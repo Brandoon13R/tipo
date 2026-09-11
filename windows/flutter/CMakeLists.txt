@@ -4,7 +4,19 @@ cmake_minimum_required(VERSION 3.14)
 set(EPHEMERAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ephemeral")
 
 # Configuration provided via flutter tool.
-include(${EPHEMERAL_DIR}/generated_config.cmake)
+# The generated file is normally created in the ephemeral directory by the
+# Flutter tool. If it is absent, avoid failing CMake immediately and provide
+# a conservative fallback for the variables this file expects.
+if(EXISTS "${EPHEMERAL_DIR}/generated_config.cmake")
+  include(${EPHEMERAL_DIR}/generated_config.cmake)
+else()
+  if(NOT DEFINED FLUTTER_ROOT)
+    set(FLUTTER_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
+  endif()
+  if(NOT DEFINED FLUTTER_TOOL_ENVIRONMENT)
+    set(FLUTTER_TOOL_ENVIRONMENT "")
+  endif()
+endif()
 
 # TODO: Move the rest of this into files in ephemeral. See
 # https://github.com/flutter/flutter/issues/57146.
@@ -15,14 +27,32 @@ if (NOT DEFINED FLUTTER_TARGET_PLATFORM)
   set(FLUTTER_TARGET_PLATFORM "windows-x64")
 endif()
 
+# Compatibility fallback for Flutter versions that do not provide
+# apply_standard_settings() in the generated CMake context.
+if(NOT COMMAND apply_standard_settings)
+  macro(apply_standard_settings target)
+    target_compile_features(${target} PUBLIC cxx_std_17)
+    if(MSVC)
+      target_compile_options(${target} PRIVATE /W4)
+    else()
+      target_compile_options(${target} PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+  endmacro()
+endif()
+
 # === Flutter Library ===
 set(FLUTTER_LIBRARY "${EPHEMERAL_DIR}/flutter_windows.dll")
 
 # Published to parent scope for install step.
-set(FLUTTER_LIBRARY ${FLUTTER_LIBRARY} PARENT_SCOPE)
-set(FLUTTER_ICU_DATA_FILE "${EPHEMERAL_DIR}/icudtl.dat" PARENT_SCOPE)
-set(PROJECT_BUILD_DIR "${PROJECT_DIR}/build/" PARENT_SCOPE)
-set(AOT_LIBRARY "${PROJECT_DIR}/build/windows/app.so" PARENT_SCOPE)
+# Only publish variables when this file is part of a parent project.
+# If this file is configured standalone, the current scope has no parent
+# and CMake emits warnings for PARENT_SCOPE assignments.
+if(NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+  set(FLUTTER_LIBRARY "${FLUTTER_LIBRARY}" PARENT_SCOPE)
+  set(FLUTTER_ICU_DATA_FILE "${EPHEMERAL_DIR}/icudtl.dat" PARENT_SCOPE)
+  set(PROJECT_BUILD_DIR "${PROJECT_DIR}/build/" PARENT_SCOPE)
+  set(AOT_LIBRARY "${PROJECT_DIR}/build/windows/app.so" PARENT_SCOPE)
+endif()
 
 list(APPEND FLUTTER_LIBRARY_HEADERS
   "flutter_export.h"
