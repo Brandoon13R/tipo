@@ -153,7 +153,7 @@ void main() {
 
     test('los datos y la configuración no se pueden modificar por fuera', () {
       final regiones = [
-        Region(tipo: TipoVerde(), coordenadas: [const Coordenada(0, 0)]),
+        Region(tipo: TipoAzul(), coordenadas: [const Coordenada(0, 0)]),
       ];
       final tablero = Tablero(filas: 1, columnas: 1, regiones: regiones);
       regiones.clear();
