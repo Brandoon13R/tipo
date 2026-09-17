@@ -29,7 +29,7 @@ void main() {
 
     test('rechaza una zona sin coordenadas', () {
       expect(
-        () => Region(tipo: TipoVerde(), coordenadas: []),
+        () => Region(tipo: TipoVerde(), posiciones: []),
         throwsArgumentError,
       );
     });

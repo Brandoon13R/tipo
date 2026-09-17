@@ -109,4 +109,3 @@ class TipoMorado extends Tipo {
     3: 4,
   };
 }
-
