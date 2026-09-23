@@ -5,6 +5,12 @@ import 'package:tipo/main.dart';
 void main() {
   testWidgets('confirma solamente con los seis datos válidos',
       (tester) async {
+    // Incluye el formulario y el resumen dentro de la superficie de prueba.
+    await tester.binding.setSurfaceSize(const Size(800, 1200));
+    addTearDown(() async {
+      await tester.binding.setSurfaceSize(null);
+    });
+
     await tester.pumpWidget(const MainApp());
 
     ElevatedButton boton() {
@@ -37,7 +43,7 @@ void main() {
 
     await tester.ensureVisible(find.byType(ElevatedButton));
     await tester.tap(find.text('Continuar'));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(
       find.text('Estos son los datos iniciales guardados:'),
