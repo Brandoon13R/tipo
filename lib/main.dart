@@ -1,8 +1,4 @@
 import 'package:flutter/material.dart';
-
-import 'package:tipo/region.dart';
-import 'package:tipo/tablero.dart';
-import 'package:tipo/tipo.dart';
 import 'package:tipo/valores_iniciales_bloc.dart';
 
 void main() {
@@ -29,33 +25,29 @@ class ValoresInicialesPage extends StatefulWidget {
 }
 
 class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
-  static const casillasIniciales = [
-    Coordenada(0, 0),
-    Coordenada(1, 0),
-  ];
+  final _bloc = ValoresInicialesBloc();
 
-  late final ValoresInicialesBloc _bloc;
+  Map<String, int>? _datosGuardados;
 
-  @override
-  void initState() {
-    super.initState();
+  void _actualizar(String region, String texto) {
+    _bloc.actualizar(region, texto);
 
-    _bloc = ValoresInicialesBloc(
-      casillasIniciales: casillasIniciales,
-      crearTablero: () => Tablero(
-        filas: 1,
-        columnas: 3,
-        regiones: [
-          Region(
-            tipo: TipoAzul(),
-            coordenadas: [
-              ...casillasIniciales,
-              const Coordenada(2, 0),
-            ],
-          ),
-        ],
-      ),
-    );
+    // Si se edita un dato, el resumen anterior deja de estar confirmado.
+    if (_datosGuardados != null) {
+      setState(() {
+        _datosGuardados = null;
+      });
+    }
+  }
+
+  void _continuar() {
+    if (!_bloc.puedeContinuar) return;
+
+    final datos = _bloc.confirmar();
+
+    setState(() {
+      _datosGuardados = datos;
+    });
   }
 
   @override
@@ -64,69 +56,76 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
     super.dispose();
   }
 
-  void _continuar() {
-    if (!_bloc.puedeAvanzar) return;
-
-    final tablero = _bloc.avanzar();
-
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => Scaffold(
-          appBar: AppBar(title: const Text('Partida iniciada')),
-          body: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              const Text('Valores iniciales guardados:'),
-              for (final entrada in tablero.datos.entries)
-                Text(
-                  'Casilla (${entrada.key.x}, ${entrada.key.y}): '
-                  '${entrada.value}',
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final guardados = _datosGuardados;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Valores iniciales')),
+      appBar: AppBar(
+        title: const Text('Datos iniciales'),
+      ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         children: [
           const Text(
-            'Completa ambas casillas con números enteros iguales '
-            'para iniciar la zona azul.',
+            'Elige un número inicial para cada región. '
+            'Debes utilizar los números del 1 al 6 sin repetir.',
           ),
-          const SizedBox(height: 16),
-          for (final casilla in casillasIniciales)
+          const SizedBox(height: 20),
+
+          for (final region in ValoresInicialesBloc.regiones)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: TextField(
-                keyboardType:
-                    const TextInputType.numberWithOptions(signed: true),
+                key: ValueKey(region),
+                keyboardType: TextInputType.number,
                 decoration: InputDecoration(
-                  labelText: 'Casilla (${casilla.x}, ${casilla.y})',
+                  labelText: region,
+                  hintText: 'Escribe un número del 1 al 6',
                   border: const OutlineInputBorder(),
                 ),
-                onChanged: (texto) => _bloc.actualizar(casilla, texto),
+                onChanged: (texto) => _actualizar(region, texto),
               ),
             ),
+
           StreamBuilder<bool>(
             stream: _bloc.cambios,
-
-            initialData: _bloc.puedeAvanzar,
+            initialData: _bloc.puedeContinuar,
             builder: (context, snapshot) {
               final habilitado = snapshot.data ?? false;
 
-              return ElevatedButton(
-                onPressed: habilitado ? _continuar : null,
-                child: const Text('Continuar'),
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    habilitado
+                        ? 'Todos los datos están completos y son válidos.'
+                        : 'Completa las seis regiones con números '
+                            'del 1 al 6, sin repetir.',
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: habilitado ? _continuar : null,
+                    child: const Text('Continuar'),
+                  ),
+                ],
               );
             },
           ),
+
+          if (guardados != null) ...[
+            const SizedBox(height: 24),
+            const Text(
+              'Estos son los datos iniciales guardados:',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            const SizedBox(height: 8),
+            for (final entrada in guardados.entries)
+              Text('${entrada.key}: ${entrada.value}'),
+          ],
         ],
       ),
     );

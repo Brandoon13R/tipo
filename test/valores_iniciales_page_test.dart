@@ -3,40 +3,56 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tipo/main.dart';
 
 void main() {
-  testWidgets('solo permite continuar con valores iniciales válidos',
+  testWidgets('confirma solamente con los seis datos válidos',
       (tester) async {
     await tester.pumpWidget(const MainApp());
 
-    final campos = find.byType(TextField);
-
-    ElevatedButton boton() =>
-        tester.widget<ElevatedButton>(find.byType(ElevatedButton));
+    ElevatedButton boton() {
+      return tester.widget<ElevatedButton>(
+        find.byType(ElevatedButton),
+      );
+    }
 
     expect(boton().onPressed, isNull);
 
-    await tester.enterText(campos.at(0), '3');
+    for (var i = 1; i <= 5; i++) {
+      final campo = find.byKey(ValueKey('Región $i'));
+      await tester.ensureVisible(campo);
+      await tester.enterText(campo, '$i');
+    }
+
     await tester.pump();
     expect(boton().onPressed, isNull);
 
-    await tester.enterText(campos.at(1), '4');
+    final ultimo = find.byKey(const ValueKey('Región 6'));
+    await tester.ensureVisible(ultimo);
+
+    await tester.enterText(ultimo, '5');
     await tester.pump();
     expect(boton().onPressed, isNull);
 
-    await tester.enterText(campos.at(1), '3');
+    await tester.enterText(ultimo, '6');
     await tester.pump();
     expect(boton().onPressed, isNotNull);
 
-    await tester.enterText(campos.at(0), '');
-    await tester.pump();
-    expect(boton().onPressed, isNull);
-
-    await tester.enterText(campos.at(0), '3');
-    await tester.pump();
+    await tester.ensureVisible(find.byType(ElevatedButton));
     await tester.tap(find.text('Continuar'));
-    await tester.pumpAndSettle();
+    await tester.pump();
 
-    expect(find.text('Partida iniciada'), findsOneWidget);
-    expect(find.text('Casilla (0, 0): 3'), findsOneWidget);
-    expect(find.text('Casilla (1, 0): 3'), findsOneWidget);
+    expect(
+      find.text('Estos son los datos iniciales guardados:'),
+      findsOneWidget,
+    );
+    expect(find.text('Región 6: 6'), findsOneWidget);
+
+    await tester.ensureVisible(ultimo);
+    await tester.enterText(ultimo, '');
+    await tester.pump();
+
+    expect(boton().onPressed, isNull);
+    expect(
+      find.text('Estos son los datos iniciales guardados:'),
+      findsNothing,
+    );
   });
 }
