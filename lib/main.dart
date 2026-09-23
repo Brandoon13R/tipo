@@ -115,8 +115,8 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
               ),
             ),
           StreamBuilder<bool>(
-            stream: _bloc.cambios,+
-            
+            stream: _bloc.cambios,
+
             initialData: _bloc.puedeAvanzar,
             builder: (context, snapshot) {
               final habilitado = snapshot.data ?? false;
