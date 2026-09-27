@@ -1,69 +1,53 @@
-# tipo
+# Tipo — Brilliant
 
-Proyecto Flutter con reglas por color, regiones y un modelo de tablero.
+Interfaz Flutter hasta la selección de los seis números iniciales.
 
-## Entrega: tablero, zonas y pruebas
+## Uso
 
-- **Tablero** (`lib/tablero.dart`) almacena los números de cada casilla en
-  un `Map<Coordenada, int>` privado y valida cada jugada antes de guardarla.
-- **Region** (`lib/region.dart`) es la clase que une el tablero con las zonas:
-  cada región asocia un `Tipo` con un conjunto de `Coordenada`.
-  El tablero recibe esas regiones y localiza la correspondiente a cada casilla.
-- **Coordenada** representa una posición: `x` es la columna e `y` es la fila,
-  ambas desde cero. Su igualdad y hash permiten consultar una misma casilla
-  usando distintas instancias con los mismos valores.
-- **Tipo** (`lib/tipo.dart`) contiene las reglas existentes de cada color.
+1. Toca una de las seis casillas con borde oscuro y signo +.
+2. Elige un número del 1 al 6. Puedes volver a tocarla para cambiarlo o borrarlo.
+3. Distribuye los seis números sin repetir. Los duplicados muestran un aviso
+   y mantienen deshabilitado el botón **Inicio**.
+4. Pulsa **Inicio** para guardar los valores en el modelo Tablero.
+   Se muestra una confirmación con las coordenadas y se bloquea la selección.
 
-Los datos se guardan **en memoria durante la partida**; no hay persistencia
-en disco ni base de datos. Esta entrega corresponde al modelo de datos.
-La pantalla inicial de Flutter aún muestra el ejemplo original.
+Los datos se conservan en memoria mientras la pantalla está abierta.
+El alcance termina en la inicialización: aún no hay tiradas, turnos ni puntuación
+de una partida completa.
 
-### Ejemplo
+## Estructura
 
-```dart
-import 'package:tipo/region.dart';
-import 'package:tipo/tablero.dart';
-import 'package:tipo/tipo.dart';
+- `lib/tablero_config.dart`: matriz bidimensional inmutable 7 × 7, paleta
+  solicitada y las seis posiciones señaladas en la imagen de referencia.
+- `TableroVisual` en `lib/main.dart`: 49 cuadrados con esquinas de 8 px,
+  separación de 6 px y ancho adaptable, hasta 540 px.
+- `ValoresInicialesBloc`: BLoC local mediante StreamController; valida que estén
+  los seis enteros entre 1 y 6 sin repetir y devuelve una copia de solo lectura.
+- `Tablero`: almacena los números por Coordenada.
+- `Region`: vincula las coordenadas con su Tipo.
 
-final zonaAzul = Region(
-  tipo: TipoAzul(),
-  coordenadas: [Coordenada(0, 0), Coordenada(1, 0)],
-);
-final tablero = Tablero(filas: 1, columnas: 2, regiones: [zonaAzul]);
+La paleta visual usa los hexadecimales pedidos, incluido #E67E22 para Rojo.
+No modifica los colores ni las reglas de las clases Tipo existentes.
 
-tablero.agregar(Coordenada(0, 0), 3); // true: guarda el dato.
-tablero.agregar(Coordenada(1, 0), 2); // false: azul exige iguales.
-tablero.agregar(Coordenada(1, 0), 3); // true.
-tablero.valorEn(Coordenada(0, 0)); // 3.
-tablero.regionEn(Coordenada(0, 0)); // zonaAzul.
-```
+Las posiciones iniciales son (columna, fila), desde cero:
+(2,0), (5,1), (1,3), (4,3), (2,5), (4,6).
+Los números no están preasignados: el jugador decide su distribución.
 
-### Criterios de esta implementación
+Las regiones se construyen agrupando casillas del mismo color conectadas
+horizontal o verticalmente. No se infieren enlaces externos ausentes en la
+matriz. Las seis casillas de inicio pertenecen a seis regiones diferentes.
+Este modelo sirve para la preparación solicitada; las reglas completas y
+conexiones del juego podrán ampliarse al implementar la partida.
 
-- Dimensiones configurables y positivas; regiones no vacías y sin solaparse.
-- Las casillas sin región no admiten jugadas.
-- No se permite sobrescribir una casilla ni jugar fuera del tablero.
-- Se conservan las reglas y los valores permitidos por los tipos existentes.
-- Una jugada rechazada no altera los datos.
-- Las colecciones expuestas son de solo lectura; `datos` devuelve una copia.
-- `reiniciar()` vacía los datos sin borrar las regiones.
-
-### Pruebas
-
-Se necesita Flutter con Dart compatible con `^3.11.1`, según `pubspec.yaml`.
+## Verificación
 
 ```sh
 flutter pub get
 flutter test
+flutter run
 ```
 
-- `test/tipo_test.dart`: reglas de color existentes.
-- `test/region_test.dart`: igualdad de coordenadas, vínculo con el tipo,
-  regiones vacías y protección de coordenadas.
-- `test/tablero_test.dart`: almacenamiento y consulta, validación de colores,
-  independencia de zonas, límites, casillas ocupadas, configuración inválida,
-  protección de datos y reinicio.
-
-El flujo `.github/workflows/flutter-tests.yml` ejecuta las pruebas en GitHub
-Actions al subir esta rama y en solicitudes de incorporación a `main`.
-Consultar el resultado de la ejecución antes de integrar.
+Las pruebas comprueban la matriz y la paleta exactas, la asignación de regiones,
+el almacenamiento, los datos inválidos, el botón Inicio, cambiar/borrar números,
+la confirmación y el tamaño cuadrado de las celdas en una pantalla de 360 px.
+GitHub Actions ejecuta flutter test en main y en solicitudes hacia main.

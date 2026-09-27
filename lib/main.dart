@@ -1,53 +1,74 @@
 import 'package:flutter/material.dart';
+import 'package:tipo/tablero.dart';
+import 'package:tipo/tablero_config.dart';
 import 'package:tipo/valores_iniciales_bloc.dart';
 
-void main() {
-  runApp(const MainApp());
-}
+void main() => runApp(const MainApp());
 
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: ValoresInicialesPage(),
-    );
-  }
+  Widget build(BuildContext context) => MaterialApp(
+    debugShowCheckedModeBanner: false,
+    theme: ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF193E37)),
+      scaffoldBackgroundColor: const Color(0xFFF4F7F4),
+    ),
+    home: const ValoresInicialesPage(),
+  );
 }
 
 class ValoresInicialesPage extends StatefulWidget {
   const ValoresInicialesPage({super.key});
-
   @override
-  State<ValoresInicialesPage> createState() =>
-      _ValoresInicialesPageState();
+  State<ValoresInicialesPage> createState() => _ValoresInicialesPageState();
 }
 
 class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
   final _bloc = ValoresInicialesBloc();
+  Tablero? _tableroIniciado;
 
-  Map<String, int>? _datosGuardados;
-
-  void _actualizar(String region, String texto) {
-    _bloc.actualizar(region, texto);
-
-    // Si se edita un dato, el resumen anterior deja de estar confirmado.
-    if (_datosGuardados != null) {
-      setState(() {
-        _datosGuardados = null;
-      });
-    }
+  Future<void> _elegir(String region) async {
+    if (_tableroIniciado != null) return;
+    final valor = await showDialog<int>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text('Número inicial · $region'),
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Text('Actual: ${_bloc.valores[region] ?? "sin asignar"}'),
+          ),
+          for (var numero = 1; numero <= 6; numero++)
+            SimpleDialogOption(
+              key: ValueKey('opcion-$numero'),
+              onPressed: () => Navigator.pop(context, numero),
+              child: Text('$numero'),
+            ),
+          SimpleDialogOption(
+            key: const ValueKey('borrar'),
+            onPressed: () => Navigator.pop(context, 0),
+            child: const Text('Borrar número'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || valor == null) return;
+    _bloc.actualizar(region, valor == 0 ? '' : '$valor');
   }
 
-  void _continuar() {
-    if (!_bloc.puedeContinuar) return;
-
+  void _iniciar() {
+    if (_tableroIniciado != null || !_bloc.puedeContinuar) return;
     final datos = _bloc.confirmar();
-
-    setState(() {
-      _datosGuardados = datos;
-    });
+    final tablero = TableroConfig.crearTablero();
+    for (final entrada in datos.entries) {
+      if (!tablero.agregar(TableroConfig.iniciales[entrada.key]!, entrada.value)) {
+        throw StateError('Configuración inicial incompatible con las regiones.');
+      }
+    }
+    setState(() => _tableroIniciado = tablero);
   }
 
   @override
@@ -57,76 +78,170 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final guardados = _datosGuardados;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Datos iniciales'),
-      ),
-      body: ListView(
+  Widget build(BuildContext context) => Scaffold(
+    body: SafeArea(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
-        children: [
-          const Text(
-            'Elige un número inicial para cada región. '
-            'Debes utilizar los números del 1 al 6 sin repetir.',
-          ),
-          const SizedBox(height: 20),
-
-          for (final region in ValoresInicialesBloc.regiones)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: TextField(
-                key: ValueKey(region),
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: region,
-                  hintText: 'Escribe un número del 1 al 6',
-                  border: const OutlineInputBorder(),
-                ),
-                onChanged: (texto) => _actualizar(region, texto),
-              ),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 540),
+            child: StreamBuilder<bool>(
+              stream: _bloc.cambios,
+              initialData: _bloc.puedeContinuar,
+              builder: (context, snapshot) {
+                final valores = _bloc.valores;
+                final cantidad = valores.values.whereType<int>().length;
+                final iniciado = _tableroIniciado != null;
+                final completos = snapshot.data ?? false;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Row(children: [
+                      Icon(Icons.grid_view_rounded, color: Color(0xFF193E37)),
+                      SizedBox(width: 10),
+                      Text('BRILLIANT', style: TextStyle(
+                        letterSpacing: 2, fontWeight: FontWeight.w700)),
+                      Spacer(),
+                      Text('7 × 7'),
+                    ]),
+                    const SizedBox(height: 24),
+                    const Text('Mapa de colores', style: TextStyle(
+                      fontSize: 28, fontWeight: FontWeight.w700,
+                      color: Color(0xFF193E37))),
+                    const SizedBox(height: 8),
+                    const Text('Toca las seis casillas con + y distribuye '
+                      'los números del 1 al 6 sin repetir.'),
+                    const SizedBox(height: 20),
+                    TableroVisual(
+                      valores: valores,
+                      habilitado: !iniciado,
+                      onSeleccionar: _elegir,
+                    ),
+                    const SizedBox(height: 20),
+                    Text('$cantidad DE 6 NÚMEROS COLOCADOS',
+                      key: const ValueKey('progreso'),
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 8),
+                    Text(iniciado
+                      ? 'Datos iniciales guardados en el tablero.'
+                      : completos
+                        ? 'Todo listo. Puedes pulsar Inicio.'
+                        : cantidad == 6
+                          ? 'Hay números repetidos. Usa cada número una sola vez.'
+                          : 'Completa las seis casillas para habilitar Inicio.',
+                      key: const ValueKey('estado')),
+                    const SizedBox(height: 20),
+                    Wrap(
+                      spacing: 14, runSpacing: 8,
+                      children: [
+                        for (final color in ColorCasilla.values)
+                          Row(mainAxisSize: MainAxisSize.min, children: [
+                            Container(width: 9, height: 9,
+                              decoration: BoxDecoration(color: color.color,
+                                borderRadius: BorderRadius.circular(2))),
+                            const SizedBox(width: 5),
+                            Text(color.nombre, style: const TextStyle(fontSize: 12)),
+                          ]),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    FilledButton(
+                      key: const ValueKey('inicio'),
+                      onPressed: completos && !iniciado ? _iniciar : null,
+                      child: const Text('Inicio'),
+                    ),
+                    if (iniciado) ...[
+                      const SizedBox(height: 16),
+                      const Text('Selección inicial confirmada',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                      for (final entrada in TableroConfig.iniciales.entries)
+                        Text('${entrada.key} · fila ${entrada.value.y + 1}, '
+                          'columna ${entrada.value.x + 1}: '
+                          '${_tableroIniciado!.valorEn(entrada.value)}'),
+                    ],
+                  ],
+                );
+              },
             ),
-
-          StreamBuilder<bool>(
-            stream: _bloc.cambios,
-            initialData: _bloc.puedeContinuar,
-            builder: (context, snapshot) {
-              final habilitado = snapshot.data ?? false;
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    habilitado
-                        ? 'Todos los datos están completos y son válidos.'
-                        : 'Completa las seis regiones con números '
-                            'del 1 al 6, sin repetir.',
-                  ),
-                  const SizedBox(height: 12),
-                  ElevatedButton(
-                    onPressed: habilitado ? _continuar : null,
-                    child: const Text('Continuar'),
-                  ),
-                ],
-              );
-            },
           ),
+        ),
+      ),
+    ),
+  );
+}
 
-          if (guardados != null) ...[
-            const SizedBox(height: 24),
-            const Text(
-              'Estos son los datos iniciales guardados:',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
-            const SizedBox(height: 8),
-            for (final entrada in guardados.entries)
-              Text('${entrada.key}: ${entrada.value}'),
+/// Componente reutilizable: 49 cuadrados y un espacio uniforme de 6 px.
+class TableroVisual extends StatelessWidget {
+  const TableroVisual({
+    super.key,
+    required this.valores,
+    required this.habilitado,
+    required this.onSeleccionar,
+  });
+  final Map<String, int?> valores;
+  final bool habilitado;
+  final ValueChanged<String> onSeleccionar;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    children: [
+      for (var y = 0; y < 7; y++) ...[
+        if (y > 0) const SizedBox(height: 6),
+        Row(
+          children: [
+            for (var x = 0; x < 7; x++) ...[
+              if (x > 0) const SizedBox(width: 6),
+              Expanded(child: AspectRatio(
+                aspectRatio: 1,
+                child: _celda(x, y),
+              )),
+            ],
           ],
-        ],
+        ),
+      ],
+    ],
+  );
+
+  Widget _celda(int x, int y) {
+    String? region;
+    for (final entrada in TableroConfig.iniciales.entries) {
+      if (entrada.value.x == x && entrada.value.y == y) region = entrada.key;
+    }
+    final seleccionable = region;
+    final numero = valores[region];
+    final color = TableroConfig.matriz[y][x];
+    final etiqueta = 'Fila ${y + 1}, columna ${x + 1}, ${color.nombre}'
+        '${region == null ? "" : ", $region, número ${numero ?? "sin asignar"}"}';
+    return Semantics(
+      label: etiqueta,
+      button: region != null,
+      child: Tooltip(
+        message: etiqueta,
+        child: Material(
+          key: ValueKey('celda-$x-$y'),
+          color: color.color,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: BorderSide(
+              color: region != null ? const Color(0xFF193E37) : Colors.transparent,
+              width: 2,
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: habilitado && seleccionable != null
+                ? () => onSeleccionar(seleccionable) : null,
+            child: Center(
+              child: numero != null
+                  ? Text('$numero', style: const TextStyle(
+                      fontSize: 24, fontWeight: FontWeight.w800,
+                      color: Color(0xFF102A25)))
+                  : region != null
+                    ? const Icon(Icons.add, size: 18, color: Color(0xFF193E37))
+                    : const SizedBox.shrink(),
+            ),
+          ),
+        ),
       ),
     );
   }

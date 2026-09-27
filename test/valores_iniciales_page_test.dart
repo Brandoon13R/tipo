@@ -3,62 +3,76 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tipo/main.dart';
 
 void main() {
-  testWidgets('confirma solamente con los seis datos válidos',
+  testWidgets('selecciona seis números, bloquea duplicados y confirma Inicio',
       (tester) async {
-    // Incluye el formulario y el resumen dentro de la superficie de prueba.
     await tester.binding.setSurfaceSize(const Size(800, 1200));
-    addTearDown(() async {
-      await tester.binding.setSurfaceSize(null);
-    });
-
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(const MainApp());
 
-    ElevatedButton boton() {
-      return tester.widget<ElevatedButton>(
-        find.byType(ElevatedButton),
-      );
+    FilledButton boton() => tester.widget(find.byKey(const ValueKey('inicio')));
+
+    Future<void> elegir(int x, int y, int numero) async {
+      final celda = find.byKey(ValueKey('celda-$x-$y'));
+      await tester.ensureVisible(celda);
+      await tester.tap(celda);
+      await tester.pumpAndSettle();
+      final opcion = find.byKey(ValueKey(numero == 0 ? 'borrar' : 'opcion-$numero'));
+      await tester.ensureVisible(opcion);
+      await tester.tap(opcion);
+      await tester.pumpAndSettle();
     }
 
     expect(boton().onPressed, isNull);
+    expect(find.byType(TextField), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('celda-0-0')));
+    await tester.pumpAndSettle();
+    expect(find.byType(SimpleDialog), findsNothing);
 
-    for (var i = 1; i <= 5; i++) {
-      final campo = find.byKey(ValueKey('Región $i'));
-      await tester.ensureVisible(campo);
-      await tester.enterText(campo, '$i');
-    }
-
-    await tester.pump();
+    await elegir(2, 0, 1);
+    await elegir(5, 1, 2);
+    await elegir(1, 3, 3);
+    await elegir(4, 3, 4);
+    await elegir(2, 5, 5);
     expect(boton().onPressed, isNull);
-
-    final ultimo = find.byKey(const ValueKey('Región 6'));
-    await tester.ensureVisible(ultimo);
-
-    await tester.enterText(ultimo, '5');
-    await tester.pump();
+    await elegir(4, 6, 5);
     expect(boton().onPressed, isNull);
-
-    await tester.enterText(ultimo, '6');
-    await tester.pump();
+    expect(find.text('Hay números repetidos. Usa cada número una sola vez.'),
+        findsOneWidget);
+    await elegir(4, 6, 6);
     expect(boton().onPressed, isNotNull);
 
-    await tester.ensureVisible(find.byType(ElevatedButton));
-    await tester.tap(find.text('Continuar'));
+    await elegir(2, 0, 0);
+    expect(boton().onPressed, isNull);
+    await elegir(2, 0, 1);
+    await tester.ensureVisible(find.byKey(const ValueKey('inicio')));
+    await tester.tap(find.byKey(const ValueKey('inicio')));
     await tester.pumpAndSettle();
 
-    expect(
-      find.text('Estos son los datos iniciales guardados:'),
-      findsOneWidget,
-    );
-    expect(find.text('Región 6: 6'), findsOneWidget);
-
-    await tester.ensureVisible(ultimo);
-    await tester.enterText(ultimo, '');
-    await tester.pump();
-
+    expect(find.text('Selección inicial confirmada'), findsOneWidget);
+    expect(find.text('Región 6 · fila 7, columna 5: 6'), findsOneWidget);
     expect(boton().onPressed, isNull);
-    expect(
-      find.text('Estos son los datos iniciales guardados:'),
-      findsNothing,
-    );
+    await tester.tap(find.byKey(const ValueKey('celda-2-0')));
+    await tester.pumpAndSettle();
+    expect(find.byType(SimpleDialog), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('49 celdas cuadradas sin desbordamiento a 360 px',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(360, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MainApp());
+    for (var y = 0; y < 7; y++) {
+      for (var x = 0; x < 7; x++) {
+        final celda = find.byKey(ValueKey('celda-$x-$y'));
+        expect(celda, findsOneWidget);
+        final size = tester.getSize(celda);
+        expect(size.width, closeTo(size.height, 0.01));
+      }
+    }
+    final a = tester.getRect(find.byKey(const ValueKey('celda-0-0')));
+    final b = tester.getRect(find.byKey(const ValueKey('celda-1-0')));
+    expect(b.left - a.right, closeTo(6, 0.01));
+    expect(tester.takeException(), isNull);
   });
 }

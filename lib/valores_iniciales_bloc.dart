@@ -16,6 +16,9 @@ class ValoresInicialesBloc {
 
   final _cambiosController = StreamController<bool>.broadcast();
 
+  // Instantánea de solo lectura para representar la selección en el tablero.
+  Map<String, int?> get valores => Map<String, int?>.unmodifiable(_valores);
+
   Stream<bool> get cambios => _cambiosController.stream;
 
   bool get puedeContinuar {
