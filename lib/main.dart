@@ -129,6 +129,18 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
             onPressed: pendientes ? juego.omitir : null,
             child: const Text('Omitir'),
           )),
+          const SizedBox(width: 10),
+          Expanded(child: OutlinedButton(
+            key: const ValueKey('reiniciar'),
+            onPressed: () {
+              setState(() {
+                _tableroIniciado = null;
+                _juego?.dispose();
+                _juego = null;
+              });
+            },
+            child: const Text('Reiniciar'),
+          )),
         ]),
         const SizedBox(height: 4),
         Text('Jugadas: ${juego.turnosJugados} · Omitidas: ${juego.turnosOmitidos}',
