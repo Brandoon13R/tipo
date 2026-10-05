@@ -55,6 +55,19 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(SimpleDialog), findsNothing);
     expect(tester.takeException(), isNull);
+    final tirar = find.byKey(const ValueKey('tirar'));
+    await tester.ensureVisible(tirar);
+    await tester.tap(tirar);
+    await tester.pump();
+    expect(tester.widget<FilledButton>(tirar).onPressed, isNull);
+    await tester.tap(find.byKey(const ValueKey('dado-0')));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('instruccion-turno')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('omitir')));
+    await tester.pump();
+    expect(tester.widget<FilledButton>(tirar).onPressed, isNotNull);
+    expect(find.text('Jugadas: 0 · Omitidas: 1'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('49 celdas cuadradas sin desbordamiento a 360 px',

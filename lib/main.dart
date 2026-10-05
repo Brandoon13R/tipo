@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tipo/tablero.dart';
+import 'package:tipo/region.dart';
+import 'package:tipo/juego_bloc.dart';
 import 'package:tipo/tablero_config.dart';
 import 'package:tipo/valores_iniciales_bloc.dart';
 
@@ -29,6 +31,7 @@ class ValoresInicialesPage extends StatefulWidget {
 class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
   final _bloc = ValoresInicialesBloc();
   Tablero? _tableroIniciado;
+  JuegoBloc? _juego;
 
   Future<void> _elegir(String region) async {
     if (_tableroIniciado != null) return;
@@ -68,12 +71,76 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
         throw StateError('Configuración inicial incompatible con las regiones.');
       }
     }
-    setState(() => _tableroIniciado = tablero);
+    setState(() {
+      _tableroIniciado = tablero;
+      _juego = JuegoBloc(tablero);
+    });
+  }
+
+  Widget _controlesJuego(JuegoBloc juego) {
+    final pendientes = juego.tiradaPendiente;
+    final pivote = juego.pivote;
+    final posibles = juego.casillasIluminadas.length;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text('Turno de juego', style: TextStyle(
+          fontSize: 19, fontWeight: FontWeight.w700)),
+        const SizedBox(height: 8),
+        Text(pendientes
+          ? pivote == null
+            ? 'Elige un dado como pivote. Colocarás el valor del otro.'
+            : posibles == 0
+              ? 'No hay casillas válidas con ese pivote. Prueba el otro dado o pulsa Omitir.'
+              : 'Toca una casilla iluminada para colocar ${juego.valorAColocar}.'
+          : 'Tira los dados para comenzar la siguiente jugada.',
+          key: const ValueKey('instruccion-turno')),
+        const SizedBox(height: 12),
+        Row(children: [
+          for (var i = 0; i < 2; i++) ...[
+            if (i > 0) const SizedBox(width: 10),
+            Expanded(child: OutlinedButton(
+              key: ValueKey('dado-$i'),
+              onPressed: pendientes ? () => juego.elegirPivote(i) : null,
+              style: OutlinedButton.styleFrom(
+                backgroundColor: pivote == i
+                  ? const Color(0xFFD4F4D8) : Colors.white,
+                side: BorderSide(
+                  color: pivote == i
+                    ? const Color(0xFF193E37) : Colors.black38,
+                  width: pivote == i ? 2 : 1,
+                ),
+              ),
+              child: Text('${i == 0 ? juego.dadoA ?? "–" : juego.dadoB ?? "–"}',
+                style: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
+            )),
+          ],
+        ]),
+        const SizedBox(height: 10),
+        Row(children: [
+          Expanded(child: FilledButton(
+            key: const ValueKey('tirar'),
+            onPressed: pendientes ? null : juego.tirar,
+            child: const Text('Tirar dados'),
+          )),
+          const SizedBox(width: 10),
+          Expanded(child: OutlinedButton(
+            key: const ValueKey('omitir'),
+            onPressed: pendientes ? juego.omitir : null,
+            child: const Text('Omitir'),
+          )),
+        ]),
+        const SizedBox(height: 4),
+        Text('Jugadas: ${juego.turnosJugados} · Omitidas: ${juego.turnosOmitidos}',
+          key: const ValueKey('contador-turnos')),
+      ],
+    );
   }
 
   @override
   void dispose() {
     _bloc.dispose();
+    _juego?.dispose();
     super.dispose();
   }
 
@@ -112,10 +179,28 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
                     const Text('Toca las seis casillas con + y distribuye '
                       'los números del 1 al 6 sin repetir.'),
                     const SizedBox(height: 20),
-                    TableroVisual(
-                      valores: valores,
-                      habilitado: !iniciado,
-                      onSeleccionar: _elegir,
+                    StreamBuilder<int>(
+                      stream: _juego?.cambios,
+                      initialData: 0,
+                      builder: (context, _) {
+                        final juego = _juego;
+                        return Column(
+                          children: [
+                            TableroVisual(
+                              valores: valores,
+                              habilitado: !iniciado,
+                              onSeleccionar: _elegir,
+                              tablero: juego?.tablero,
+                              iluminadas: juego?.casillasIluminadas ?? const {},
+                              onJugar: juego?.colocar,
+                            ),
+                            if (juego != null) ...[
+                              const SizedBox(height: 18),
+                              _controlesJuego(juego),
+                            ],
+                          ],
+                        );
+                      },
                     ),
                     const SizedBox(height: 20),
                     Text('$cantidad DE 6 NÚMEROS COLOCADOS',
@@ -177,10 +262,16 @@ class TableroVisual extends StatelessWidget {
     required this.valores,
     required this.habilitado,
     required this.onSeleccionar,
+    this.tablero,
+    this.iluminadas = const {},
+    this.onJugar,
   });
   final Map<String, int?> valores;
   final bool habilitado;
   final ValueChanged<String> onSeleccionar;
+  final Tablero? tablero;
+  final Set<Coordenada> iluminadas;
+  final ValueChanged<Coordenada>? onJugar;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -208,37 +299,45 @@ class TableroVisual extends StatelessWidget {
       if (entrada.value.x == x && entrada.value.y == y) region = entrada.key;
     }
     final seleccionable = region;
-    final numero = valores[region];
+    final posicion = Coordenada(x, y);
+    final destacada = iluminadas.contains(posicion);
+    final numero = tablero?.valorEn(posicion) ?? valores[region];
     final color = TableroConfig.matriz[y][x];
     final etiqueta = 'Fila ${y + 1}, columna ${x + 1}, ${color.nombre}'
         '${region == null ? "" : ", $region, número ${numero ?? "sin asignar"}"}';
     return Semantics(
-      label: etiqueta,
+      label: destacada ? '$etiqueta, disponible para colocar' : etiqueta,
       button: region != null,
       child: Tooltip(
         message: etiqueta,
         child: Material(
           key: ValueKey('celda-$x-$y'),
-          color: color.color,
+          color: destacada ? Color.lerp(color.color, Colors.white, 0.38)! : color.color,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
             side: BorderSide(
-              color: region != null ? const Color(0xFF193E37) : Colors.transparent,
-              width: 2,
+              color: destacada ? Colors.white
+                  : region != null ? const Color(0xFF193E37) : Colors.transparent,
+              width: destacada ? 3 : 2,
             ),
           ),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
-            onTap: habilitado && seleccionable != null
-                ? () => onSeleccionar(seleccionable) : null,
+            onTap: destacada && onJugar != null
+                ? () => onJugar!(posicion)
+                : habilitado && seleccionable != null
+                  ? () => onSeleccionar(seleccionable) : null,
             child: Center(
               child: numero != null
                   ? Text('$numero', style: const TextStyle(
                       fontSize: 24, fontWeight: FontWeight.w800,
                       color: Color(0xFF102A25)))
-                  : region != null
-                    ? const Icon(Icons.add, size: 18, color: Color(0xFF193E37))
-                    : const SizedBox.shrink(),
+                  : destacada
+                    ? const Icon(Icons.add_circle_outline, size: 22,
+                        color: Color(0xFF102A25))
+                    : region != null
+                      ? const Icon(Icons.add, size: 18, color: Color(0xFF193E37))
+                      : const SizedBox.shrink(),
             ),
           ),
         ),

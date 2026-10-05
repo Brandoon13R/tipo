@@ -1,6 +1,6 @@
 # Tipo — Brilliant
 
-Interfaz Flutter hasta la selección de los seis números iniciales.
+Interfaz Flutter para la selección de los seis números iniciales y las primeras jugadas.
 
 ## Uso
 
@@ -11,9 +11,7 @@ Interfaz Flutter hasta la selección de los seis números iniciales.
 4. Pulsa **Inicio** para guardar los valores en el modelo Tablero.
    Se muestra una confirmación con las coordenadas y se bloquea la selección.
 
-Los datos se conservan en memoria mientras la pantalla está abierta.
-El alcance termina en la inicialización: aún no hay tiradas, turnos ni puntuación
-de una partida completa.
+Después de Inicio puedes tirar dos dados con valores 1–6. Toca uno como pivote: se iluminan las casillas vacías adyacentes por un lado a cualquier ficha con ese número que aceptan el valor del otro dado según la regla de su región. Puedes elegir el otro pivote, tocar una casilla iluminada para jugar, u omitir la tirada. Omitir descarta ambos valores y habilita otra tirada, incluso si existía una jugada posible (opción solicitada). Los números y contadores se conservan en memoria mientras la pantalla está abierta. Aún no hay puntuación ni gestión multijugador.
 
 ## Estructura
 
@@ -23,6 +21,7 @@ de una partida completa.
   separación de 6 px y ancho adaptable, hasta 540 px.
 - `ValoresInicialesBloc`: BLoC local mediante StreamController; valida que estén
   los seis enteros entre 1 y 6 sin repetir y devuelve una copia de solo lectura.
+- `JuegoBloc`: tirada, pivote, cálculo de casillas válidas, colocación y omisión.
 - `Tablero`: almacena los números por Coordenada.
 - `Region`: vincula las coordenadas con su Tipo.
 
@@ -49,5 +48,6 @@ flutter run
 
 Las pruebas comprueban la matriz y la paleta exactas, la asignación de regiones,
 el almacenamiento, los datos inválidos, el botón Inicio, cambiar/borrar números,
-la confirmación y el tamaño cuadrado de las celdas en una pantalla de 360 px.
+la confirmación, el tamaño cuadrado de las celdas en una pantalla de 360 px,
+y el flujo de tirada, pivote, casillas legales, colocación y omisión.
 GitHub Actions ejecuta flutter test en main y en solicitudes hacia main.
