@@ -32,7 +32,7 @@ class JuegoBloc {
   void tirar() {
     if (tiradaPendiente) throw StateError('Resuelve u omite la tirada actual.');
     _dadoA = _siguiente(6) + 1;
-    _dadoB = _random.nextInt(6) + 1;
+    _dadoB = _siguiente(6) + 1;
     _pivote = null;
     _notificar();
   }
