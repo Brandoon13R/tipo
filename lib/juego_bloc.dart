@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:tipo/puntuacion.dart';
 import 'package:tipo/region.dart';
 import 'package:tipo/tablero.dart';
 
@@ -18,6 +19,10 @@ class JuegoBloc {
   int? _pivote;
   int turnosJugados = 0;
   int turnosOmitidos = 0;
+  late final PuntuacionPartida puntuacion = PuntuacionPartida(tablero);
+
+  int get puntos => puntuacion.total;
+  Map<String, int> get puntosPorZona => puntuacion.obtenidos;
 
   Stream<int> get cambios => _cambios.stream;
   int? get dadoA => _dadoA;
@@ -72,6 +77,7 @@ class JuegoBloc {
   bool colocar(Coordenada coordenada) {
     if (!casillasIluminadas.contains(coordenada)) return false;
     if (!tablero.agregar(coordenada, valorAColocar!)) return false;
+    puntuacion.revisarZonasCompletadas();
     turnosJugados++;
     _terminarTirada();
     return true;

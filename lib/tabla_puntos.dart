@@ -1,36 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:tipo/tablero_config.dart';
-
-class PremioZona {
-  const PremioZona(
-    this.nombre,
-    this.color,
-    this.primero,
-    this.segundo,
-    this.tercero,
-  );
-
-  final String nombre;
-  final ColorCasilla color;
-  final int primero;
-  final int segundo;
-  final int tercero;
-}
-
-const premiosZonas = <PremioZona>[
-  PremioZona('Azul sup.', ColorCasilla.azul, 7, 5, 3),
-  PremioZona('Verde izq.', ColorCasilla.verde, 4, 3, 2),
-  PremioZona('Rojo izq.', ColorCasilla.rojo, 6, 4, 2),
-  PremioZona('Violeta izq.', ColorCasilla.morado, 6, 4, 2),
-  PremioZona('Violeta der.', ColorCasilla.morado, 6, 4, 2),
-  PremioZona('Amarillo', ColorCasilla.amarillo, 8, 6, 4),
-  PremioZona('Verde der.', ColorCasilla.verde, 4, 3, 2),
-  PremioZona('Azul inf.', ColorCasilla.azul, 7, 5, 3),
-  PremioZona('Rojo inf.', ColorCasilla.rojo, 6, 4, 2),
-];
+import 'package:tipo/puntuacion.dart';
 
 class TablaPuntos extends StatelessWidget {
-  const TablaPuntos({super.key});
+  const TablaPuntos({
+    super.key,
+    required this.puntos,
+    required this.obtenidos,
+  });
+
+  final int puntos;
+  final Map<String, int> obtenidos;
 
   @override
   Widget build(BuildContext context) {
@@ -42,10 +21,13 @@ class TablaPuntos extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Puntos: 0',
-              key: ValueKey('puntos-acumulados'),
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+            Text(
+              'Puntos: $puntos',
+              key: const ValueKey('puntos-acumulados'),
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 8),
             const Text(
@@ -55,6 +37,7 @@ class TablaPuntos extends StatelessWidget {
             const Divider(height: 12),
             for (final zona in premiosZonas)
               Padding(
+                key: ValueKey('premio-${zona.id}'),
                 padding: const EdgeInsets.symmetric(vertical: 5),
                 child: Row(
                   children: [
@@ -78,13 +61,23 @@ class TablaPuntos extends StatelessWidget {
                       '${zona.primero} · ${zona.segundo} · ${zona.tercero}',
                       style: const TextStyle(fontSize: 11),
                     ),
+                    const SizedBox(width: 5),
+                    Text(
+                      obtenidos[zona.id] == null
+                          ? '—'
+                          : '+${obtenidos[zona.id]}',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ),
             const Divider(height: 12),
-            const Text(
-              'Puntos obtenidos: —',
-              style: TextStyle(fontSize: 11),
+            Text(
+              'Puntos obtenidos: $puntos',
+              style: const TextStyle(fontSize: 11),
             ),
           ],
         ),

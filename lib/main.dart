@@ -241,7 +241,10 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
           children: [
             tableroVisual,
             const SizedBox(height: 12),
-            const TablaPuntos(),
+            TablaPuntos(
+                puntos: juego!.puntos,
+                obtenidos: juego.puntosPorZona,
+              ),
           ],
         );
       },
