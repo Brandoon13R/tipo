@@ -232,7 +232,7 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
             children: [
               Expanded(child: tableroVisual),
               const SizedBox(width: 12),
-              const SizedBox(width: 205, child: TablaPuntos()),
+              SizedBox(width: 205, child: TablaPuntos()),
             ],
           );
         }
