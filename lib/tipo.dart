@@ -63,9 +63,9 @@ class TipoRojo extends Tipo {
  
   @override
   Map<int, int> get puntuaciones => {
-    1:8,
-    2:6,
-    3:4
+    1: 6,
+    2: 4,
+    3: 2,
   };
 }
 
@@ -104,8 +104,8 @@ class TipoMorado extends Tipo {
  
   @override
   Map<int, int> get puntuaciones => {
-    1: 8,
-    2: 6,
-    3: 4,
+    1: 6,
+    2: 4,
+    3: 2,
   };
 }
