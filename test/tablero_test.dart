@@ -61,11 +61,14 @@ void main() {
       expect(tablero.agregar(const Coordenada(2, 0), 1), isTrue);
     });
 
-    test('verde conserva la regla existente de aceptar cualquier entero', () {
+    test('verde acepta valores de los dados y rechaza los demás', () {
       final tablero = tableroConTipo(TipoVerde());
-      expect(tablero.agregar(const Coordenada(0, 0), -1), isTrue);
-      expect(tablero.agregar(const Coordenada(1, 0), 99), isTrue);
-      expect(tablero.agregar(const Coordenada(2, 0), 99), isTrue);
+
+      expect(tablero.agregar(const Coordenada(0, 0), 1), isTrue);
+      expect(tablero.agregar(const Coordenada(1, 0), 6), isTrue);
+      expect(tablero.agregar(const Coordenada(2, 0), 0), isFalse);
+      expect(tablero.agregar(const Coordenada(2, 0), 7), isFalse);
+      expect(tablero.valorEn(const Coordenada(2, 0)), isNull);
     });
 
     test('no sobrescribe una casilla ocupada', () {

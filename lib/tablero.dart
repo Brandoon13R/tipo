@@ -44,19 +44,23 @@ class Tablero {
   int? valorEn(Coordenada coordenada) => _datos[coordenada];
 
   bool esPosibleAgregar(Coordenada coordenada, int valor) {
-    if (!contiene(coordenada) || _datos.containsKey(coordenada)) {
-      return false;
-    }
-    final region = regionEn(coordenada);
-    if (region == null) {
-      return false;
-    }
-    final actuales = <int>[
-      for (final posicion in region.coordenadas)
-        if (_datos.containsKey(posicion)) _datos[posicion]!,
-    ];
-    return region.tipo.esPosibleAgregar(actuales, valor);
+  if (valor < 1 ||
+      valor > 6 ||
+      !contiene(coordenada) ||
+      _datos.containsKey(coordenada)) {
+    return false;
   }
+
+  final region = regionEn(coordenada);
+  if (region == null) return false;
+
+  final actuales = <int>[
+    for (final posicion in region.coordenadas)
+      if (_datos.containsKey(posicion)) _datos[posicion]!,
+  ];
+
+  return region.tipo.esPosibleAgregar(actuales, valor);
+}
 
   /// Rechaza una jugada inválida sin modificar los datos existentes.
   bool agregar(Coordenada coordenada, int valor) {
