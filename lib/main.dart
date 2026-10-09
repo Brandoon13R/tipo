@@ -116,7 +116,7 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
                           'Prueba el otro dado o pulsa Omitir.'
                       : 'Toca una casilla iluminada para colocar '
                           '${juego.valorAColocar}.'
-              : 'Tira los dados para comenzar la siguiente jugada.',
+              : 'Elige un dado como pivote.',
           key: const ValueKey('instruccion-turno'),
         ),
         const SizedBox(height: 12),
@@ -156,14 +156,6 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
         const SizedBox(height: 10),
         Row(
           children: [
-            Expanded(
-              child: FilledButton(
-                key: const ValueKey('tirar'),
-                onPressed: pendientes ? null : juego.tirar,
-                child: const Text('Tirar dados'),
-              ),
-            ),
-            const SizedBox(width: 10),
             Expanded(
               child: OutlinedButton(
                 key: const ValueKey('omitir'),

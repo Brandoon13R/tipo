@@ -8,7 +8,9 @@ import 'package:tipo/tablero.dart';
 /// Maneja una tirada pendiente y calcula movimientos legales desde el tablero.
 class JuegoBloc {
   JuegoBloc(this.tablero, {int Function(int max)? siguiente})
-      : _siguiente = siguiente ?? Random().nextInt;
+      : _siguiente = siguiente ?? Random().nextInt {
+    _tirar();
+  }
 
   final Tablero tablero;
   final int Function(int max) _siguiente;
@@ -33,9 +35,8 @@ class JuegoBloc {
       ? null
       : (_pivote == 0 ? _dadoB : _dadoA);
 
-  /// Dos dados de seis valores (1–6). No cambia una tirada aún pendiente.
-  void tirar() {
-    if (tiradaPendiente) throw StateError('Resuelve u omite la tirada actual.');
+  /// Genera dos dados al iniciar y después de resolver cada turno.
+  void _tirar() {
     _dadoA = _siguiente(6) + 1;
     _dadoB = _siguiente(6) + 1;
     _pivote = null;
@@ -91,10 +92,7 @@ class JuegoBloc {
   }
 
   void _terminarTirada() {
-    _dadoA = null;
-    _dadoB = null;
-    _pivote = null;
-    _notificar();
+    _tirar();
   }
 
   void _notificar() => _cambios.add(++_revision);

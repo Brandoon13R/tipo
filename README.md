@@ -11,7 +11,7 @@ Interfaz Flutter para la selección de los seis números iniciales y las primera
 4. Pulsa **Inicio** para guardar los valores en el modelo Tablero.
    Se muestra una confirmación con las coordenadas y se bloquea la selección.
 
-Después de Inicio puedes tirar dos dados con valores 1–6. Toca uno como pivote: se iluminan las casillas vacías adyacentes por un lado a cualquier ficha con ese número que aceptan el valor del otro dado según la regla de su región. Puedes elegir el otro pivote, tocar una casilla iluminada para jugar, u omitir la tirada. Omitir descarta ambos valores y habilita otra tirada, incluso si existía una jugada posible (opción solicitada). Los números y contadores se conservan en memoria mientras la pantalla está abierta. Aún no hay puntuación ni gestión multijugador.
+Al pulsar Inicio se lanzan automáticamente dos dados con valores 1–6. Toca uno como pivote: se iluminan las casillas vacías adyacentes por un lado a cualquier ficha con ese número que aceptan el valor del otro dado según la regla de su región. Puedes elegir el otro pivote, tocar una casilla iluminada para jugar, u omitir la tirada. Omitir descarta ambos valores y lanza automáticamente el siguiente par, incluso si existía una jugada posible. Después de colocar un número también se lanzan los dados para el siguiente turno. Reiniciar permite volver a elegir los números iniciales. Los números y contadores se conservan en memoria mientras la pantalla está abierta. Las zonas completadas otorgan una vez el premio de primer lugar y la tabla muestra el total. La partida es individual.
 
 ## Estructura
 

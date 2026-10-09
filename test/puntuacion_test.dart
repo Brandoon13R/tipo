@@ -21,7 +21,7 @@ void main() {
     final juego = JuegoBloc(tablero, siguiente: (_) => 0);
     addTearDown(juego.dispose);
     expect(juego.puntos, 0);
-    juego.tirar(); // 1 y 1.
+    expect([juego.dadoA, juego.dadoB], [1, 1]);
     juego.elegirPivote(0);
     expect(juego.colocar(const Coordenada(2, 1)), isTrue);
     expect(juego.puntos, 7);
@@ -29,8 +29,8 @@ void main() {
 
     juego.puntuacion.revisarZonasCompletadas();
     expect(juego.puntos, 7);
-    juego.tirar();
     juego.omitir();
+    expect(juego.tiradaPendiente, isTrue);
     expect(juego.puntos, 7);
   });
 

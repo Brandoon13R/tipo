@@ -55,18 +55,20 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(SimpleDialog), findsNothing);
     expect(tester.takeException(), isNull);
-    final tirar = find.byKey(const ValueKey('tirar'));
-    await tester.ensureVisible(tirar);
-    await tester.tap(tirar);
-    await tester.pump();
-    expect(tester.widget<FilledButton>(tirar).onPressed, isNull);
-    await tester.tap(find.byKey(const ValueKey('dado-0')));
+    expect(find.byKey(const ValueKey('tirar')), findsNothing);
+    final dado = find.byKey(const ValueKey('dado-0'));
+    expect(tester.widget<OutlinedButton>(dado).onPressed, isNotNull);
+    await tester.ensureVisible(dado);
+    await tester.tap(dado);
     await tester.pump();
     expect(find.byKey(const ValueKey('instruccion-turno')), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('omitir')));
     await tester.pump();
-    expect(tester.widget<FilledButton>(tirar).onPressed, isNotNull);
+    expect(tester.widget<OutlinedButton>(dado).onPressed, isNotNull);
     expect(find.text('Jugadas: 0 · Omitidas: 1'), findsOneWidget);
+    final valor = tester.widget<OutlinedButton>(dado).child! as Text;
+    expect(valor.data, isNot('–'));
+    expect(find.byKey(const ValueKey('reiniciar')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
