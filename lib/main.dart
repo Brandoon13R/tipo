@@ -232,7 +232,13 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
             children: [
               Expanded(child: tableroVisual),
               const SizedBox(width: 12),
-              SizedBox(width: 205, child: TablaPuntos()),
+              SizedBox(
+                width: 205,
+                child: TablaPuntos(
+                  puntos: juego!.puntos,
+                  obtenidos: juego.puntosPorZona,
+                ),
+              ),
             ],
           );
         }
