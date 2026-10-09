@@ -56,9 +56,9 @@ void main() {
       expect(tipo.color, const Color(0xFFF44336));
       expect(tipo.descripcion, 'Todos los números deben de ser distintos');
       expect(tipo.puntuaciones, {
-        1: 8,
-        2: 6,
-        3: 4,
+        1: 6,
+        2: 4,
+        3: 2,
       });
     });
 
@@ -101,9 +101,9 @@ void main() {
       expect(tipo.color, const Color(0xFF9C27B0));
       expect(tipo.descripcion, 'Máximo dos números diferentes por zona');
       expect(tipo.puntuaciones, {
-        1: 8,
-        2: 6,
-        3: 4,
+        1: 6,
+        2: 4,
+        3: 2,
       });
     });
 
