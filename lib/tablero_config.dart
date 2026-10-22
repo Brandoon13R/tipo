@@ -367,6 +367,7 @@ class Nivel2Config extends NivelConfig {
       [
         const Coordenada(5, 2),
         const Coordenada(4, 3),
+        const Coordenada(4, 4),
         const Coordenada(5, 3),
         const Coordenada(6, 3),
         const Coordenada(5, 4),
@@ -400,7 +401,6 @@ class Nivel2Config extends NivelConfig {
         const Coordenada(4, 2),
         const Coordenada(2, 4),
         const Coordenada(3, 4),
-        const Coordenada(4, 4),
         const Coordenada(2, 5),
         const Coordenada(3, 5),
         const Coordenada(4, 5),
