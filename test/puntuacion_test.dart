@@ -7,32 +7,34 @@ import 'package:tipo/tablero_config.dart';
 import 'package:tipo/tabla_puntos.dart';
 
 void main() {
-  test('una jugada que completa azul suma el primer premio una sola vez',
-      () async {
-    final tablero = TableroConfig.crearTablero();
-    for (final posicion in [
-      const Coordenada(2, 0),
-      const Coordenada(3, 1),
-      const Coordenada(3, 2),
-    ]) {
-      expect(tablero.agregar(posicion, 1), isTrue);
-    }
+  test(
+    'una jugada que completa azul suma el primer premio una sola vez',
+    () async {
+      final tablero = TableroConfig.crearTablero();
+      for (final posicion in [
+        const Coordenada(2, 0),
+        const Coordenada(3, 1),
+        const Coordenada(3, 2),
+      ]) {
+        expect(tablero.agregar(posicion, 1), isTrue);
+      }
 
-    final juego = JuegoBloc(tablero, siguiente: (_) => 0);
-    addTearDown(juego.dispose);
-    expect(juego.puntos, 0);
-    expect([juego.dadoA, juego.dadoB], [1, 1]);
-    juego.elegirPivote(0);
-    expect(juego.colocar(const Coordenada(2, 1)), isTrue);
-    expect(juego.puntos, 7);
-    expect(juego.puntosPorZona['azul_superior'], 7);
+      final juego = JuegoBloc(tablero, siguiente: (_) => 0);
+      addTearDown(juego.dispose);
+      expect(juego.puntos, 0);
+      expect([juego.dadoA, juego.dadoB], [1, 1]);
+      juego.elegirPivote(0);
+      expect(juego.colocar(const Coordenada(2, 1)), isTrue);
+      expect(juego.puntos, 7);
+      expect(juego.puntosPorZona['azul_superior'], 7);
 
-    juego.puntuacion.revisarZonasCompletadas();
-    expect(juego.puntos, 7);
-    juego.omitir();
-    expect(juego.tiradaPendiente, isTrue);
-    expect(juego.puntos, 7);
-  });
+      juego.puntuacion.revisarZonasCompletadas();
+      expect(juego.puntos, 7);
+      juego.omitir();
+      expect(juego.tiradaPendiente, isTrue);
+      expect(juego.puntos, 7);
+    },
+  );
 
   test('amarillo premia una sola vez al ocupar sus cinco casillas', () {
     final tablero = TableroConfig.crearTablero();
@@ -53,8 +55,9 @@ void main() {
   test('las dos zonas verdes puntúan por separado al completarse', () {
     final tablero = TableroConfig.crearTablero();
     final puntuacion = PuntuacionPartida(tablero);
-    final verdes = premiosZonas.where((zona) =>
-        zona.id == 'verde_izquierdo' || zona.id == 'verde_derecho');
+    final verdes = premiosZonas.where(
+      (zona) => zona.id == 'verde_izquierdo' || zona.id == 'verde_derecho',
+    );
 
     for (final zona in verdes) {
       expect(zona.posicionesEn(tablero), hasLength(6));
@@ -74,10 +77,7 @@ void main() {
         home: Scaffold(
           body: SizedBox(
             width: 205,
-            child: TablaPuntos(
-              puntos: 7,
-              obtenidos: {'azul_superior': 7},
-            ),
+            child: TablaPuntos(puntos: 7, obtenidos: {'azul_superior': 7}),
           ),
         ),
       ),

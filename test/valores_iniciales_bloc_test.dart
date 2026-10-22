@@ -14,10 +14,7 @@ void main() {
 
   void completar(List<int> numeros) {
     for (var i = 0; i < numeros.length; i++) {
-      bloc.actualizar(
-        ValoresInicialesBloc.regiones[i],
-        numeros[i].toString(),
-      );
+      bloc.actualizar(ValoresInicialesBloc.regiones[i], numeros[i].toString());
     }
   }
 
@@ -68,10 +65,7 @@ void main() {
   test('bloquea de nuevo cuando se borra un dato', () async {
     completar([1, 2, 3, 4, 5, 6]);
 
-    final notificacion = expectLater(
-      bloc.cambios,
-      emits(false),
-    );
+    final notificacion = expectLater(bloc.cambios, emits(false));
 
     bloc.actualizar('Región 3', '');
 
@@ -83,10 +77,7 @@ void main() {
     completar([1, 2, 3, 4, 5, 6]);
     final guardados = bloc.confirmar();
 
-    expect(
-      () => guardados['Región 1'] = 6,
-      throwsUnsupportedError,
-    );
+    expect(() => guardados['Región 1'] = 6, throwsUnsupportedError);
 
     bloc.actualizar('Región 1', '');
 

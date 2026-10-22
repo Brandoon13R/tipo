@@ -3,11 +3,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tipo/main.dart';
 
 void main() {
-  testWidgets('selecciona seis números, bloquea duplicados y confirma Inicio',
-      (tester) async {
+  testWidgets('selecciona seis números, bloquea duplicados y confirma Inicio', (
+    tester,
+  ) async {
     await tester.binding.setSurfaceSize(const Size(800, 1200));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(const MainApp());
+    await tester.tap(find.byKey(const ValueKey('seleccionar-nivel_1')));
+    await tester.pumpAndSettle();
 
     FilledButton boton() => tester.widget(find.byKey(const ValueKey('inicio')));
 
@@ -16,7 +19,9 @@ void main() {
       await tester.ensureVisible(celda);
       await tester.tap(celda);
       await tester.pumpAndSettle();
-      final opcion = find.byKey(ValueKey(numero == 0 ? 'borrar' : 'opcion-$numero'));
+      final opcion = find.byKey(
+        ValueKey(numero == 0 ? 'borrar' : 'opcion-$numero'),
+      );
       await tester.ensureVisible(opcion);
       await tester.tap(opcion);
       await tester.pumpAndSettle();
@@ -36,8 +41,10 @@ void main() {
     expect(boton().onPressed, isNull);
     await elegir(4, 6, 5);
     expect(boton().onPressed, isNull);
-    expect(find.text('Hay números repetidos. Usa cada número una sola vez.'),
-        findsOneWidget);
+    expect(
+      find.text('Hay números repetidos. Usa cada número una sola vez.'),
+      findsOneWidget,
+    );
     await elegir(4, 6, 6);
     expect(boton().onPressed, isNotNull);
 
@@ -72,11 +79,14 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('49 celdas cuadradas sin desbordamiento a 360 px',
-      (tester) async {
+  testWidgets('49 celdas cuadradas sin desbordamiento a 360 px', (
+    tester,
+  ) async {
     await tester.binding.setSurfaceSize(const Size(360, 800));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(const MainApp());
+    await tester.tap(find.byKey(const ValueKey('seleccionar-nivel_1')));
+    await tester.pumpAndSettle();
     for (var y = 0; y < 7; y++) {
       for (var x = 0; x < 7; x++) {
         final celda = find.byKey(ValueKey('celda-$x-$y'));

@@ -9,11 +9,7 @@ void main() {
 
       expect(tipo.color, const Color(0xFF0000FF));
       expect(tipo.descripcion, 'Todos los números deben ser iguales');
-      expect(tipo.puntuaciones, {
-        1: 7,
-        2: 5,
-        3: 3,
-      });
+      expect(tipo.puntuaciones, {1: 7, 2: 5, 3: 3});
     });
 
     test('solo acepta elementos iguales o una lista vacía', () {
@@ -32,11 +28,7 @@ void main() {
 
       expect(tipo.color, Colors.yellow);
       expect(tipo.descripcion, 'Todos los números deben de ser distintos');
-      expect(tipo.puntuaciones, {
-        1: 8,
-        2: 6,
-        3: 4,
-      });
+      expect(tipo.puntuaciones, {1: 8, 2: 6, 3: 4});
     });
 
     test('solo permite agregar un número que aún no existe en la lista', () {
@@ -55,11 +47,7 @@ void main() {
 
       expect(tipo.color, const Color(0xFFF44336));
       expect(tipo.descripcion, 'Todos los números deben de ser distintos');
-      expect(tipo.puntuaciones, {
-        1: 6,
-        2: 4,
-        3: 2,
-      });
+      expect(tipo.puntuaciones, {1: 6, 2: 4, 3: 2});
     });
 
     test('permite la lista vacía y rechaza duplicados', () {
@@ -78,11 +66,7 @@ void main() {
 
       expect(tipo.color, const Color(0xFF4CAF50));
       expect(tipo.descripcion, 'Se puede colocar cualquier número');
-      expect(tipo.puntuaciones, {
-        1: 4,
-        2: 3,
-        3: 2,
-      });
+      expect(tipo.puntuaciones, {1: 4, 2: 3, 3: 2});
     });
 
     test('siempre permite agregar cualquier valor', () {
@@ -100,11 +84,7 @@ void main() {
 
       expect(tipo.color, const Color(0xFF9C27B0));
       expect(tipo.descripcion, 'Máximo dos números diferentes por zona');
-      expect(tipo.puntuaciones, {
-        1: 6,
-        2: 4,
-        3: 2,
-      });
+      expect(tipo.puntuaciones, {1: 6, 2: 4, 3: 2});
     });
 
     test('permite hasta dos números distintos en la zona', () {

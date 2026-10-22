@@ -1,7 +1,9 @@
 import 'package:tipo/region.dart';
+import 'package:tipo/nivel_config.dart';
 
 /// Almacena las jugadas en memoria y aplica las reglas de cada región.
 class Tablero {
+  final NivelConfig? config;
   final int filas;
   final int columnas;
   final List<Region> regiones;
@@ -9,6 +11,7 @@ class Tablero {
   final Map<Coordenada, int> _datos = {};
 
   Tablero({
+    this.config,
     required this.filas,
     required this.columnas,
     required Iterable<Region> regiones,
@@ -19,7 +22,9 @@ class Tablero {
     for (final region in this.regiones) {
       for (final coordenada in region.coordenadas) {
         if (!contiene(coordenada)) {
-          throw ArgumentError('La coordenada $coordenada está fuera del tablero.');
+          throw ArgumentError(
+            'La coordenada $coordenada está fuera del tablero.',
+          );
         }
         if (_regionPorCoordenada.containsKey(coordenada)) {
           throw ArgumentError('Las regiones no deben compartir coordenadas.');
@@ -28,6 +33,13 @@ class Tablero {
       }
     }
   }
+
+  factory Tablero.desdeConfig(NivelConfig config) => Tablero(
+    config: config,
+    filas: config.matriz.length,
+    columnas: config.matriz.first.length,
+    regiones: config.regionesDeJuego,
+  );
 
   /// Copia de solo lectura de las casillas ocupadas.
   Map<Coordenada, int> get datos => Map<Coordenada, int>.unmodifiable(_datos);
@@ -44,23 +56,32 @@ class Tablero {
   int? valorEn(Coordenada coordenada) => _datos[coordenada];
 
   bool esPosibleAgregar(Coordenada coordenada, int valor) {
-  if (valor < 1 ||
-      valor > 6 ||
-      !contiene(coordenada) ||
-      _datos.containsKey(coordenada)) {
-    return false;
+    if (valor < 1 ||
+        valor > 6 ||
+        !contiene(coordenada) ||
+        _datos.containsKey(coordenada)) {
+      return false;
+    }
+
+    final region = regionEn(coordenada);
+    if (region == null) return false;
+
+    final actuales = <int>[
+      for (final posicion in region.coordenadas)
+        if (_datos.containsKey(posicion)) _datos[posicion]!,
+    ];
+
+    final tipo = region.tipo;
+    if (tipo is ReglaXO) {
+      return tipo.esPosibleAgregarEn(
+        actuales: _datos,
+        coordenada: coordenada,
+        posible: valor,
+        coordenadasRegion: region.coordenadas,
+      );
+    }
+    return region.tipo.esPosibleAgregar(actuales, valor);
   }
-
-  final region = regionEn(coordenada);
-  if (region == null) return false;
-
-  final actuales = <int>[
-    for (final posicion in region.coordenadas)
-      if (_datos.containsKey(posicion)) _datos[posicion]!,
-  ];
-
-  return region.tipo.esPosibleAgregar(actuales, valor);
-}
 
   /// Rechaza una jugada inválida sin modificar los datos existentes.
   bool agregar(Coordenada coordenada, int valor) {

@@ -3,6 +3,7 @@ import 'package:tipo/tablero.dart';
 import 'package:tipo/region.dart';
 import 'package:tipo/juego_bloc.dart';
 import 'package:tipo/tablero_config.dart';
+import 'package:tipo/nivel_config.dart';
 import 'package:tipo/tabla_puntos.dart';
 import 'package:tipo/valores_iniciales_bloc.dart';
 
@@ -13,30 +14,96 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF193E37),
+    debugShowCheckedModeBanner: false,
+    theme: ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF193E37)),
+      scaffoldBackgroundColor: const Color(0xFFF4F7F4),
+    ),
+    home: const SeleccionNivelPage(),
+  );
+}
+
+class SeleccionNivelPage extends StatelessWidget {
+  const SeleccionNivelPage({super.key});
+
+  void _seleccionar(BuildContext context, NivelConfig config) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ValoresInicialesPage(config: config),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: SafeArea(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Icon(
+                  Icons.grid_view_rounded,
+                  size: 48,
+                  color: Color(0xFF193E37),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'BRILLIANT',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    letterSpacing: 3,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 24,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                for (final config in [Nivel1Config(), Nivel2Config()]) ...[
+                  FilledButton(
+                    key: ValueKey('seleccionar-${config.id}'),
+                    onPressed: () => _seleccionar(context, config),
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Text(config.nombre),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ],
+            ),
           ),
-          scaffoldBackgroundColor: const Color(0xFFF4F7F4),
         ),
-        home: const ValoresInicialesPage(),
-      );
+      ),
+    ),
+  );
 }
 
 class ValoresInicialesPage extends StatefulWidget {
-  const ValoresInicialesPage({super.key});
+  const ValoresInicialesPage({super.key, this.config});
+
+  final NivelConfig? config;
 
   @override
-  State<ValoresInicialesPage> createState() =>
-      _ValoresInicialesPageState();
+  State<ValoresInicialesPage> createState() => _ValoresInicialesPageState();
 }
 
 class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
-  final _bloc = ValoresInicialesBloc();
+  late final NivelConfig _config;
+  late final ValoresInicialesBloc _bloc;
   Tablero? _tableroIniciado;
   JuegoBloc? _juego;
+
+  @override
+  void initState() {
+    super.initState();
+    _config = widget.config ?? Nivel1Config();
+    _bloc = ValoresInicialesBloc(regiones: _config.iniciales.keys.toList());
+  }
 
   Future<void> _elegir(String region) async {
     if (_tableroIniciado != null) return;
@@ -48,9 +115,7 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Text(
-              'Actual: ${_bloc.valores[region] ?? "sin asignar"}',
-            ),
+            child: Text('Actual: ${_bloc.valores[region] ?? "sin asignar"}'),
           ),
           for (var numero = 1; numero <= 6; numero++)
             SimpleDialogOption(
@@ -75,13 +140,10 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
     if (_tableroIniciado != null || !_bloc.puedeContinuar) return;
 
     final datos = _bloc.confirmar();
-    final tablero = TableroConfig.crearTablero();
+    final tablero = Tablero.desdeConfig(_config);
 
     for (final entrada in datos.entries) {
-      if (!tablero.agregar(
-        TableroConfig.iniciales[entrada.key]!,
-        entrada.value,
-      )) {
+      if (!tablero.agregar(_config.iniciales[entrada.key]!, entrada.value)) {
         throw StateError(
           'Configuración inicial incompatible con las regiones.',
         );
@@ -110,11 +172,11 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
         Text(
           pendientes
               ? pivote == null
-                  ? 'Elige un dado como pivote. Colocarás el valor del otro.'
-                  : posibles == 0
-                      ? 'No hay casillas válidas con ese pivote. '
+                    ? 'Elige un dado como pivote. Colocarás el valor del otro.'
+                    : posibles == 0
+                    ? 'No hay casillas válidas con ese pivote. '
                           'Prueba el otro dado o pulsa Omitir.'
-                      : 'Toca una casilla iluminada para colocar '
+                    : 'Toca una casilla iluminada para colocar '
                           '${juego.valorAColocar}.'
               : 'Elige un dado como pivote.',
           key: const ValueKey('instruccion-turno'),
@@ -127,9 +189,7 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
               Expanded(
                 child: OutlinedButton(
                   key: ValueKey('dado-$i'),
-                  onPressed: pendientes
-                      ? () => juego.elegirPivote(i)
-                      : null,
+                  onPressed: pendientes ? () => juego.elegirPivote(i) : null,
                   style: OutlinedButton.styleFrom(
                     backgroundColor: pivote == i
                         ? const Color(0xFFD4F4D8)
@@ -201,6 +261,7 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
       habilitado: !iniciado,
       onSeleccionar: _elegir,
       tablero: juego?.tablero,
+      config: _config,
       iluminadas: juego?.casillasIluminadas ?? const {},
       onJugar: juego?.colocar,
     );
@@ -229,6 +290,7 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
                 child: TablaPuntos(
                   puntos: juego!.puntos,
                   obtenidos: juego.puntosPorZona,
+                  config: _config,
                 ),
               ),
             ],
@@ -240,15 +302,16 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
             tableroVisual,
             const SizedBox(height: 12),
             TablaPuntos(
-                puntos: juego!.puntos,
-                obtenidos: juego.puntosPorZona,
-              ),
+              puntos: juego!.puntos,
+              obtenidos: juego.puntosPorZona,
+              config: _config,
+            ),
           ],
         );
       },
     );
   }
-  
+
   @override
   void dispose() {
     _bloc.dispose();
@@ -258,158 +321,150 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1000),
-                child: StreamBuilder<bool>(
-                  stream: _bloc.cambios,
-                  initialData: _bloc.puedeContinuar,
-                  builder: (context, snapshot) {
-                    final valores = _bloc.valores;
-                    final cantidad =
-                        valores.values.whereType<int>().length;
-                    final iniciado = _tableroIniciado != null;
-                    final completos = snapshot.data ?? false;
+    body: SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1000),
+            child: StreamBuilder<bool>(
+              stream: _bloc.cambios,
+              initialData: _bloc.puedeContinuar,
+              builder: (context, snapshot) {
+                final valores = _bloc.valores;
+                final cantidad = valores.values.whereType<int>().length;
+                final iniciado = _tableroIniciado != null;
+                final completos = snapshot.data ?? false;
 
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
                       children: [
-                        const Row(
-                          children: [
-                            Icon(
-                              Icons.grid_view_rounded,
-                              color: Color(0xFF193E37),
-                            ),
-                            SizedBox(width: 10),
-                            Text(
-                              'BRILLIANT',
-                              style: TextStyle(
-                                letterSpacing: 2,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            Spacer(),
-                            Text('7 × 7'),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        const Text(
-                          'Mapa de colores',
+                        Icon(Icons.grid_view_rounded, color: Color(0xFF193E37)),
+                        SizedBox(width: 10),
+                        Text(
+                          'BRILLIANT',
                           style: TextStyle(
-                            fontSize: 28,
+                            letterSpacing: 2,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF193E37),
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Toca las seis casillas con + y distribuye '
-                          'los números del 1 al 6 sin repetir.',
-                        ),
-                        const SizedBox(height: 20),
-                        StreamBuilder<int>(
-                          stream: _juego?.cambios,
-                          initialData: 0,
-                          builder: (context, _) {
-                            final juego = _juego;
-                            return Column(
-                              children: [
-                                _tableroConPuntos(
-                                  valores: valores,
-                                  iniciado: iniciado,
-                                  juego: juego,
-                                ),
-                                if (juego != null) ...[
-                                  const SizedBox(height: 18),
-                                  _controlesJuego(juego),
-                                ],
-                              ],
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 20),
+                        Spacer(),
                         Text(
-                          '$cantidad DE 6 NÚMEROS COLOCADOS',
-                          key: const ValueKey('progreso'),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          '${_config.matriz.first.length} × ${_config.matriz.length}',
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          iniciado
-                              ? 'Datos iniciales guardados en el tablero.'
-                              : completos
-                                  ? 'Todo listo. Puedes pulsar Inicio.'
-                                  : cantidad == 6
-                                      ? 'Hay números repetidos. '
-                                          'Usa cada número una sola vez.'
-                                      : 'Completa las seis casillas '
-                                          'para habilitar Inicio.',
-                          key: const ValueKey('estado'),
-                        ),
-                        const SizedBox(height: 20),
-                        Wrap(
-                          spacing: 14,
-                          runSpacing: 8,
-                          children: [
-                            for (final color in ColorCasilla.values)
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    width: 9,
-                                    height: 9,
-                                    decoration: BoxDecoration(
-                                      color: color.color,
-                                      borderRadius:
-                                          BorderRadius.circular(2),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 5),
-                                  Text(
-                                    color.nombre,
-                                    style: const TextStyle(fontSize: 12),
-                                  ),
-                                ],
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        FilledButton(
-                          key: const ValueKey('inicio'),
-                          onPressed: completos && !iniciado
-                              ? _iniciar
-                              : null,
-                          child: const Text('Inicio'),
-                        ),
-                        if (iniciado) ...[
-                          const SizedBox(height: 16),
-                          const Text(
-                            'Selección inicial confirmada',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          for (final entrada
-                              in TableroConfig.iniciales.entries)
-                            Text(
-                              '${entrada.key} · '
-                              'fila ${entrada.value.y + 1}, '
-                              'columna ${entrada.value.x + 1}: '
-                              '${_tableroIniciado!.valorEn(entrada.value)}',
-                            ),
-                        ],
                       ],
-                    );
-                  },
-                ),
-              ),
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Mapa de colores',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF193E37),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Toca las seis casillas con + y distribuye '
+                      'los números del 1 al 6 sin repetir.',
+                    ),
+                    const SizedBox(height: 20),
+                    StreamBuilder<int>(
+                      stream: _juego?.cambios,
+                      initialData: 0,
+                      builder: (context, _) {
+                        final juego = _juego;
+                        return Column(
+                          children: [
+                            _tableroConPuntos(
+                              valores: valores,
+                              iniciado: iniciado,
+                              juego: juego,
+                            ),
+                            if (juego != null) ...[
+                              const SizedBox(height: 18),
+                              _controlesJuego(juego),
+                            ],
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      '$cantidad DE 6 NÚMEROS COLOCADOS',
+                      key: const ValueKey('progreso'),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      iniciado
+                          ? 'Datos iniciales guardados en el tablero.'
+                          : completos
+                          ? 'Todo listo. Puedes pulsar Inicio.'
+                          : cantidad == 6
+                          ? 'Hay números repetidos. '
+                                'Usa cada número una sola vez.'
+                          : 'Completa las seis casillas '
+                                'para habilitar Inicio.',
+                      key: const ValueKey('estado'),
+                    ),
+                    const SizedBox(height: 20),
+                    Wrap(
+                      spacing: 14,
+                      runSpacing: 8,
+                      children: [
+                        for (final color in ColorCasilla.values)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 9,
+                                height: 9,
+                                decoration: BoxDecoration(
+                                  color: color.color,
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                color.nombre,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    FilledButton(
+                      key: const ValueKey('inicio'),
+                      onPressed: completos && !iniciado ? _iniciar : null,
+                      child: const Text('Inicio'),
+                    ),
+                    if (iniciado) ...[
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Selección inicial confirmada',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      for (final entrada in _config.iniciales.entries)
+                        Text(
+                          '${entrada.key} · '
+                          'fila ${entrada.value.y + 1}, '
+                          'columna ${entrada.value.x + 1}: '
+                          '${_tableroIniciado!.valorEn(entrada.value)}',
+                        ),
+                    ],
+                  ],
+                );
+              },
             ),
           ),
         ),
-      );
+      ),
+    ),
+  );
 }
 
 /// Componente reutilizable: 49 cuadrados y un espacio uniforme de 6 px.
@@ -419,6 +474,7 @@ class TableroVisual extends StatelessWidget {
     required this.valores,
     required this.habilitado,
     required this.onSeleccionar,
+    required this.config,
     this.tablero,
     this.iluminadas = const {},
     this.onJugar,
@@ -427,35 +483,31 @@ class TableroVisual extends StatelessWidget {
   final Map<String, int?> valores;
   final bool habilitado;
   final ValueChanged<String> onSeleccionar;
+  final NivelConfig config;
   final Tablero? tablero;
   final Set<Coordenada> iluminadas;
   final ValueChanged<Coordenada>? onJugar;
 
   @override
   Widget build(BuildContext context) => Column(
-        children: [
-          for (var y = 0; y < 7; y++) ...[
-            if (y > 0) const SizedBox(height: 6),
-            Row(
-              children: [
-                for (var x = 0; x < 7; x++) ...[
-                  if (x > 0) const SizedBox(width: 6),
-                  Expanded(
-                    child: AspectRatio(
-                      aspectRatio: 1,
-                      child: _celda(x, y),
-                    ),
-                  ),
-                ],
-              ],
-            ),
+    children: [
+      for (var y = 0; y < config.matriz.length; y++) ...[
+        if (y > 0) const SizedBox(height: 6),
+        Row(
+          children: [
+            for (var x = 0; x < config.matriz[y].length; x++) ...[
+              if (x > 0) const SizedBox(width: 6),
+              Expanded(child: AspectRatio(aspectRatio: 1, child: _celda(x, y))),
+            ],
           ],
-        ],
-      );
+        ),
+      ],
+    ],
+  );
 
   Widget _celda(int x, int y) {
     String? region;
-    for (final entrada in TableroConfig.iniciales.entries) {
+    for (final entrada in config.iniciales.entries) {
       if (entrada.value.x == x && entrada.value.y == y) {
         region = entrada.key;
       }
@@ -465,15 +517,14 @@ class TableroVisual extends StatelessWidget {
     final posicion = Coordenada(x, y);
     final destacada = iluminadas.contains(posicion);
     final numero = tablero?.valorEn(posicion) ?? valores[region];
-    final color = TableroConfig.matriz[y][x];
+    final color = config.matriz[y][x];
 
-    final etiqueta = 'Fila ${y + 1}, columna ${x + 1}, ${color.nombre}'
+    final etiqueta =
+        'Fila ${y + 1}, columna ${x + 1}, ${color.nombre}'
         '${region == null ? "" : ", $region, número ${numero ?? "sin asignar"}"}';
 
     return Semantics(
-      label: destacada
-          ? '$etiqueta, disponible para colocar'
-          : etiqueta,
+      label: destacada ? '$etiqueta, disponible para colocar' : etiqueta,
       button: region != null,
       child: Tooltip(
         message: etiqueta,
@@ -488,8 +539,8 @@ class TableroVisual extends StatelessWidget {
               color: destacada
                   ? Colors.white
                   : region != null
-                      ? const Color(0xFF193E37)
-                      : Colors.transparent,
+                  ? const Color(0xFF193E37)
+                  : Colors.transparent,
               width: destacada ? 3 : 2,
             ),
           ),
@@ -498,8 +549,8 @@ class TableroVisual extends StatelessWidget {
             onTap: destacada && onJugar != null
                 ? () => onJugar!(posicion)
                 : habilitado && seleccionable != null
-                    ? () => onSeleccionar(seleccionable)
-                    : null,
+                ? () => onSeleccionar(seleccionable)
+                : null,
             child: Center(
               child: numero != null
                   ? Text(
@@ -511,18 +562,14 @@ class TableroVisual extends StatelessWidget {
                       ),
                     )
                   : destacada
-                      ? const Icon(
-                          Icons.add_circle_outline,
-                          size: 22,
-                          color: Color(0xFF102A25),
-                        )
-                      : region != null
-                          ? const Icon(
-                              Icons.add,
-                              size: 18,
-                              color: Color(0xFF193E37),
-                            )
-                          : const SizedBox.shrink(),
+                  ? const Icon(
+                      Icons.add_circle_outline,
+                      size: 22,
+                      color: Color(0xFF102A25),
+                    )
+                  : region != null
+                  ? const Icon(Icons.add, size: 18, color: Color(0xFF193E37))
+                  : const SizedBox.shrink(),
             ),
           ),
         ),

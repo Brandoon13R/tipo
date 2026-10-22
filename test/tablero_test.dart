@@ -4,19 +4,19 @@ import 'package:tipo/tablero.dart';
 import 'package:tipo/tipo.dart';
 
 Tablero tableroConTipo(Tipo tipo) => Tablero(
-      filas: 1,
-      columnas: 3,
-      regiones: [
-        Region(
-          tipo: tipo,
-          coordenadas: [
-            const Coordenada(0, 0),
-            const Coordenada(1, 0),
-            const Coordenada(2, 0),
-          ],
-        ),
+  filas: 1,
+  columnas: 3,
+  regiones: [
+    Region(
+      tipo: tipo,
+      coordenadas: [
+        const Coordenada(0, 0),
+        const Coordenada(1, 0),
+        const Coordenada(2, 0),
       ],
-    );
+    ),
+  ],
+);
 
 void main() {
   group('Tablero', () {
@@ -163,10 +163,7 @@ void main() {
       expect(tablero.regiones, hasLength(1));
       expect(() => tablero.regiones.clear(), throwsUnsupportedError);
       final copia = tablero.datos;
-      expect(
-        () => copia[const Coordenada(0, 0)] = 8,
-        throwsUnsupportedError,
-      );
+      expect(() => copia[const Coordenada(0, 0)] = 8, throwsUnsupportedError);
       expect(tablero.agregar(const Coordenada(0, 0), 3), isTrue);
       expect(copia, isEmpty);
     });

@@ -10,9 +10,12 @@ class ValoresInicialesBloc {
     'Región 6',
   ];
 
-  final Map<String, int?> _valores = {
-    for (final region in regiones) region: null,
-  };
+  ValoresInicialesBloc({List<String> regiones = ValoresInicialesBloc.regiones})
+    : regionesIniciales = List<String>.unmodifiable(regiones),
+      _valores = {for (final region in regiones) region: null};
+
+  final List<String> regionesIniciales;
+  final Map<String, int?> _valores;
 
   final _cambiosController = StreamController<bool>.broadcast();
 
@@ -52,8 +55,7 @@ class ValoresInicialesBloc {
 
     // Devuelve una copia que no puede modificarse desde fuera.
     return Map<String, int>.unmodifiable({
-      for (final entrada in _valores.entries)
-        entrada.key: entrada.value!,
+      for (final entrada in _valores.entries) entrada.key: entrada.value!,
     });
   }
 

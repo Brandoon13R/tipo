@@ -1,21 +1,125 @@
+import 'package:flutter/material.dart';
 import 'package:tipo/tipo.dart';
 
 class Region {
+  final String id;
+  final String nombre;
   final Tipo tipo;
+  final Color color;
+  final List<int> puntos;
   final Set<Coordenada> coordenadas;
 
   Region({
+    this.id = 'region',
+    this.nombre = 'Región',
     required this.tipo,
     required Iterable<Coordenada> coordenadas,
-  }) : coordenadas = Set<Coordenada>.unmodifiable(coordenadas) {
+    Color? color,
+    Iterable<int> puntos = const [0, 0, 0],
+  }) : color = color ?? tipo.color,
+       puntos = List<int>.unmodifiable(puntos),
+       coordenadas = Set<Coordenada>.unmodifiable(coordenadas) {
     if (this.coordenadas.isEmpty) {
       throw ArgumentError('La región debe tener coordenadas.');
     }
+    if (this.puntos.isEmpty) {
+      throw ArgumentError('La región debe definir al menos un premio.');
+    }
   }
 
-  bool contiene(Coordenada coordenada) {
-    return coordenadas.contains(coordenada);
+  bool contiene(Coordenada coordenada) => coordenadas.contains(coordenada);
+}
+
+class ReglaDiferente extends Tipo {
+  ReglaDiferente({this.color = Colors.black});
+
+  @override
+  final Color color;
+
+  @override
+  String get descripcion => 'Los números no pueden repetirse';
+
+  @override
+  bool esPosibleAgregar(List<int> actuales, int posible) =>
+      !actuales.contains(posible);
+
+  @override
+  Map<int, int> get puntuaciones => const {1: 6, 2: 4, 3: 2};
+}
+
+class ReglaXO extends Tipo {
+  ReglaXO({this.color = Colors.black});
+
+  @override
+  final Color color;
+
+  @override
+  String get descripcion =>
+      'Las casillas ortogonalmente vecinas alternan paridad';
+
+  @override
+  bool esPosibleAgregar(List<int> actuales, int posible) =>
+      actuales.isEmpty || actuales.last.isEven != posible.isEven;
+
+  bool esPosibleAgregarEn({
+    required Map<Coordenada, int> actuales,
+    required Coordenada coordenada,
+    required int posible,
+    required Set<Coordenada> coordenadasRegion,
+  }) {
+    final posiciones = coordenadasRegion.toList();
+    final indice = posiciones.indexOf(coordenada);
+    if (indice < 0) return false;
+
+    for (final vecinoIndice in [indice - 1, indice + 1]) {
+      if (vecinoIndice < 0 || vecinoIndice >= posiciones.length) continue;
+      final valorVecino = actuales[posiciones[vecinoIndice]];
+      if (valorVecino != null && valorVecino.isEven == posible.isEven) {
+        return false;
+      }
+    }
+    return true;
   }
+
+  @override
+  Map<int, int> get puntuaciones => const {1: 6, 2: 4, 3: 2};
+}
+
+class ReglaIgual extends Tipo {
+  ReglaIgual({
+    this.color = Colors.black,
+    Map<int, int> premios = const {1: 7, 2: 5, 3: 3},
+  }) : _premios = premios;
+
+  @override
+  final Color color;
+  final Map<int, int> _premios;
+
+  @override
+  String get descripcion => 'Todos los números deben ser iguales';
+
+  @override
+  bool esPosibleAgregar(List<int> actuales, int posible) =>
+      actuales.isEmpty || actuales.every((valor) => valor == posible);
+
+  @override
+  Map<int, int> get puntuaciones => Map<int, int>.unmodifiable(_premios);
+}
+
+class ReglaCualquiera extends Tipo {
+  ReglaCualquiera({this.color = Colors.black});
+
+  @override
+  final Color color;
+
+  @override
+  String get descripcion => 'Acepta cualquier número del 1 al 6';
+
+  @override
+  bool esPosibleAgregar(List<int> actuales, int posible) => true;
+
+  @override
+  Map<int, int> get puntuaciones => const {1: 4, 2: 3, 3: 2};
 }
 
 class Coordenada {
@@ -25,9 +129,8 @@ class Coordenada {
   const Coordenada(this.x, this.y);
 
   @override
-  bool operator ==(Object other) {
-    return other is Coordenada && x == other.x && y == other.y;
-  }
+  bool operator ==(Object other) =>
+      other is Coordenada && x == other.x && y == other.y;
 
   @override
   int get hashCode => Object.hash(x, y);

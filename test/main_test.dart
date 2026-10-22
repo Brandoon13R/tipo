@@ -4,54 +4,68 @@ import 'package:tipo/main.dart';
 
 void main() {
   group('MainApp y ValoresInicialesPage Tests', () {
-    testWidgets('Montaje inicial muestra interfaz base y botón Inicio deshabilitado', (WidgetTester tester) async {
-      await tester.pumpWidget(const MainApp());
+    testWidgets(
+      'Montaje inicial muestra interfaz base y botón Inicio deshabilitado',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(const MainApp());
+        await tester.tap(find.byKey(const ValueKey('seleccionar-nivel_1')));
+        await tester.pumpAndSettle();
 
-      // Verifica textos y títulos iniciales
-      expect(find.text('BRILLIANT'), findsOneWidget);
-      expect(find.text('Mapa de colores'), findsOneWidget);
-      expect(find.text('7 × 7'), findsOneWidget);
-      
-      // Verifica el contador de progreso inicial
-      expect(find.byKey(const ValueKey('progreso')), findsOneWidget);
-      expect(find.text('0 DE 6 NÚMEROS COLOCADOS'), findsOneWidget);
-      
-      // Verifica la instrucción de estado
-      expect(find.text('Completa las seis casillas para habilitar Inicio.'), findsOneWidget);
+        // Verifica textos y títulos iniciales
+        expect(find.text('BRILLIANT'), findsOneWidget);
+        expect(find.text('Mapa de colores'), findsOneWidget);
+        expect(find.text('7 × 7'), findsOneWidget);
 
-      // Verifica que el botón de inicio existe pero está deshabilitado (onPressed == null)
-      final botonInicioFinder = find.byKey(const ValueKey('inicio'));
-      expect(botonInicioFinder, findsOneWidget);
-      
-      final FilledButton botonInicio = tester.widget(botonInicioFinder);
-      expect(botonInicio.onPressed, isNull);
-    });
+        // Verifica el contador de progreso inicial
+        expect(find.byKey(const ValueKey('progreso')), findsOneWidget);
+        expect(find.text('0 DE 6 NÚMEROS COLOCADOS'), findsOneWidget);
 
-    testWidgets('Tocar una casilla inicial abre el diálogo y actualiza el progreso', (WidgetTester tester) async {
-      await tester.pumpWidget(const MainApp());
+        // Verifica la instrucción de estado
+        expect(
+          find.text('Completa las seis casillas para habilitar Inicio.'),
+          findsOneWidget,
+        );
 
-      // Busca el ícono '+' que tienen las casillas iniciales habilitadas
-      final casillasLibres = find.byIcon(Icons.add);
-      expect(casillasLibres, findsWidgets);
+        // Verifica que el botón de inicio existe pero está deshabilitado (onPressed == null)
+        final botonInicioFinder = find.byKey(const ValueKey('inicio'));
+        expect(botonInicioFinder, findsOneWidget);
 
-      // Simula el toque en la primera casilla disponible
-      await tester.tap(casillasLibres.first);
-      await tester.pumpAndSettle();
+        final FilledButton botonInicio = tester.widget(botonInicioFinder);
+        expect(botonInicio.onPressed, isNull);
+      },
+    );
 
-      // Verifica que el diálogo se abre mostrando las opciones y el botón de borrar
-      expect(find.byType(SimpleDialog), findsOneWidget);
-      expect(find.text('Borrar número'), findsOneWidget);
-      expect(find.byKey(const ValueKey('opcion-4')), findsOneWidget);
+    testWidgets(
+      'Tocar una casilla inicial abre el diálogo y actualiza el progreso',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(const MainApp());
+        await tester.tap(find.byKey(const ValueKey('seleccionar-nivel_1')));
+        await tester.pumpAndSettle();
 
-      // Elige el número 4 dentro del diálogo
-      await tester.tap(find.text('4'));
-      await tester.pumpAndSettle(); // Espera a que la animación del diálogo termine
+        // Busca el ícono '+' que tienen las casillas iniciales habilitadas
+        final casillasLibres = find.byIcon(Icons.add);
+        expect(casillasLibres, findsWidgets);
 
-      // Verifica que el progreso del Bloc se actualizó en la UI
-      expect(find.text('1 DE 6 NÚMEROS COLOCADOS'), findsOneWidget);
-      
-      // Verifica que el número 4 ahora se dibuja en la pantalla (como casilla seleccionada)
-      expect(find.text('4'), findsWidgets);
-    });
+        // Simula el toque en la primera casilla disponible
+        await tester.tap(casillasLibres.first);
+        await tester.pumpAndSettle();
+
+        // Verifica que el diálogo se abre mostrando las opciones y el botón de borrar
+        expect(find.byType(SimpleDialog), findsOneWidget);
+        expect(find.text('Borrar número'), findsOneWidget);
+        expect(find.byKey(const ValueKey('opcion-4')), findsOneWidget);
+
+        // Elige el número 4 dentro del diálogo
+        await tester.tap(find.text('4'));
+        await tester
+            .pumpAndSettle(); // Espera a que la animación del diálogo termine
+
+        // Verifica que el progreso del Bloc se actualizó en la UI
+        expect(find.text('1 DE 6 NÚMEROS COLOCADOS'), findsOneWidget);
+
+        // Verifica que el número 4 ahora se dibuja en la pantalla (como casilla seleccionada)
+        expect(find.text('4'), findsWidgets);
+      },
+    );
   });
 }
