@@ -532,7 +532,7 @@ class Nivel3Config extends NivelConfig {
         const Coordenada(5, 0),
         const Coordenada(5, 1),
         const Coordenada(6, 0),
-      ]
+      ],
     ),
     _region(
       'morado arriba',
@@ -547,7 +547,7 @@ class Nivel3Config extends NivelConfig {
         const Coordenada(3, 2),
         const Coordenada(4, 0),
         const Coordenada(4, 1),
-      ]
+      ],
     ),
     _region(
       'morado abajo',
@@ -562,7 +562,7 @@ class Nivel3Config extends NivelConfig {
         const Coordenada(4, 6),
         const Coordenada(5, 6),
         const Coordenada(6, 6),
-      ]
+      ],
     ),
     _region(
       'blanco',
@@ -576,7 +576,7 @@ class Nivel3Config extends NivelConfig {
         const Coordenada(3, 3),
         const Coordenada(3, 6),
         const Coordenada(6, 1),
-      ]
+      ],
     ),
     _region(
       'rojo izq',
@@ -591,7 +591,7 @@ class Nivel3Config extends NivelConfig {
         const Coordenada(1, 3),
         const Coordenada(2, 2),
         const Coordenada(2, 3),
-      ]
+      ],
     ),
     _region(
       'rojo der',
@@ -606,7 +606,7 @@ class Nivel3Config extends NivelConfig {
         const Coordenada(5, 3),
         const Coordenada(6, 2),
         const Coordenada(6, 3),
-      ]
+      ],
     ),
     _region(
       'azul',
@@ -620,7 +620,7 @@ class Nivel3Config extends NivelConfig {
         const Coordenada(3, 4),
         const Coordenada(4, 4),
         const Coordenada(5, 4),
-      ]
+      ],
     ),
     _region(
       'verde',
@@ -638,9 +638,9 @@ class Nivel3Config extends NivelConfig {
         const Coordenada(5, 5),
         const Coordenada(6, 4),
         const Coordenada(6, 5),
-      ]
+      ],
     ),
-  ]); 
+  ]);
 
   Region _region(
     String id,
@@ -722,6 +722,232 @@ class Nivel3Config extends NivelConfig {
       ColorCasilla.morado,
       ColorCasilla.morado,
       ColorCasilla.morado,
+    ],
+  ];
+}
+
+class Nivel4Config extends NivelConfig {
+  @override
+  String get id => 'nivel_4';
+
+  @override
+  String get nombre => 'Nivel 4';
+
+  @override
+  final Map<String, Coordenada> iniciales = const {
+    'Región 1': Coordenada(0, 3),
+    'Región 2': Coordenada(1, 6),
+    'Región 3': Coordenada(2, 2),
+    'Región 4': Coordenada(4, 0),
+    'Región 5': Coordenada(4, 5),
+    'Región 6': Coordenada(5, 2),
+  };
+
+  @override
+  late final List<Region> regiones = List.unmodifiable([
+    _region(
+      'naranja_superior',
+      'Naranja superior',
+      ColorCasilla.naranja,
+      ReglaRango(minimo: 4, maximo: 6, color: ColorCasilla.naranja.color),
+      [6, 4, 3],
+      [
+        const Coordenada(0, 0),
+        const Coordenada(1, 0),
+        const Coordenada(2, 0),
+        const Coordenada(3, 0),
+        const Coordenada(4, 0),
+        const Coordenada(5, 0),
+        const Coordenada(6, 0),
+      ],
+    ),
+    _region(
+      'naranja_inferior',
+      'Naranja inferior',
+      ColorCasilla.naranja,
+      ReglaRango(minimo: 1, maximo: 3, color: ColorCasilla.naranja.color),
+      [6, 4, 3],
+      [
+        const Coordenada(0, 6),
+        const Coordenada(1, 6),
+        const Coordenada(2, 6),
+        const Coordenada(3, 6),
+        const Coordenada(4, 6),
+        const Coordenada(5, 6),
+        const Coordenada(6, 6),
+      ],
+    ),
+    _region(
+      'amarillo',
+      'Amarillo',
+      ColorCasilla.amarillo,
+      ReglaDiferente(color: ColorCasilla.amarillo.color),
+      [8, 6, 4],
+      [
+        const Coordenada(0, 1),
+        const Coordenada(6, 1),
+        const Coordenada(0, 3),
+        const Coordenada(6, 3),
+        const Coordenada(0, 5),
+        const Coordenada(6, 5),
+      ],
+    ),
+    _region(
+      'rojo_izquierdo',
+      'Rojo izquierdo',
+      ColorCasilla.rojo,
+      ReglaDiferente(color: ColorCasilla.rojo.color),
+      [6, 4, 2],
+      [
+        const Coordenada(1, 1),
+        const Coordenada(0, 2),
+        const Coordenada(1, 2),
+        const Coordenada(0, 4),
+        const Coordenada(1, 4),
+        const Coordenada(1, 5),
+      ],
+    ),
+    _region(
+      'rojo_derecho',
+      'Rojo derecho',
+      ColorCasilla.rojo,
+      ReglaDiferente(color: ColorCasilla.rojo.color),
+      [6, 4, 2],
+      [
+        const Coordenada(5, 1),
+        const Coordenada(5, 2),
+        const Coordenada(6, 2),
+        const Coordenada(5, 4),
+        const Coordenada(6, 4),
+        const Coordenada(5, 5),
+      ],
+    ),
+    _region(
+      'azul',
+      'Azul',
+      ColorCasilla.azul,
+      ReglaIgual(color: ColorCasilla.azul.color),
+      [8, 6, 4],
+      [
+        const Coordenada(2, 1),
+        const Coordenada(4, 1),
+        const Coordenada(2, 3),
+        const Coordenada(4, 3),
+        const Coordenada(2, 5),
+        const Coordenada(4, 5),
+      ],
+    ),
+    _region(
+      'verde',
+      'Verde',
+      ColorCasilla.verde,
+      ReglaCualquiera(color: ColorCasilla.verde.color),
+      [3, 2, 1],
+      [
+        const Coordenada(3, 1),
+        const Coordenada(1, 3),
+        const Coordenada(5, 3),
+        const Coordenada(3, 5),
+      ],
+    ),
+    _region(
+      'morado',
+      'Morado',
+      ColorCasilla.morado,
+      ReglaXO(color: ColorCasilla.morado.color),
+      [7, 5, 3],
+      [
+        const Coordenada(2, 2),
+        const Coordenada(3, 2),
+        const Coordenada(4, 2),
+        const Coordenada(3, 3),
+        const Coordenada(2, 4),
+        const Coordenada(3, 4),
+        const Coordenada(4, 4),
+      ],
+    ),
+  ]);
+
+  Region _region(
+    String id,
+    String nombre,
+    ColorCasilla color,
+    Tipo tipo,
+    List<int> puntos,
+    List<Coordenada> coordenadas,
+  ) => Region(
+    id: id,
+    nombre: nombre,
+    color: color.color,
+    tipo: tipo,
+    puntos: puntos,
+    coordenadas: coordenadas,
+  );
+
+  @override
+  List<List<ColorCasilla>> get matriz => const [
+    [
+      ColorCasilla.naranja,
+      ColorCasilla.naranja,
+      ColorCasilla.naranja,
+      ColorCasilla.naranja,
+      ColorCasilla.naranja,
+      ColorCasilla.naranja,
+      ColorCasilla.naranja,
+    ],
+    [
+      ColorCasilla.amarillo,
+      ColorCasilla.rojo,
+      ColorCasilla.azul,
+      ColorCasilla.verde,
+      ColorCasilla.azul,
+      ColorCasilla.rojo,
+      ColorCasilla.amarillo,
+    ],
+    [
+      ColorCasilla.rojo,
+      ColorCasilla.rojo,
+      ColorCasilla.morado,
+      ColorCasilla.morado,
+      ColorCasilla.morado,
+      ColorCasilla.rojo,
+      ColorCasilla.rojo,
+    ],
+    [
+      ColorCasilla.amarillo,
+      ColorCasilla.verde,
+      ColorCasilla.azul,
+      ColorCasilla.morado,
+      ColorCasilla.azul,
+      ColorCasilla.verde,
+      ColorCasilla.amarillo,
+    ],
+    [
+      ColorCasilla.rojo,
+      ColorCasilla.rojo,
+      ColorCasilla.morado,
+      ColorCasilla.morado,
+      ColorCasilla.morado,
+      ColorCasilla.rojo,
+      ColorCasilla.rojo,
+    ],
+    [
+      ColorCasilla.amarillo,
+      ColorCasilla.rojo,
+      ColorCasilla.azul,
+      ColorCasilla.verde,
+      ColorCasilla.azul,
+      ColorCasilla.rojo,
+      ColorCasilla.amarillo,
+    ],
+    [
+      ColorCasilla.naranja,
+      ColorCasilla.naranja,
+      ColorCasilla.naranja,
+      ColorCasilla.naranja,
+      ColorCasilla.naranja,
+      ColorCasilla.naranja,
+      ColorCasilla.naranja,
     ],
   ];
 }

@@ -127,6 +127,34 @@ class ReglaCualquiera extends Tipo {
   Map<int, int> get puntuaciones => const {1: 4, 2: 3, 3: 2};
 }
 
+class ReglaRango extends Tipo {
+  ReglaRango({
+    required this.minimo,
+    required this.maximo,
+    this.color = Colors.black,
+  }) {
+    if (minimo < 1 || maximo > 6 || minimo > maximo) {
+      throw ArgumentError('El rango debe estar entre 1 y 6 y ser válido.');
+    }
+  }
+
+  final int minimo;
+  final int maximo;
+
+  @override
+  final Color color;
+
+  @override
+  String get descripcion => 'Acepta valores entre $minimo y $maximo';
+
+  @override
+  bool esPosibleAgregar(List<int> actuales, int posible) =>
+      posible >= minimo && posible <= maximo;
+
+  @override
+  Map<int, int> get puntuaciones => const {};
+}
+
 class Coordenada {
   final int x;
   final int y;

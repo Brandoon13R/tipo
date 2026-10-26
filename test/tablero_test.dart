@@ -99,6 +99,34 @@ void main() {
       expect(tablero.agregar(const Coordenada(2, 2), 3), isTrue);
     });
 
+    test('regla de rango acepta solo valores dentro de los límites', () {
+      for (final (minimo, maximo) in [(1, 3), (4, 6)]) {
+        final tablero = Tablero(
+          filas: 1,
+          columnas: 1,
+          regiones: [
+            Region(
+              tipo: ReglaRango(minimo: minimo, maximo: maximo),
+              coordenadas: [const Coordenada(0, 0)],
+            ),
+          ],
+        );
+
+        expect(tablero.agregar(const Coordenada(0, 0), minimo), isTrue);
+        tablero.reiniciar();
+        expect(tablero.agregar(const Coordenada(0, 0), maximo), isTrue);
+        tablero.reiniciar();
+        expect(tablero.agregar(const Coordenada(0, 0), minimo - 1), isFalse);
+        expect(tablero.agregar(const Coordenada(0, 0), maximo + 1), isFalse);
+      }
+    });
+
+    test('regla de rango rechaza límites fuera del juego o invertidos', () {
+      expect(() => ReglaRango(minimo: 0, maximo: 3), throwsArgumentError);
+      expect(() => ReglaRango(minimo: 4, maximo: 7), throwsArgumentError);
+      expect(() => ReglaRango(minimo: 5, maximo: 3), throwsArgumentError);
+    });
+
     test('verde acepta valores de los dados y rechaza los demás', () {
       final tablero = tableroConTipo(TipoVerde());
 

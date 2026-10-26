@@ -185,6 +185,8 @@ void main() {
     expect(find.byType(SeleccionNivelPage), findsOneWidget);
     expect(find.text('Nivel 1'), findsOneWidget);
     expect(find.text('Nivel 2'), findsOneWidget);
+    expect(find.text('Nivel 3'), findsOneWidget);
+    expect(find.text('Nivel 4'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('seleccionar-nivel_2')));
     await tester.pumpAndSettle();

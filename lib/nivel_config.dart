@@ -8,7 +8,8 @@ enum ColorCasilla {
   azul('Azul', Color(0xFF3498DB)),
   morado('Morado', Color(0xFF9B59B6)),
   rojo('Rojo', Color(0xFFE74C3C)),
-  blanco('Blanco', Color(0xFFFFFFFF));
+  blanco('Blanco', Color(0xFFFFFFFF)),
+  naranja('Naranja', Color(0xFFF39C12));
 
   const ColorCasilla(this.nombre, this.color);
   final String nombre;
@@ -21,6 +22,7 @@ enum ColorCasilla {
     morado => TipoMorado(),
     rojo => TipoRojo(),
     blanco => TipoAzul(),
+    naranja => ReglaRango(minimo: 1, maximo: 6, color: color),
   };
 }
 
