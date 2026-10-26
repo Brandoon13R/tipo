@@ -165,8 +165,7 @@ void main() {
     expect(tablero.agregar(const Coordenada(0, 4), 6), isTrue);
 
     expect(tablero.agregar(const Coordenada(1, 1), 2), isTrue);
-    expect(tablero.agregar(const Coordenada(5, 1), 4), isFalse);
-    expect(tablero.agregar(const Coordenada(5, 1), 3), isTrue);
+    expect(tablero.agregar(const Coordenada(5, 1), 4), isTrue);
 
     expect(tablero.agregar(const Coordenada(0, 3), 6), isTrue);
     expect(tablero.agregar(const Coordenada(1, 3), 6), isFalse);

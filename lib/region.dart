@@ -67,13 +67,18 @@ class ReglaXO extends Tipo {
     required int posible,
     required Set<Coordenada> coordenadasRegion,
   }) {
-    final posiciones = coordenadasRegion.toList();
-    final indice = posiciones.indexOf(coordenada);
-    if (indice < 0) return false;
+    if (!coordenadasRegion.contains(coordenada)) return false;
 
-    for (final vecinoIndice in [indice - 1, indice + 1]) {
-      if (vecinoIndice < 0 || vecinoIndice >= posiciones.length) continue;
-      final valorVecino = actuales[posiciones[vecinoIndice]];
+    final vecinos = [
+      Coordenada(coordenada.x - 1, coordenada.y),
+      Coordenada(coordenada.x + 1, coordenada.y),
+      Coordenada(coordenada.x, coordenada.y - 1),
+      Coordenada(coordenada.x, coordenada.y + 1),
+    ];
+
+    for (final vecino in vecinos) {
+      if (!coordenadasRegion.contains(vecino)) continue;
+      final valorVecino = actuales[vecino];
       if (valorVecino != null && valorVecino.isEven == posible.isEven) {
         return false;
       }

@@ -61,6 +61,44 @@ void main() {
       expect(tablero.agregar(const Coordenada(2, 0), 1), isTrue);
     });
 
+    test('XO solo alterna paridad entre casillas vecinas de la región', () {
+      final tablero = Tablero(
+        filas: 3,
+        columnas: 3,
+        regiones: [
+          Region(
+            tipo: ReglaXO(),
+            coordenadas: [
+              const Coordenada(1, 0),
+              const Coordenada(2, 2),
+              const Coordenada(2, 0),
+            ],
+          ),
+        ],
+      );
+
+      expect(tablero.agregar(const Coordenada(1, 0), 1), isTrue);
+      expect(tablero.agregar(const Coordenada(2, 2), 3), isTrue);
+      expect(tablero.agregar(const Coordenada(2, 0), 5), isFalse);
+      expect(tablero.agregar(const Coordenada(2, 0), 4), isTrue);
+    });
+
+    test('XO no exige alternancia entre casillas no vecinas', () {
+      final tablero = Tablero(
+        filas: 3,
+        columnas: 3,
+        regiones: [
+          Region(
+            tipo: ReglaXO(),
+            coordenadas: [const Coordenada(1, 0), const Coordenada(2, 2)],
+          ),
+        ],
+      );
+
+      expect(tablero.agregar(const Coordenada(1, 0), 1), isTrue);
+      expect(tablero.agregar(const Coordenada(2, 2), 3), isTrue);
+    });
+
     test('verde acepta valores de los dados y rechaza los demás', () {
       final tablero = tableroConTipo(TipoVerde());
 
