@@ -165,17 +165,40 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
     final pendientes = juego.tiradaPendiente;
     final pivote = juego.pivote;
     final posibles = juego.casillasIluminadas.length;
+    final bloqueado = juego.bloqueado;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (bloqueado) ...[
+          Container(
+            key: const ValueKey('aviso-bloqueo'),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFE2E0),
+              border: Border.all(color: const Color(0xFFB3261E)),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Text(
+              'Partida bloqueada: no quedan jugadas válidas. '
+              'Reinicia para comenzar una partida nueva.',
+              style: TextStyle(
+                color: Color(0xFF8C1D18),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+        ],
         const Text(
           'Turno de juego',
           style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 8),
         Text(
-          pendientes
+          bloqueado
+              ? 'No hay casillas vacías que puedan completarse con las reglas.'
+              : pendientes
               ? pivote == null
                     ? 'Elige un dado como pivote. Colocarás el valor del otro.'
                     : posibles == 0
@@ -194,7 +217,9 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
               Expanded(
                 child: OutlinedButton(
                   key: ValueKey('dado-$i'),
-                  onPressed: pendientes ? () => juego.elegirPivote(i) : null,
+                  onPressed: pendientes && !bloqueado
+                      ? () => juego.elegirPivote(i)
+                      : null,
                   style: OutlinedButton.styleFrom(
                     backgroundColor: pivote == i
                         ? const Color(0xFFD4F4D8)
@@ -224,7 +249,7 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
             Expanded(
               child: OutlinedButton(
                 key: const ValueKey('omitir'),
-                onPressed: pendientes ? juego.omitir : null,
+                onPressed: pendientes && !bloqueado ? juego.omitir : null,
                 child: const Text('Omitir'),
               ),
             ),

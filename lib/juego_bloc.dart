@@ -8,7 +8,7 @@ import 'package:tipo/tablero.dart';
 /// Maneja una tirada pendiente y calcula movimientos legales desde el tablero.
 class JuegoBloc {
   JuegoBloc(this.tablero, {int Function(int max)? siguiente})
-      : _siguiente = siguiente ?? Random().nextInt {
+    : _siguiente = siguiente ?? Random().nextInt {
     _tirar();
   }
 
@@ -31,9 +31,27 @@ class JuegoBloc {
   int? get dadoB => _dadoB;
   int? get pivote => _pivote;
   bool get tiradaPendiente => _dadoA != null;
-  int? get valorAColocar => _pivote == null
-      ? null
-      : (_pivote == 0 ? _dadoB : _dadoA);
+  bool get bloqueado {
+    if (tablero.datos.length == tablero.filas * tablero.columnas) return false;
+
+    for (final entrada in tablero.datos.entries) {
+      final posicion = entrada.key;
+      for (final vecino in [
+        Coordenada(posicion.x - 1, posicion.y),
+        Coordenada(posicion.x + 1, posicion.y),
+        Coordenada(posicion.x, posicion.y - 1),
+        Coordenada(posicion.x, posicion.y + 1),
+      ]) {
+        for (var valor = 1; valor <= 6; valor++) {
+          if (tablero.esPosibleAgregar(vecino, valor)) return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  int? get valorAColocar =>
+      _pivote == null ? null : (_pivote == 0 ? _dadoB : _dadoA);
 
   /// Genera dos dados al iniciar y después de resolver cada turno.
   void _tirar() {
@@ -76,6 +94,7 @@ class JuegoBloc {
   }
 
   bool colocar(Coordenada coordenada) {
+    if (bloqueado) return false;
     if (!casillasIluminadas.contains(coordenada)) return false;
     if (!tablero.agregar(coordenada, valorAColocar!)) return false;
     puntuacion.revisarZonasCompletadas();
@@ -86,6 +105,9 @@ class JuegoBloc {
 
   /// Variante solicitada: permite pasar voluntariamente esta tirada.
   void omitir() {
+    if (bloqueado) {
+      throw StateError('La partida está bloqueada: no quedan jugadas válidas.');
+    }
     if (!tiradaPendiente) throw StateError('No hay tirada que omitir.');
     turnosOmitidos++;
     _terminarTirada();

@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tipo/juego_bloc.dart';
 import 'package:tipo/region.dart';
+import 'package:tipo/tablero.dart';
 import 'package:tipo/tablero_config.dart';
 
 class DadosFijos {
@@ -95,5 +96,35 @@ void main() {
     expect(juego.tablero.valorEn(const Coordenada(2, 1)), 1);
     expect(juego.pivote, isNull);
     expect([juego.dadoA, juego.dadoB], [1, 1]);
+  });
+
+  test(
+    'detecta bloqueo cuando ninguna paridad permite completar la última casilla',
+    () {
+      final xo = Region(
+        tipo: ReglaXO(),
+        coordenadas: [
+          const Coordenada(0, 1),
+          const Coordenada(1, 0),
+          const Coordenada(1, 1),
+        ],
+      );
+      final tablero = Tablero(filas: 2, columnas: 2, regiones: [xo]);
+      expect(tablero.agregar(const Coordenada(0, 1), 3), isTrue);
+      expect(tablero.agregar(const Coordenada(1, 0), 4), isTrue);
+      final juego = JuegoBloc(tablero, siguiente: (_) => 0);
+      addTearDown(juego.dispose);
+
+      expect(juego.bloqueado, isTrue);
+      expect(juego.colocar(const Coordenada(1, 1)), isFalse);
+      expect(juego.omitir, throwsA(isA<StateError>()));
+    },
+  );
+
+  test('no considera bloqueo si existe una jugada posible', () async {
+    final juego = partida();
+    addTearDown(juego.dispose);
+
+    expect(juego.bloqueado, isFalse);
   });
 }
