@@ -535,8 +535,8 @@ class Nivel3Config extends NivelConfig {
       ]
     ),
     _region(
-      'morado_arriba',
-      'morado_arriba',
+      'morado arriba',
+      'morado arriba',
       ColorCasilla.morado,
       ReglaXO(color: ColorCasilla.morado.color),
       [7, 5, 3],
@@ -550,8 +550,8 @@ class Nivel3Config extends NivelConfig {
       ]
     ),
     _region(
-      'morado_abajo',
-      'morado_abajo',
+      'morado abajo',
+      'morado abajo',
       ColorCasilla.morado,
       ReglaXO(color: ColorCasilla.morado.color),
       [7, 5, 3],
@@ -579,8 +579,8 @@ class Nivel3Config extends NivelConfig {
       ]
     ),
     _region(
-      'rojo_izq',
-      'rojo_izq',
+      'rojo izq',
+      'rojo izq',
       ColorCasilla.rojo,
       ReglaDiferente(color: ColorCasilla.rojo.color),
       [6, 4, 2],
@@ -594,8 +594,8 @@ class Nivel3Config extends NivelConfig {
       ]
     ),
     _region(
-      'rojo_der',
-      'rojo_der',
+      'rojo der',
+      'rojo der',
       ColorCasilla.rojo,
       ReglaDiferente(color: ColorCasilla.rojo.color),
       [6, 4, 2],
