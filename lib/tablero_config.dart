@@ -492,6 +492,231 @@ class Nivel2Config extends NivelConfig {
   ];
 }
 
+class Nivel3Config extends NivelConfig {
+  @override
+  String get id => 'nivel_3';
+  @override
+  String get nombre => 'Nivel 3';
+
+  @override
+  final Map<String, Coordenada> iniciales = const {
+    'Región 1': Coordenada(1, 4),
+    'Región 2': Coordenada(2, 1),
+    'Región 3': Coordenada(2, 6),
+    'Región 4': Coordenada(3, 3),
+    'Región 5': Coordenada(5, 1),
+    'Región 6': Coordenada(6, 4),
+  };
+
+  @override
+  late final List<Region> regiones = List.unmodifiable([
+    _region(
+      'amarillo',
+      'Amarillo.',
+      ColorCasilla.amarillo,
+      ReglaDiferente(color: ColorCasilla.amarillo.color),
+      [7, 5, 3],
+      [
+        const Coordenada(0, 0),
+        const Coordenada(1, 0),
+        const Coordenada(1, 1),
+        const Coordenada(5, 0),
+        const Coordenada(5, 1),
+        const Coordenada(6, 0),
+      ]
+    ),
+    _region(
+      'morado_arriba',
+      'morado_arriba',
+      ColorCasilla.morado,
+      ReglaXO(color: ColorCasilla.morado.color),
+      [7, 5, 3],
+      [
+        const Coordenada(2, 0),
+        const Coordenada(2, 1),
+        const Coordenada(3, 1),
+        const Coordenada(3, 2),
+        const Coordenada(4, 0),
+        const Coordenada(4, 1),
+      ]
+    ),
+    _region(
+      'morado_abajo',
+      'morado_abajo',
+      ColorCasilla.morado,
+      ReglaXO(color: ColorCasilla.morado.color),
+      [7, 5, 3],
+      [
+        const Coordenada(0, 6),
+        const Coordenada(1, 6),
+        const Coordenada(2, 6),
+        const Coordenada(4, 6),
+        const Coordenada(5, 6),
+        const Coordenada(6, 6),
+      ]
+    ),
+    _region(
+      'blanco',
+      'blanco',
+      ColorCasilla.blanco,
+      ReglaIgual(color: ColorCasilla.blanco.color),
+      [8, 6, 4],
+      [
+        const Coordenada(0, 1),
+        const Coordenada(3, 0),
+        const Coordenada(3, 3),
+        const Coordenada(3, 6),
+        const Coordenada(6, 1),
+      ]
+    ),
+    _region(
+      'rojo_izq',
+      'rojo_izq',
+      ColorCasilla.rojo,
+      ReglaDiferente(color: ColorCasilla.rojo.color),
+      [6, 4, 2],
+      [
+        const Coordenada(0, 2),
+        const Coordenada(0, 3),
+        const Coordenada(1, 2),
+        const Coordenada(1, 3),
+        const Coordenada(2, 2),
+        const Coordenada(2, 3),
+      ]
+    ),
+    _region(
+      'rojo_der',
+      'rojo_der',
+      ColorCasilla.rojo,
+      ReglaDiferente(color: ColorCasilla.rojo.color),
+      [6, 4, 2],
+      [
+        const Coordenada(4, 2),
+        const Coordenada(4, 3),
+        const Coordenada(5, 2),
+        const Coordenada(5, 3),
+        const Coordenada(6, 2),
+        const Coordenada(6, 3),
+      ]
+    ),
+    _region(
+      'azul',
+      'azul',
+      ColorCasilla.azul,
+      ReglaIgual(color: ColorCasilla.azul.color),
+      [7, 5, 3],
+      [
+        const Coordenada(1, 4),
+        const Coordenada(2, 4),
+        const Coordenada(3, 4),
+        const Coordenada(4, 4),
+        const Coordenada(5, 4),
+      ]
+    ),
+    _region(
+      'verde',
+      'verde',
+      ColorCasilla.verde,
+      ReglaCualquiera(color: ColorCasilla.verde.color),
+      [6, 5, 4],
+      [
+        const Coordenada(0, 4),
+        const Coordenada(0, 5),
+        const Coordenada(1, 5),
+        const Coordenada(2, 5),
+        const Coordenada(3, 5),
+        const Coordenada(4, 5),
+        const Coordenada(5, 5),
+        const Coordenada(6, 4),
+        const Coordenada(6, 5),
+      ]
+    ),
+  ]); 
+
+  Region _region(
+    String id,
+    String nombre,
+    ColorCasilla color,
+    Tipo tipo,
+    List<int> puntos,
+    List<Coordenada> coordenadas,
+  ) => Region(
+    id: id,
+    nombre: nombre,
+    color: color.color,
+    tipo: tipo,
+    puntos: puntos,
+    coordenadas: coordenadas,
+  );
+
+  @override
+  List<List<ColorCasilla>> get matriz => const [
+    [
+      ColorCasilla.amarillo,
+      ColorCasilla.amarillo,
+      ColorCasilla.morado,
+      ColorCasilla.blanco,
+      ColorCasilla.morado,
+      ColorCasilla.amarillo,
+      ColorCasilla.amarillo,
+    ],
+    [
+      ColorCasilla.blanco,
+      ColorCasilla.amarillo,
+      ColorCasilla.morado,
+      ColorCasilla.morado,
+      ColorCasilla.morado,
+      ColorCasilla.amarillo,
+      ColorCasilla.blanco,
+    ],
+    [
+      ColorCasilla.rojo,
+      ColorCasilla.rojo,
+      ColorCasilla.rojo,
+      ColorCasilla.morado,
+      ColorCasilla.rojo,
+      ColorCasilla.rojo,
+      ColorCasilla.rojo,
+    ],
+    [
+      ColorCasilla.rojo,
+      ColorCasilla.rojo,
+      ColorCasilla.rojo,
+      ColorCasilla.blanco,
+      ColorCasilla.rojo,
+      ColorCasilla.rojo,
+      ColorCasilla.rojo,
+    ],
+    [
+      ColorCasilla.verde,
+      ColorCasilla.azul,
+      ColorCasilla.azul,
+      ColorCasilla.azul,
+      ColorCasilla.azul,
+      ColorCasilla.azul,
+      ColorCasilla.verde,
+    ],
+    [
+      ColorCasilla.verde,
+      ColorCasilla.verde,
+      ColorCasilla.verde,
+      ColorCasilla.verde,
+      ColorCasilla.verde,
+      ColorCasilla.verde,
+      ColorCasilla.verde,
+    ],
+    [
+      ColorCasilla.morado,
+      ColorCasilla.morado,
+      ColorCasilla.morado,
+      ColorCasilla.blanco,
+      ColorCasilla.morado,
+      ColorCasilla.morado,
+      ColorCasilla.morado,
+    ],
+  ];
+}
+
 /// Compatibilidad con la API estática anterior del Nivel 1.
 class TableroConfig {
   static const matriz = Nivel1Config.matrizNivel1;

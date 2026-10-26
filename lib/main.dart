@@ -63,7 +63,7 @@ class SeleccionNivelPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 32),
-                for (final config in [Nivel1Config(), Nivel2Config()]) ...[
+                for (final config in [Nivel1Config(), Nivel2Config(), Nivel3Config()]) ...[
                   FilledButton(
                     key: ValueKey('seleccionar-${config.id}'),
                     onPressed: () => _seleccionar(context, config),
