@@ -256,11 +256,11 @@ class Nivel2Config extends NivelConfig {
   @override
   final Map<String, Coordenada> iniciales = const {
     'Región 1': Coordenada(0, 2),
-    'Región 2': Coordenada(4, 1),
+    'Región 2': Coordenada(4, 0),
     'Región 3': Coordenada(2, 3),
-    'Región 4': Coordenada(4, 3),
-    'Región 5': Coordenada(2, 5),
-    'Región 6': Coordenada(6, 4),
+    'Región 4': Coordenada(5, 4),
+    'Región 5': Coordenada(1, 5),
+    'Región 6': Coordenada(4, 6),
   };
 
   @override
