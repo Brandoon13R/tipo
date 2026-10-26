@@ -388,8 +388,8 @@ class Nivel2Config extends NivelConfig {
       ],
     ),
     _region(
-      'azul',
-      'Azul',
+      'azul arr',
+      'Azul arr',
       ColorCasilla.azul,
       ReglaIgual(color: ColorCasilla.azul.color),
       [7, 5, 3],
@@ -399,6 +399,15 @@ class Nivel2Config extends NivelConfig {
         const Coordenada(4, 1),
         const Coordenada(3, 2),
         const Coordenada(4, 2),
+      ],
+    ),
+    _region(
+      'azul abj',
+      'Azul abj',
+      ColorCasilla.azul,
+      ReglaIgual(color: ColorCasilla.azul.color),
+      [7, 5, 3],
+      [
         const Coordenada(2, 4),
         const Coordenada(3, 4),
         const Coordenada(2, 5),
