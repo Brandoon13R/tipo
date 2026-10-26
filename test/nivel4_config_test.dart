@@ -109,4 +109,18 @@ void main() {
     expect(find.text('0 DE 6 NÚMEROS COLOCADOS'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('el botón Menú vuelve a la selección de niveles', (tester) async {
+    await tester.pumpWidget(const MainApp());
+    await tester.tap(find.byKey(const ValueKey('seleccionar-nivel_4')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('volver-menu')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SeleccionNivelPage), findsOneWidget);
+    expect(find.text('Nivel 4'), findsOneWidget);
+    expect(find.byKey(const ValueKey('volver-menu')), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
 }

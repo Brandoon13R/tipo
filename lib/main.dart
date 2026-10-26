@@ -371,6 +371,12 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
                   children: [
                     Row(
                       children: [
+                        IconButton(
+                          key: const ValueKey('volver-menu'),
+                          tooltip: 'Volver al menú',
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: const Icon(Icons.arrow_back),
+                        ),
                         Icon(Icons.grid_view_rounded, color: Color(0xFF193E37)),
                         SizedBox(width: 10),
                         Text(
