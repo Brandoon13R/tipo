@@ -112,6 +112,7 @@ void main() {
 
   testWidgets('el botón Menú vuelve a la selección de niveles', (tester) async {
     await tester.pumpWidget(const MainApp());
+    expect(find.byKey(const ValueKey('cerrar-aplicacion')), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('seleccionar-nivel_4')));
     await tester.pumpAndSettle();
 

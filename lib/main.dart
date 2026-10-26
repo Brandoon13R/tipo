@@ -1,3 +1,5 @@
+import 'dart:io' show exit;
+
 import 'package:flutter/material.dart';
 import 'package:tipo/tablero.dart';
 import 'package:tipo/region.dart';
@@ -79,6 +81,15 @@ class SeleccionNivelPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                 ],
+                OutlinedButton.icon(
+                  key: const ValueKey('cerrar-aplicacion'),
+                  onPressed: () => exit(0),
+                  icon: const Icon(Icons.exit_to_app),
+                  label: const Padding(
+                    padding: EdgeInsets.all(14),
+                    child: Text('Cerrar aplicación'),
+                  ),
+                ),
               ],
             ),
           ),
