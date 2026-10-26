@@ -447,7 +447,7 @@ class Nivel2Config extends NivelConfig {
     [
       ColorCasilla.morado,
       ColorCasilla.rojo,
-      ColorCasilla.azul,
+      ColorCasilla.rojo,
       ColorCasilla.azul,
       ColorCasilla.azul,
       ColorCasilla.rojo,
@@ -467,7 +467,7 @@ class Nivel2Config extends NivelConfig {
       ColorCasilla.rojo,
       ColorCasilla.azul,
       ColorCasilla.azul,
-      ColorCasilla.azul,
+      ColorCasilla.rojo,
       ColorCasilla.rojo,
       ColorCasilla.morado,
     ],
