@@ -269,7 +269,7 @@ class Nivel2Config extends NivelConfig {
       'morado_izq',
       'Morado izq.',
       ColorCasilla.morado,
-      ReglaDiferente(color: ColorCasilla.morado.color),
+      ReglaXO(color: ColorCasilla.morado.color),
       [6, 4, 2],
       [
         const Coordenada(0, 0),
@@ -377,7 +377,7 @@ class Nivel2Config extends NivelConfig {
       'amarillo',
       'Amarillo',
       ColorCasilla.amarillo,
-      ReglaXO(color: ColorCasilla.amarillo.color),
+      ReglaDiferente(color: ColorCasilla.amarillo.color),
       [6, 4, 2],
       [
         const Coordenada(1, 1),
