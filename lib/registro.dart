@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tipo/BDD.dart';
+import 'package:tipo/perfil_usuario.dart';
 
 class RegistroPage extends StatefulWidget {
-  const RegistroPage({super.key, this.authService});
+  const RegistroPage({super.key, this.authService, this.supabaseClient});
 
   final AuthService? authService;
+  final SupabaseClient? supabaseClient;
 
   @override
   State<RegistroPage> createState() => _RegistroPageState();
@@ -122,14 +124,17 @@ class _RegistroPageState extends State<RegistroPage> {
 
   Widget _encabezado() => Column(
     children: [
-      Align(
-        alignment: Alignment.centerLeft,
-        child: IconButton(
-          key: const ValueKey('registro-volver'),
-          tooltip: 'Volver a iniciar sesión',
-          onPressed: _cargando ? null : () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.arrow_back),
-        ),
+      Row(
+        children: [
+          IconButton(
+            key: const ValueKey('registro-volver'),
+            tooltip: 'Volver a iniciar sesión',
+            onPressed: _cargando ? null : () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.arrow_back),
+          ),
+          const Spacer(),
+          PerfilUsuario(client: widget.supabaseClient),
+        ],
       ),
       const SizedBox(height: 12),
       const Icon(Icons.person_add_alt_1, size: 60, color: Color(0xFF193E37)),
@@ -280,6 +285,11 @@ class _RegistroPageState extends State<RegistroPage> {
   Widget _mensajeRegistroCompletado() => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
+      Align(
+        alignment: Alignment.centerRight,
+        child: PerfilUsuario(client: widget.supabaseClient),
+      ),
+      const SizedBox(height: 12),
       const Icon(
         Icons.mark_email_read_outlined,
         size: 64,

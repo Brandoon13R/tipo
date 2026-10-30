@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tipo/BDD.dart';
+import 'package:tipo/perfil_usuario.dart';
 import 'package:tipo/registro.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key, this.authService});
+  const LoginPage({super.key, this.authService, this.supabaseClient});
 
   final AuthService? authService;
+  final SupabaseClient? supabaseClient;
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -91,16 +93,19 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: IconButton(
-                      key: const ValueKey('login-volver'),
-                      tooltip: 'Volver al inicio',
-                      onPressed: _cargando
-                          ? null
-                          : () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.arrow_back),
-                    ),
+                  Row(
+                    children: [
+                      IconButton(
+                        key: const ValueKey('login-volver'),
+                        tooltip: 'Volver al inicio',
+                        onPressed: _cargando
+                            ? null
+                            : () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.arrow_back),
+                      ),
+                      const Spacer(),
+                      PerfilUsuario(client: widget.supabaseClient),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   const Icon(
@@ -206,7 +211,9 @@ class _LoginPageState extends State<LoginPage> {
                         ? null
                         : () => Navigator.of(context).push(
                             MaterialPageRoute<void>(
-                              builder: (_) => const RegistroPage(),
+                              builder: (_) => RegistroPage(
+                                supabaseClient: widget.supabaseClient,
+                              ),
                             ),
                           ),
                     child: const Text('¿No tienes cuenta? Crea tu cuenta'),

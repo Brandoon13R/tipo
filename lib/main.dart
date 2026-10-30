@@ -10,6 +10,7 @@ import 'package:tipo/nivel_config.dart';
 import 'package:tipo/tabla_puntos.dart';
 import 'package:tipo/valores_iniciales_bloc.dart';
 import 'package:tipo/login.dart';
+import 'package:tipo/perfil_usuario.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,11 +18,13 @@ void main() async {
     url: 'https://ugsokviyojezfpbsdxyu.supabase.co',
     publishableKey: 'sb_publishable_58OIQdapcUTY03u9FXbO_A_plTZGVuo',
   );
-  runApp(const MainApp());
+  runApp(MainApp(supabaseClient: Supabase.instance.client));
 }
 
 class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+  const MainApp({super.key, this.supabaseClient});
+
+  final SupabaseClient? supabaseClient;
 
   @override
   Widget build(BuildContext context) => MaterialApp(
@@ -31,82 +34,148 @@ class MainApp extends StatelessWidget {
       colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF193E37)),
       scaffoldBackgroundColor: const Color(0xFFF4F7F4),
     ),
-    home: const MenuPage(),
+    home: MenuPage(supabaseClient: supabaseClient),
   );
 }
 
-class MenuPage extends StatelessWidget {
-  const MenuPage({super.key});
+class MenuPage extends StatefulWidget {
+  const MenuPage({super.key, this.supabaseClient});
+
+  final SupabaseClient? supabaseClient;
+
+  @override
+  State<MenuPage> createState() => _MenuPageState();
+}
+
+class _MenuPageState extends State<MenuPage> {
+  bool _cerrandoSesion = false;
 
   void _jugar(BuildContext context) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute<void>(builder: (_) => const SeleccionNivelPage()));
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            SeleccionNivelPage(supabaseClient: widget.supabaseClient),
+      ),
+    );
+  }
+
+  Future<void> _cerrarSesion() async {
+    final client = widget.supabaseClient;
+    if (client == null || _cerrandoSesion) return;
+
+    setState(() => _cerrandoSesion = true);
+    try {
+      await client.auth.signOut();
+    } on AuthException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pudo cerrar sesión: ${error.message}')),
+      );
+    } finally {
+      if (mounted) setState(() => _cerrandoSesion = false);
+    }
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    body: SafeArea(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 480),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Icon(
-                  Icons.grid_view_rounded,
-                  size: 56,
-                  color: Color(0xFF193E37),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'BRILLIANT',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    letterSpacing: 3,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 28,
+  Widget build(BuildContext context) {
+    final client = widget.supabaseClient;
+    return StreamBuilder<AuthState>(
+      stream: client?.auth.onAuthStateChange,
+      builder: (context, snapshot) {
+        final sesion = snapshot.hasData
+            ? snapshot.data!.session
+            : client?.auth.currentSession;
+        final sesionActiva = sesion != null;
+
+        return Scaffold(
+          body: SafeArea(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 480),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: PerfilUsuario(client: client),
+                      ),
+                      const Icon(
+                        Icons.grid_view_rounded,
+                        size: 56,
+                        color: Color(0xFF193E37),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'BRILLIANT',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          letterSpacing: 3,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 28,
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                      FilledButton(
+                        key: const ValueKey('jugar'),
+                        onPressed: () => _jugar(context),
+                        child: const Padding(
+                          padding: EdgeInsets.all(14),
+                          child: Text('Jugar'),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      OutlinedButton(
+                        key: ValueKey(
+                          sesionActiva ? 'cerrar-sesion' : 'iniciar-sesion',
+                        ),
+                        onPressed: _cerrandoSesion
+                            ? null
+                            : sesionActiva
+                            ? _cerrarSesion
+                            : () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) =>
+                                      LoginPage(supabaseClient: client),
+                                ),
+                              ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(14),
+                          child: Text(
+                            _cerrandoSesion
+                                ? 'Cerrando sesión...'
+                                : sesionActiva
+                                ? 'Cerrar sesión'
+                                : 'Iniciar sesión',
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 40),
-                FilledButton(
-                  key: const ValueKey('jugar'),
-                  onPressed: () => _jugar(context),
-                  child: const Padding(
-                    padding: EdgeInsets.all(14),
-                    child: Text('Jugar'),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                OutlinedButton(
-                  key: const ValueKey('iniciar-sesion'),
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(builder: (_) => const LoginPage()),
-                  ),
-                  child: const Padding(
-                    padding: EdgeInsets.all(14),
-                    child: Text('Iniciar sesión'),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
-    ),
-  );
+        );
+      },
+    );
+  }
 }
 
 class SeleccionNivelPage extends StatelessWidget {
-  const SeleccionNivelPage({super.key});
+  const SeleccionNivelPage({super.key, this.supabaseClient});
+
+  final SupabaseClient? supabaseClient;
 
   void _seleccionar(BuildContext context, NivelConfig config) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => ValoresInicialesPage(config: config),
+        builder: (_) => ValoresInicialesPage(
+          config: config,
+          supabaseClient: supabaseClient,
+        ),
       ),
     );
   }
@@ -123,14 +192,17 @@ class SeleccionNivelPage extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: IconButton(
-                    key: const ValueKey('volver-inicio'),
-                    tooltip: 'Volver al inicio',
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.arrow_back),
-                  ),
+                Row(
+                  children: [
+                    IconButton(
+                      key: const ValueKey('volver-inicio'),
+                      tooltip: 'Volver al inicio',
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.arrow_back),
+                    ),
+                    const Spacer(),
+                    PerfilUsuario(client: supabaseClient),
+                  ],
                 ),
                 const Icon(
                   Icons.grid_view_rounded,
@@ -184,9 +256,10 @@ class SeleccionNivelPage extends StatelessWidget {
 }
 
 class ValoresInicialesPage extends StatefulWidget {
-  const ValoresInicialesPage({super.key, this.config});
+  const ValoresInicialesPage({super.key, this.config, this.supabaseClient});
 
   final NivelConfig? config;
+  final SupabaseClient? supabaseClient;
 
   @override
   State<ValoresInicialesPage> createState() => _ValoresInicialesPageState();
@@ -486,6 +559,10 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
                           '${_config.matriz.first.length} × ${_config.matriz.length}',
                         ),
                       ],
+                    ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: PerfilUsuario(client: widget.supabaseClient),
                     ),
                     const SizedBox(height: 24),
                     const Text(
