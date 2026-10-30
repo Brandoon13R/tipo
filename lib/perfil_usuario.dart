@@ -1,37 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:tipo/sesion_usuario.dart';
 
 class PerfilUsuario extends StatelessWidget {
-  const PerfilUsuario({super.key, required this.client});
+  const PerfilUsuario({super.key, required this.sesion});
 
-  final SupabaseClient? client;
+  final SesionUsuario? sesion;
 
   @override
   Widget build(BuildContext context) {
-    final supabaseClient = client;
-    if (supabaseClient == null) return const SizedBox.shrink();
+    final userSession = sesion;
+    if (userSession == null) return const SizedBox.shrink();
 
-    final auth = supabaseClient.auth;
-    return StreamBuilder<AuthState>(
-      stream: auth.onAuthStateChange,
-      builder: (context, snapshot) {
-        final usuario = snapshot.hasData
-            ? snapshot.data!.session?.user
-            : auth.currentUser;
-        if (usuario == null) return const SizedBox.shrink();
-
-        final metadata = usuario.userMetadata;
-        final nombre = metadata?['usuario_name'] as String?;
-        final etiqueta = nombre?.trim().isNotEmpty == true
-            ? nombre!.trim()
-            : usuario.email ?? 'Perfil';
+    return AnimatedBuilder(
+      animation: userSession,
+      builder: (context, _) {
+        final username = userSession.usuarioName;
+        if (username == null) return const SizedBox.shrink();
 
         return Chip(
           key: const ValueKey('perfil-usuario'),
           avatar: const Icon(Icons.account_circle_outlined, size: 20),
           label: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 150),
-            child: Text(etiqueta, maxLines: 1, overflow: TextOverflow.ellipsis),
+            child: Text(username, maxLines: 1, overflow: TextOverflow.ellipsis),
           ),
           visualDensity: VisualDensity.compact,
         );
