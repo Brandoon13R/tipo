@@ -1,6 +1,7 @@
 import 'dart:io' show exit;
 
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tipo/tablero.dart';
 import 'package:tipo/region.dart';
 import 'package:tipo/juego_bloc.dart';
@@ -9,7 +10,14 @@ import 'package:tipo/nivel_config.dart';
 import 'package:tipo/tabla_puntos.dart';
 import 'package:tipo/valores_iniciales_bloc.dart';
 
-void main() => runApp(const MainApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Supabase.initialize(
+    url: 'https://ugsokviyojezfpbsdxyu.supabase.co',
+    publishableKey: 'sb_publishable_58OIQdapcUTY03u9FXbO_A_plTZGVuo',
+  );
+  runApp(const MainApp());
+}
 
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
