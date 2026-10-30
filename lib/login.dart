@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tipo/BDD.dart';
+import 'package:tipo/registro.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key, this.authService});
@@ -197,6 +198,18 @@ class _LoginPageState extends State<LoginPage> {
                             )
                           : const Text('Iniciar sesión'),
                     ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    key: const ValueKey('login-crear-cuenta'),
+                    onPressed: _cargando
+                        ? null
+                        : () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const RegistroPage(),
+                            ),
+                          ),
+                    child: const Text('¿No tienes cuenta? Crea tu cuenta'),
                   ),
                 ],
               ),

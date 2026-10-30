@@ -13,4 +13,14 @@ class AuthService {
     email: correo.trim(),
     password: contrasena,
   );
+
+  Future<AuthResponse> registrarUsuario({
+    required String correo,
+    required String usuarioName,
+    required String contrasena,
+  }) => _supabase.auth.signUp(
+    email: correo.trim(),
+    password: contrasena,
+    data: {'usuario_name': usuarioName.trim()},
+  );
 }

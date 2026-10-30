@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tipo/main.dart';
 import 'package:tipo/login.dart';
+import 'package:tipo/registro.dart';
 
 void main() {
   group('MainApp y ValoresInicialesPage Tests', () {
@@ -87,6 +88,15 @@ void main() {
       expect(find.byType(LoginPage), findsOneWidget);
       expect(find.text('Correo electrónico'), findsOneWidget);
       expect(find.text('Contraseña'), findsOneWidget);
+      expect(find.text('¿No tienes cuenta? Crea tu cuenta'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('login-crear-cuenta')));
+      await tester.pumpAndSettle();
+      expect(find.byType(RegistroPage), findsOneWidget);
+      expect(find.text('Nombre de usuario'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('registro-volver')));
+      await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const ValueKey('login-volver')));
       await tester.pumpAndSettle();
