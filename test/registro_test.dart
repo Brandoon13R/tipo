@@ -13,7 +13,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Escribe un nombre de usuario.'), findsOneWidget);
-    expect(find.text('Escribe tu correo electrónico.'), findsOneWidget);
+    expect(find.byKey(const ValueKey('registro-email')), findsNothing);
     expect(find.text('Escribe una contraseña.'), findsOneWidget);
     expect(find.text('Confirma tu contraseña.'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -27,10 +27,6 @@ void main() {
     await tester.enterText(
       find.byKey(const ValueKey('registro-usuario')),
       'jugador',
-    );
-    await tester.enterText(
-      find.byKey(const ValueKey('registro-email')),
-      'jugador@example.com',
     );
     await tester.ensureVisible(find.byKey(const ValueKey('registro-password')));
     await tester.enterText(

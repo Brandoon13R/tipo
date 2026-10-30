@@ -9,6 +9,8 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(800, 1200));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(const MainApp());
+    await tester.tap(find.byKey(const ValueKey('jugar')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('seleccionar-nivel_1')));
     await tester.pumpAndSettle();
 
@@ -85,6 +87,8 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(360, 800));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(const MainApp());
+    await tester.tap(find.byKey(const ValueKey('jugar')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('seleccionar-nivel_1')));
     await tester.pumpAndSettle();
     for (var y = 0; y < 7; y++) {

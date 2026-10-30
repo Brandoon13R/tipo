@@ -86,7 +86,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('iniciar-sesion')));
       await tester.pumpAndSettle();
       expect(find.byType(LoginPage), findsOneWidget);
-      expect(find.text('Correo electrónico'), findsOneWidget);
+      expect(find.text('Nombre de usuario'), findsOneWidget);
       expect(find.text('Contraseña'), findsOneWidget);
       expect(find.text('¿No tienes cuenta? Crea tu cuenta'), findsOneWidget);
 

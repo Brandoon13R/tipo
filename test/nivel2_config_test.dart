@@ -182,6 +182,8 @@ void main() {
 
   testWidgets('la selección navega al nivel elegido', (tester) async {
     await tester.pumpWidget(const MainApp());
+    await tester.tap(find.byKey(const ValueKey('jugar')));
+    await tester.pumpAndSettle();
     expect(find.byType(SeleccionNivelPage), findsOneWidget);
     expect(find.text('Nivel 1'), findsOneWidget);
     expect(find.text('Nivel 2'), findsOneWidget);

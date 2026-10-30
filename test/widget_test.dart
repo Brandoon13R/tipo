@@ -9,6 +9,8 @@ void main() {
     // 1. Cargar la aplicación
     await tester.pumpWidget(const MainApp());
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('jugar')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('seleccionar-nivel_1')));
     await tester.pumpAndSettle();
 
