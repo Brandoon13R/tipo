@@ -79,7 +79,7 @@ class SeleccionNivelPage extends StatelessWidget {
                       child: Text(config.nombre),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 15),
                 ],
                 OutlinedButton.icon(
                   key: const ValueKey('cerrar-aplicacion'),
@@ -90,6 +90,7 @@ class SeleccionNivelPage extends StatelessWidget {
                     child: Text('Cerrar aplicación'),
                   ),
                 ),
+                const SizedBox(height: 32),
               ],
             ),
           ),
