@@ -1,3 +1,6 @@
 {
-    "cmake.sourceDirectory": "C:/Users/brand/OneDrive/Escritorio/freelancer_inicio/Flutter/tipo/windows/flutter"
+    "cmake.sourceDirectory": "C:/Users/brand/OneDrive/Escritorio/freelancer_inicio/Flutter/tipo/windows/flutter",
+    "deno.enablePaths": [
+        "./supabase/functions"
+    ]
 }

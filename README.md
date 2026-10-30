@@ -51,3 +51,34 @@ el almacenamiento, los datos inválidos, el botón Inicio, cambiar/borrar númer
 la confirmación, el tamaño cuadrado de las celdas en una pantalla de 360 px,
 y el flujo de tirada, pivote, casillas legales, colocación y omisión.
 GitHub Actions ejecuta flutter test en main y en solicitudes hacia main.
+
+## Autenticación con usuario y contraseña
+
+El registro y el inicio de sesión usan la función `usuario-auth`; Flutter no
+lee ni escribe las credenciales directamente en `usuarios`. La Edge Function
+genera y verifica hashes bcrypt en el servidor, y la app conserva el token de
+sesión en almacenamiento seguro del dispositivo. La contraseña nunca se envía
+a la base de datos en texto plano.
+
+Antes de ejecutar la app con este flujo:
+
+1. Revisa y ejecuta en el SQL Editor la migración
+   `supabase/migrations/20261030000000_custom_usuario_auth.sql`. Esta borra las
+   filas existentes de `usuarios` (cuentas de prueba) y renombra
+   `contrasena` a `contrasena_hash`.
+2. Despliega la función desde la raíz del proyecto con Supabase CLI:
+
+   ```sh
+   supabase functions deploy usuario-auth
+   ```
+
+   La función usa los secretos de entorno del proyecto Supabase. No pongas la
+   clave `service_role` en Flutter ni en archivos versionados.
+3. La función deja de usar Supabase Auth para las cuentas de la app. Las
+   operaciones futuras sobre datos privados también deben pasar por funciones
+   que validen el token de sesión; no deben conceder acceso directo a `anon`.
+
+Las sesiones duran 24 horas. Después de cinco intentos de inicio de sesión
+fallidos para un usuario, se bloquean nuevos intentos durante 15 minutos. Los
+nombres de usuario se normalizan a minúsculas y se aceptan de 3 a 15 letras
+ASCII, números o guiones bajos.
