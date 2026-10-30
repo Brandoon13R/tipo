@@ -89,5 +89,23 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(SeleccionNivelPage), findsOneWidget);
     });
+
+    testWidgets('niveles permite regresar al inicio y cerrar la aplicación', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(const MainApp());
+      await tester.tap(find.byKey(const ValueKey('jugar')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('volver-inicio')), findsOneWidget);
+      expect(find.byKey(const ValueKey('cerrar-aplicacion')), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('volver-inicio')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MenuPage), findsOneWidget);
+      expect(find.text('Jugar'), findsOneWidget);
+      expect(find.text('Iniciar sesión'), findsOneWidget);
+    });
   });
 }

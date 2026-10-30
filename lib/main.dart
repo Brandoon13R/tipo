@@ -122,6 +122,15 @@ class SeleccionNivelPage extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    key: const ValueKey('volver-inicio'),
+                    tooltip: 'Volver al inicio',
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.arrow_back),
+                  ),
+                ),
                 const Icon(
                   Icons.grid_view_rounded,
                   size: 48,
