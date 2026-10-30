@@ -9,6 +9,7 @@ import 'package:tipo/tablero_config.dart';
 import 'package:tipo/nivel_config.dart';
 import 'package:tipo/tabla_puntos.dart';
 import 'package:tipo/valores_iniciales_bloc.dart';
+import 'package:tipo/login.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,11 +39,9 @@ class MenuPage extends StatelessWidget {
   const MenuPage({super.key});
 
   void _jugar(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => const SeleccionNivelPage(),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const SeleccionNivelPage()));
   }
 
   @override
@@ -84,7 +83,9 @@ class MenuPage extends StatelessWidget {
                 const SizedBox(height: 16),
                 OutlinedButton(
                   key: const ValueKey('iniciar-sesion'),
-                  onPressed: () {},
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(builder: (_) => const LoginPage()),
+                  ),
                   child: const Padding(
                     padding: EdgeInsets.all(14),
                     child: Text('Iniciar sesión'),

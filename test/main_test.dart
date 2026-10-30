@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tipo/main.dart';
+import 'package:tipo/login.dart';
 
 void main() {
   group('MainApp y ValoresInicialesPage Tests', () {
@@ -72,7 +73,7 @@ void main() {
       },
     );
 
-    testWidgets('el menú ofrece Jugar y deja Iniciar sesión sin acción', (
+    testWidgets('el menú abre la pantalla de inicio de sesión', (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(const MainApp());
@@ -82,6 +83,12 @@ void main() {
       expect(find.text('Iniciar sesión'), findsOneWidget);
 
       await tester.tap(find.byKey(const ValueKey('iniciar-sesion')));
+      await tester.pumpAndSettle();
+      expect(find.byType(LoginPage), findsOneWidget);
+      expect(find.text('Correo electrónico'), findsOneWidget);
+      expect(find.text('Contraseña'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('login-volver')));
       await tester.pumpAndSettle();
       expect(find.byType(MenuPage), findsOneWidget);
 

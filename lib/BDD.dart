@@ -6,10 +6,11 @@ class AuthService {
 
   final SupabaseClient _supabase;
 
-  Future<void> registrarUsuario(String nombre, String contrasena) async {
-    await _supabase.from('usuarios').insert({
-      'Usuario_name': nombre.trim(),
-      'contrasena': contrasena,
-    });
-  }
+  Future<AuthResponse> iniciarSesion({
+    required String correo,
+    required String contrasena,
+  }) => _supabase.auth.signInWithPassword(
+    email: correo.trim(),
+    password: contrasena,
+  );
 }
