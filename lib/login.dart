@@ -3,12 +3,19 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tipo/BDD.dart';
 import 'package:tipo/perfil_usuario.dart';
 import 'package:tipo/registro.dart';
+import 'package:tipo/sesion_usuario.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key, this.authService, this.supabaseClient});
+  const LoginPage({
+    super.key,
+    this.authService,
+    this.supabaseClient,
+    this.sesionUsuario,
+  });
 
   final AuthService? authService;
   final SupabaseClient? supabaseClient;
+  final SesionUsuario? sesionUsuario;
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -16,11 +23,23 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final _correoController = TextEditingController();
+  final _usuarioController = TextEditingController();
   final _contrasenaController = TextEditingController();
   bool _cargando = false;
   bool _mostrarContrasena = false;
   String? _error;
+
+  AuthService get _authService {
+    final service = widget.authService;
+    if (service != null) return service;
+    final client = widget.supabaseClient;
+    if (client == null) {
+      throw const AuthServiceException(
+        'No está disponible el servicio de autenticación.',
+      );
+    }
+    return AuthService(client);
+  }
 
   Future<void> _iniciarSesion() async {
     if (!_formKey.currentState!.validate()) return;
@@ -32,50 +51,50 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      final respuesta = await (widget.authService ?? AuthService())
-          .iniciarSesion(
-            correo: _correoController.text,
-            contrasena: _contrasenaController.text,
-          );
+      final respuesta = await _authService.iniciarSesion(
+        usuarioName: _usuarioController.text,
+        contrasena: _contrasenaController.text,
+      );
 
       if (!mounted) return;
-      if (respuesta.session == null) {
-        setState(() {
-          _cargando = false;
-          _error = 'No se pudo iniciar sesión. Verifica tu correo e inténtalo.';
-        });
-        return;
+      final sesionUsuario = widget.sesionUsuario;
+      if (sesionUsuario == null) {
+        throw const AuthServiceException(
+          'No está disponible el almacenamiento seguro de sesión.',
+        );
       }
+      await sesionUsuario.iniciar(respuesta);
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Sesión iniciada correctamente.')),
       );
       Navigator.of(context).pop();
-    } on AuthException catch (error) {
+    } on AuthServiceException catch (error) {
       if (!mounted) return;
       setState(() {
         _cargando = false;
         _error = _mensajeError(error);
       });
+    } on Exception catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _cargando = false;
+        _error = 'No se pudo guardar la sesión de forma segura: $error';
+      });
     }
   }
 
-  String _mensajeError(AuthException error) {
-    if (error.code == 'email_not_confirmed') {
-      return 'Confirma tu correo electrónico antes de iniciar sesión.';
+  String _mensajeError(AuthServiceException error) {
+    if (error.statusCode == 401) {
+      return 'Usuario o contraseña incorrectos.';
     }
-    if (error.code == 'invalid_credentials' || error.statusCode == '400') {
-      return 'Correo o contraseña incorrectos.';
-    }
-    if (error is AuthRetryableFetchException) {
-      return 'No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.';
-    }
-    return 'No se pudo iniciar sesión. Inténtalo de nuevo más tarde.';
+    return error.message;
   }
 
   @override
   void dispose() {
-    _correoController.dispose();
+    _usuarioController.dispose();
     _contrasenaController.dispose();
     super.dispose();
   }
@@ -104,7 +123,7 @@ class _LoginPageState extends State<LoginPage> {
                         icon: const Icon(Icons.arrow_back),
                       ),
                       const Spacer(),
-                      PerfilUsuario(client: widget.supabaseClient),
+                      PerfilUsuario(sesion: widget.sesionUsuario),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -121,25 +140,22 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 28),
                   TextFormField(
-                    key: const ValueKey('login-email'),
-                    controller: _correoController,
-                    keyboardType: TextInputType.emailAddress,
+                    key: const ValueKey('login-usuario'),
+                    controller: _usuarioController,
                     textInputAction: TextInputAction.next,
-                    autofillHints: const [AutofillHints.email],
+                    autofillHints: const [AutofillHints.username],
                     decoration: const InputDecoration(
-                      labelText: 'Correo electrónico',
-                      prefixIcon: Icon(Icons.email_outlined),
+                      labelText: 'Nombre de usuario',
+                      prefixIcon: Icon(Icons.person_outline),
                       border: OutlineInputBorder(),
                     ),
                     validator: (valor) {
-                      final correo = valor?.trim() ?? '';
-                      if (correo.isEmpty) {
-                        return 'Escribe tu correo electrónico.';
+                      final usuario = valor?.trim() ?? '';
+                      if (usuario.isEmpty) {
+                        return 'Escribe tu nombre de usuario.';
                       }
-                      if (!RegExp(
-                        r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
-                      ).hasMatch(correo)) {
-                        return 'Escribe un correo electrónico válido.';
+                      if (!RegExp(r'^[a-zA-Z0-9_]{3,15}$').hasMatch(usuario)) {
+                        return 'Usa de 3 a 15 letras, números o guiones bajos.';
                       }
                       return null;
                     },
@@ -212,7 +228,9 @@ class _LoginPageState extends State<LoginPage> {
                         : () => Navigator.of(context).push(
                             MaterialPageRoute<void>(
                               builder: (_) => RegistroPage(
+                                authService: widget.authService,
                                 supabaseClient: widget.supabaseClient,
+                                sesionUsuario: widget.sesionUsuario,
                               ),
                             ),
                           ),

@@ -1,13 +1,22 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tipo/BDD.dart';
 import 'package:tipo/perfil_usuario.dart';
+import 'package:tipo/sesion_usuario.dart';
 
 class RegistroPage extends StatefulWidget {
-  const RegistroPage({super.key, this.authService, this.supabaseClient});
+  const RegistroPage({
+    super.key,
+    this.authService,
+    this.supabaseClient,
+    this.sesionUsuario,
+  });
 
   final AuthService? authService;
   final SupabaseClient? supabaseClient;
+  final SesionUsuario? sesionUsuario;
 
   @override
   State<RegistroPage> createState() => _RegistroPageState();
@@ -16,14 +25,24 @@ class RegistroPage extends StatefulWidget {
 class _RegistroPageState extends State<RegistroPage> {
   final _formKey = GlobalKey<FormState>();
   final _usuarioController = TextEditingController();
-  final _correoController = TextEditingController();
   final _contrasenaController = TextEditingController();
   final _confirmarContrasenaController = TextEditingController();
   bool _cargando = false;
   bool _mostrarContrasena = false;
   bool _registroCompletado = false;
-  bool _requiereConfirmacion = false;
   String? _error;
+
+  AuthService get _authService {
+    final service = widget.authService;
+    if (service != null) return service;
+    final client = widget.supabaseClient;
+    if (client == null) {
+      throw const AuthServiceException(
+        'No está disponible el servicio de autenticación.',
+      );
+    }
+    return AuthService(client);
+  }
 
   Future<void> _crearCuenta() async {
     if (!_formKey.currentState!.validate()) return;
@@ -35,28 +54,26 @@ class _RegistroPageState extends State<RegistroPage> {
     });
 
     try {
-      final respuesta = await (widget.authService ?? AuthService())
-          .registrarUsuario(
-            correo: _correoController.text,
-            usuarioName: _usuarioController.text,
-            contrasena: _contrasenaController.text,
-          );
+      final respuesta = await _authService.registrarUsuario(
+        usuarioName: _usuarioController.text,
+        contrasena: _contrasenaController.text,
+      );
 
       if (!mounted) return;
-      if (respuesta.user == null) {
-        setState(() {
-          _cargando = false;
-          _error = 'No se pudo crear la cuenta. Inténtalo de nuevo.';
-        });
-        return;
+      final sesionUsuario = widget.sesionUsuario;
+      if (sesionUsuario == null) {
+        throw const AuthServiceException(
+          'No está disponible el almacenamiento seguro de sesión.',
+        );
       }
+      await sesionUsuario.iniciar(respuesta);
+      if (!mounted) return;
 
       setState(() {
         _cargando = false;
         _registroCompletado = true;
-        _requiereConfirmacion = respuesta.session == null;
       });
-    } on AuthException catch (error) {
+    } on AuthServiceException catch (error) {
       if (!mounted) return;
       setState(() {
         _cargando = false;
@@ -71,35 +88,16 @@ class _RegistroPageState extends State<RegistroPage> {
     }
   }
 
-  String _mensajeError(AuthException error) {
-    if (error.code == 'user_already_exists') {
-      return 'Ya existe una cuenta con ese correo electrónico.';
+  String _mensajeError(AuthServiceException error) {
+    if (error.statusCode == 409) {
+      return 'Ese nombre de usuario ya está registrado.';
     }
-    if (error.code == 'weak_password') {
-      return 'La contraseña es demasiado débil. Elige otra.';
-    }
-    if (error.code == 'email_address_invalid') {
-      return 'El formato del correo es válido, pero Supabase Auth rechazó '
-          'la dirección. Revisa la configuración del proveedor Email y sus '
-          'políticas de validación.';
-    }
-    if (error is AuthRetryableFetchException) {
-      return 'No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.';
-    }
-    final detalle = error.message.trim();
-    final codigo = error.code;
-    return [
-      'No se pudo crear la cuenta.',
-      if (detalle.isNotEmpty) detalle,
-      if (codigo != null && codigo.isNotEmpty) 'Código: $codigo',
-      if (error.statusCode != null) 'Estado: ${error.statusCode}',
-    ].join('\n');
+    return error.message;
   }
 
   @override
   void dispose() {
     _usuarioController.dispose();
-    _correoController.dispose();
     _contrasenaController.dispose();
     _confirmarContrasenaController.dispose();
     super.dispose();
@@ -133,7 +131,7 @@ class _RegistroPageState extends State<RegistroPage> {
             icon: const Icon(Icons.arrow_back),
           ),
           const Spacer(),
-          PerfilUsuario(client: widget.supabaseClient),
+          PerfilUsuario(sesion: widget.sesionUsuario),
         ],
       ),
       const SizedBox(height: 12),
@@ -169,29 +167,8 @@ class _RegistroPageState extends State<RegistroPage> {
           validator: (valor) {
             final usuario = valor?.trim() ?? '';
             if (usuario.isEmpty) return 'Escribe un nombre de usuario.';
-            if (usuario.length > 15) {
-              return 'El nombre debe tener máximo 15 caracteres.';
-            }
-            return null;
-          },
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          key: const ValueKey('registro-email'),
-          controller: _correoController,
-          keyboardType: TextInputType.emailAddress,
-          textInputAction: TextInputAction.next,
-          autofillHints: const [AutofillHints.email],
-          decoration: const InputDecoration(
-            labelText: 'Correo electrónico',
-            prefixIcon: Icon(Icons.email_outlined),
-            border: OutlineInputBorder(),
-          ),
-          validator: (valor) {
-            final correo = valor?.trim() ?? '';
-            if (correo.isEmpty) return 'Escribe tu correo electrónico.';
-            if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(correo)) {
-              return 'Escribe un correo electrónico válido.';
+            if (!RegExp(r'^[a-zA-Z0-9_]{3,15}$').hasMatch(usuario)) {
+              return 'Usa de 3 a 15 letras, números o guiones bajos.';
             }
             return null;
           },
@@ -222,8 +199,9 @@ class _RegistroPageState extends State<RegistroPage> {
             if (valor == null || valor.isEmpty) {
               return 'Escribe una contraseña.';
             }
-            if (valor.length < 6) {
-              return 'La contraseña debe tener al menos 6 caracteres.';
+            final bytes = utf8.encode(valor);
+            if (bytes.length < 8 || bytes.length > 72) {
+              return 'La contraseña debe tener entre 8 y 72 bytes UTF-8.';
             }
             return null;
           },
@@ -287,11 +265,11 @@ class _RegistroPageState extends State<RegistroPage> {
     children: [
       Align(
         alignment: Alignment.centerRight,
-        child: PerfilUsuario(client: widget.supabaseClient),
+        child: PerfilUsuario(sesion: widget.sesionUsuario),
       ),
       const SizedBox(height: 12),
       const Icon(
-        Icons.mark_email_read_outlined,
+        Icons.verified_user_outlined,
         size: 64,
         color: Color(0xFF193E37),
       ),
@@ -303,9 +281,8 @@ class _RegistroPageState extends State<RegistroPage> {
       ),
       const SizedBox(height: 16),
       Text(
-        _requiereConfirmacion
-            ? 'Revisa tu correo y confirma la cuenta antes de iniciar sesión.'
-            : 'Tu cuenta está lista. Ya puedes iniciar sesión.',
+        'Tu cuenta está lista y ya iniciaste sesión como '
+        '${widget.sesionUsuario?.usuarioName ?? ''}.',
         textAlign: TextAlign.center,
       ),
       const SizedBox(height: 24),
