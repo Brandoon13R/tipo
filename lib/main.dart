@@ -30,7 +30,72 @@ class MainApp extends StatelessWidget {
       colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF193E37)),
       scaffoldBackgroundColor: const Color(0xFFF4F7F4),
     ),
-    home: const SeleccionNivelPage(),
+    home: const MenuPage(),
+  );
+}
+
+class MenuPage extends StatelessWidget {
+  const MenuPage({super.key});
+
+  void _jugar(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const SeleccionNivelPage(),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: SafeArea(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Icon(
+                  Icons.grid_view_rounded,
+                  size: 56,
+                  color: Color(0xFF193E37),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'BRILLIANT',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    letterSpacing: 3,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 28,
+                  ),
+                ),
+                const SizedBox(height: 40),
+                FilledButton(
+                  key: const ValueKey('jugar'),
+                  onPressed: () => _jugar(context),
+                  child: const Padding(
+                    padding: EdgeInsets.all(14),
+                    child: Text('Jugar'),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                OutlinedButton(
+                  key: const ValueKey('iniciar-sesion'),
+                  onPressed: () {},
+                  child: const Padding(
+                    padding: EdgeInsets.all(14),
+                    child: Text('Iniciar sesión'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
   );
 }
 

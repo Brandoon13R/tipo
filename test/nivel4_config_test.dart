@@ -100,6 +100,8 @@ void main() {
 
   testWidgets('Nivel 4 aparece en el menú y abre el tablero', (tester) async {
     await tester.pumpWidget(const MainApp());
+    await tester.tap(find.byKey(const ValueKey('jugar')));
+    await tester.pumpAndSettle();
     expect(find.text('Nivel 4'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('seleccionar-nivel_4')));
@@ -112,6 +114,8 @@ void main() {
 
   testWidgets('el botón Menú vuelve a la selección de niveles', (tester) async {
     await tester.pumpWidget(const MainApp());
+    await tester.tap(find.byKey(const ValueKey('jugar')));
+    await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('cerrar-aplicacion')), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('seleccionar-nivel_4')));
     await tester.pumpAndSettle();

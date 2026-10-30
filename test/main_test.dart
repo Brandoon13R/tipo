@@ -8,6 +8,8 @@ void main() {
       'Montaje inicial muestra interfaz base y botón Inicio deshabilitado',
       (WidgetTester tester) async {
         await tester.pumpWidget(const MainApp());
+        await tester.tap(find.byKey(const ValueKey('jugar')));
+        await tester.pumpAndSettle();
         await tester.tap(find.byKey(const ValueKey('seleccionar-nivel_1')));
         await tester.pumpAndSettle();
 
@@ -39,6 +41,8 @@ void main() {
       'Tocar una casilla inicial abre el diálogo y actualiza el progreso',
       (WidgetTester tester) async {
         await tester.pumpWidget(const MainApp());
+        await tester.tap(find.byKey(const ValueKey('jugar')));
+        await tester.pumpAndSettle();
         await tester.tap(find.byKey(const ValueKey('seleccionar-nivel_1')));
         await tester.pumpAndSettle();
 
@@ -67,5 +71,23 @@ void main() {
         expect(find.text('4'), findsWidgets);
       },
     );
+
+    testWidgets('el menú ofrece Jugar y deja Iniciar sesión sin acción', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(const MainApp());
+
+      expect(find.byType(MenuPage), findsOneWidget);
+      expect(find.text('Jugar'), findsOneWidget);
+      expect(find.text('Iniciar sesión'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('iniciar-sesion')));
+      await tester.pumpAndSettle();
+      expect(find.byType(MenuPage), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('jugar')));
+      await tester.pumpAndSettle();
+      expect(find.byType(SeleccionNivelPage), findsOneWidget);
+    });
   });
 }
