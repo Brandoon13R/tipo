@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tipo/BDD.dart';
 import 'package:tipo/main.dart';
 import 'package:tipo/login.dart';
 import 'package:tipo/registro.dart';
+import 'package:tipo/sesion_usuario.dart';
 
 void main() {
   group('MainApp y ValoresInicialesPage Tests', () {
@@ -124,5 +126,97 @@ void main() {
       expect(find.text('Jugar'), findsOneWidget);
       expect(find.text('Iniciar sesión'), findsOneWidget);
     });
+
+    testWidgets('cancelar la confirmación conserva la cuenta', (
+      WidgetTester tester,
+    ) async {
+      final session = _FakeSesionUsuario();
+      final authService = _FakeAuthService();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MenuPage(sesionUsuario: session, authService: authService),
+        ),
+      );
+
+      await tester.tap(find.byKey(const ValueKey('eliminar-cuenta')));
+      await tester.pumpAndSettle();
+      expect(find.text('¿Eliminar cuenta?'), findsOneWidget);
+      expect(find.textContaining('No se puede deshacer.'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('cancelar-eliminar-cuenta')));
+      await tester.pumpAndSettle();
+
+      expect(authService.deletedToken, isNull);
+      expect(session.activa, isTrue);
+      expect(find.byKey(const ValueKey('eliminar-cuenta')), findsOneWidget);
+    });
+
+    testWidgets('confirmar elimina la cuenta y limpia la sesión local', (
+      WidgetTester tester,
+    ) async {
+      final session = _FakeSesionUsuario();
+      final authService = _FakeAuthService();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MenuPage(sesionUsuario: session, authService: authService),
+        ),
+      );
+
+      await tester.tap(find.byKey(const ValueKey('eliminar-cuenta')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('confirmar-eliminar-cuenta')));
+      await tester.pumpAndSettle();
+
+      expect(authService.deletedToken, 'test-session-token');
+      expect(session.activa, isFalse);
+      expect(find.text('La cuenta se eliminó correctamente.'), findsOneWidget);
+      expect(find.byKey(const ValueKey('eliminar-cuenta')), findsNothing);
+    });
   });
+}
+
+class _FakeSesionUsuario extends SesionUsuario {
+  bool _activa = true;
+
+  @override
+  String? get token => _activa ? 'test-session-token' : null;
+
+  @override
+  String? get usuarioName => _activa ? 'jugador' : null;
+
+  @override
+  bool get activa => _activa;
+
+  @override
+  Future<void> limpiar() async {
+    _activa = false;
+    notifyListeners();
+  }
+}
+
+class _FakeAuthService implements AuthService {
+  String? deletedToken;
+
+  @override
+  Future<void> eliminarCuenta(String token) async {
+    deletedToken = token;
+  }
+
+  @override
+  Future<AuthSessionResult> iniciarSesion({
+    required String usuarioName,
+    required String contrasena,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<AuthSessionResult> registrarUsuario({
+    required String usuarioName,
+    required String contrasena,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<void> cerrarSesion(String token) => throw UnimplementedError();
+
+  @override
+  Future<String> validarSesion(String token) => throw UnimplementedError();
 }

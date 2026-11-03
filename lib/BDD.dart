@@ -77,6 +77,10 @@ class AuthService {
     await _invoke({'action': 'logout', 'session_token': token});
   }
 
+  Future<void> eliminarCuenta(String token) async {
+    await _invoke({'action': 'delete_account', 'session_token': token});
+  }
+
   Future<Map<String, dynamic>> _invoke(Map<String, dynamic> body) async {
     try {
       final response = await _supabase.functions.invoke(

@@ -82,3 +82,10 @@ Las sesiones duran 24 horas. Después de cinco intentos de inicio de sesión
 fallidos para un usuario, se bloquean nuevos intentos durante 15 minutos. Los
 nombres de usuario se normalizan a minúsculas y se aceptan de 3 a 15 letras
 ASCII, números o guiones bajos.
+
+Las personas con sesión activa pueden eliminar su cuenta desde el menú. La app
+pide confirmación y la función `usuario-auth` elimina únicamente la cuenta
+asociada al token de sesión vigente; la clave foránea elimina sus sesiones.
+Antes de desplegar esta versión, aplica la migración aditiva
+`supabase/migrations/20261102000000_account_deletion.sql` para conceder al rol
+`service_role` permiso de eliminar usuarios. Esta migración no borra cuentas.

@@ -48,8 +48,14 @@ class MainApp extends StatelessWidget {
 }
 
 class MenuPage extends StatefulWidget {
-  const MenuPage({super.key, this.supabaseClient, this.sesionUsuario});
+  const MenuPage({
+    super.key,
+    this.authService,
+    this.supabaseClient,
+    this.sesionUsuario,
+  });
 
+  final AuthService? authService;
   final SupabaseClient? supabaseClient;
   final SesionUsuario? sesionUsuario;
 
@@ -59,6 +65,7 @@ class MenuPage extends StatefulWidget {
 
 class _MenuPageState extends State<MenuPage> {
   bool _cerrandoSesion = false;
+  bool _eliminandoCuenta = false;
 
   void _jugar(BuildContext context) {
     Navigator.of(context).push(
@@ -75,7 +82,11 @@ class _MenuPageState extends State<MenuPage> {
     final client = widget.supabaseClient;
     final session = widget.sesionUsuario;
     final token = session?.token;
-    if (client == null || session == null || token == null || _cerrandoSesion) {
+    if (client == null ||
+        session == null ||
+        token == null ||
+        _cerrandoSesion ||
+        _eliminandoCuenta) {
       return;
     }
 
@@ -101,6 +112,81 @@ class _MenuPageState extends State<MenuPage> {
       );
     } finally {
       if (mounted) setState(() => _cerrandoSesion = false);
+    }
+  }
+
+  Future<void> _confirmarEliminarCuenta() async {
+    final confirmacion = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('¿Eliminar cuenta?'),
+        content: const Text(
+          'Esta acción eliminará tu cuenta y cerrará todas tus sesiones. '
+          'No se puede deshacer.',
+        ),
+        actions: [
+          TextButton(
+            key: const ValueKey('cancelar-eliminar-cuenta'),
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            key: const ValueKey('confirmar-eliminar-cuenta'),
+            onPressed: () => Navigator.of(context).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('Eliminar cuenta'),
+          ),
+        ],
+      ),
+    );
+    if (confirmacion != true || !mounted) return;
+    if (_cerrandoSesion || _eliminandoCuenta) return;
+
+    final session = widget.sesionUsuario;
+    final token = session?.token;
+    if (session == null || token == null) return;
+
+    final authService =
+        widget.authService ??
+        (widget.supabaseClient == null
+            ? null
+            : AuthService(widget.supabaseClient!));
+    if (authService == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No está disponible el servicio de autenticación.'),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _eliminandoCuenta = true);
+    try {
+      await authService.eliminarCuenta(token);
+      await session.limpiar();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('La cuenta se eliminó correctamente.')),
+      );
+    } on AuthServiceException catch (error) {
+      if (error.statusCode == 401) {
+        await session.limpiar();
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No se pudo eliminar la cuenta: ${error.message}'),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pudo eliminar la cuenta: $error')),
+      );
+    } finally {
+      if (mounted) setState(() => _eliminandoCuenta = false);
     }
   }
 
@@ -171,7 +257,7 @@ class _MenuPageState extends State<MenuPage> {
                     key: ValueKey(
                       sesionActiva ? 'cerrar-sesion' : 'iniciar-sesion',
                     ),
-                    onPressed: _cerrandoSesion
+                    onPressed: _cerrandoSesion || _eliminandoCuenta
                         ? null
                         : sesionActiva
                         ? _cerrarSesion
@@ -188,12 +274,28 @@ class _MenuPageState extends State<MenuPage> {
                       child: Text(
                         _cerrandoSesion
                             ? 'Cerrando sesión...'
+                            : _eliminandoCuenta
+                            ? 'Eliminando cuenta...'
                             : sesionActiva
                             ? 'Cerrar sesión'
                             : 'Iniciar sesión',
                       ),
                     ),
                   ),
+                  if (sesionActiva) ...[
+                    const SizedBox(height: 8),
+                    TextButton.icon(
+                      key: const ValueKey('eliminar-cuenta'),
+                      onPressed: _cerrandoSesion || _eliminandoCuenta
+                          ? null
+                          : _confirmarEliminarCuenta,
+                      icon: const Icon(Icons.delete_outline),
+                      label: const Text('Eliminar cuenta'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
