@@ -109,6 +109,20 @@ void main() {
       expect(find.byType(SeleccionNivelPage), findsOneWidget);
     });
 
+    testWidgets('multijugador requiere una sesión activa', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(const MainApp());
+      await tester.tap(find.byKey(const ValueKey('multijugador')));
+      await tester.pump();
+
+      expect(find.text('Crea una partida'), findsNothing);
+      expect(
+        find.text('Inicia sesión para crear o unirte a una partida.'),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('niveles permite regresar al inicio y cerrar la aplicación', (
       WidgetTester tester,
     ) async {

@@ -127,4 +127,41 @@ void main() {
 
     expect(juego.bloqueado, isFalse);
   });
+
+  test('restaura tablero, tirada y pivote tras recuperar una sala', () async {
+    final juego = partida();
+    addTearDown(juego.dispose);
+    juego.elegirPivote(0);
+
+    final restaurado = JuegoBloc.restaurar(
+      TableroConfig.crearTablero(),
+      juego.toJson(),
+    );
+    addTearDown(restaurado.dispose);
+
+    expect(restaurado.tablero.datos, juego.tablero.datos);
+    expect(restaurado.dadoA, juego.dadoA);
+    expect(restaurado.dadoB, juego.dadoB);
+    expect(restaurado.pivote, 0);
+    expect(restaurado.valorAColocar, juego.valorAColocar);
+    expect(restaurado.casillasIluminadas, juego.casillasIluminadas);
+    expect(restaurado.colocar(const Coordenada(1, 0)), isTrue);
+    expect(restaurado.turnosJugados, 1);
+  });
+
+  test('rechaza snapshots de tablero malformados', () {
+    expect(
+      () => JuegoBloc.restaurar(TableroConfig.crearTablero(), {
+        'cells': [
+          {'x': 20, 'y': 0, 'value': 1},
+        ],
+        'die_a': 1,
+        'die_b': 2,
+        'pivot': null,
+        'turns_played': 0,
+        'turns_skipped': 0,
+      }),
+      throwsFormatException,
+    );
+  });
 }
