@@ -12,6 +12,68 @@ class JuegoBloc {
     _tirar();
   }
 
+  factory JuegoBloc.restaurar(Tablero tablero, Map<String, dynamic> estado) {
+    final celdas = estado['cells'];
+    if (celdas is! List) {
+      throw const FormatException('El estado no contiene las casillas.');
+    }
+
+    final datos = <Coordenada, int>{};
+    for (final celda in celdas) {
+      if (celda is! Map ||
+          celda['x'] is! int ||
+          celda['y'] is! int ||
+          celda['value'] is! int) {
+        throw const FormatException('El estado contiene una casilla inválida.');
+      }
+      final coordenada = Coordenada(celda['x'] as int, celda['y'] as int);
+      if (datos.containsKey(coordenada)) {
+        throw const FormatException('El estado contiene casillas repetidas.');
+      }
+      datos[coordenada] = celda['value'] as int;
+    }
+
+    final dadoA = estado['die_a'];
+    final dadoB = estado['die_b'];
+    final pivote = estado['pivot'];
+    final jugados = estado['turns_played'];
+    final omitidos = estado['turns_skipped'];
+    if ((dadoA != null && (dadoA is! int || dadoA < 1 || dadoA > 6)) ||
+        (dadoB != null && (dadoB is! int || dadoB < 1 || dadoB > 6)) ||
+        (dadoA == null) != (dadoB == null) ||
+        (pivote != null && (pivote is! int || (pivote != 0 && pivote != 1))) ||
+        jugados is! int ||
+        jugados < 0 ||
+        omitidos is! int ||
+        omitidos < 0) {
+      throw const FormatException('El estado de la tirada no es válido.');
+    }
+
+    tablero.restaurarDatos(datos);
+    return JuegoBloc._restaurado(
+      tablero,
+      dadoA: dadoA as int?,
+      dadoB: dadoB as int?,
+      pivote: pivote as int?,
+      jugados: jugados,
+      omitidos: omitidos,
+    );
+  }
+
+  JuegoBloc._restaurado(
+    this.tablero, {
+    required int? dadoA,
+    required int? dadoB,
+    required int? pivote,
+    required int jugados,
+    required int omitidos,
+  }) : _siguiente = Random().nextInt,
+       _dadoA = dadoA,
+       _dadoB = dadoB,
+       _pivote = pivote,
+       turnosJugados = jugados,
+       turnosOmitidos = omitidos;
+
   final Tablero tablero;
   final int Function(int max) _siguiente;
   final _cambios = StreamController<int>.broadcast();
@@ -25,6 +87,22 @@ class JuegoBloc {
 
   int get puntos => puntuacion.total;
   Map<String, int> get puntosPorZona => puntuacion.obtenidos;
+  bool get finalizada =>
+      tablero.datos.length == tablero.filas * tablero.columnas || bloqueado;
+
+  Map<String, dynamic> toJson() => {
+    'cells': [
+      for (final entry in tablero.datos.entries)
+        {'x': entry.key.x, 'y': entry.key.y, 'value': entry.value},
+    ],
+    'die_a': _dadoA,
+    'die_b': _dadoB,
+    'pivot': _pivote,
+    'turns_played': turnosJugados,
+    'turns_skipped': turnosOmitidos,
+    'score': puntos,
+    'finished': finalizada,
+  };
 
   Stream<int> get cambios => _cambios.stream;
   int? get dadoA => _dadoA;
