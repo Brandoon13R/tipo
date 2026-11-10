@@ -3,7 +3,6 @@ import 'dart:io' show exit;
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tipo/tablero.dart';
-import 'package:tipo/region.dart';
 import 'package:tipo/juego_bloc.dart';
 import 'package:tipo/tablero_config.dart';
 import 'package:tipo/nivel_config.dart';
@@ -13,6 +12,10 @@ import 'package:tipo/login.dart';
 import 'package:tipo/perfil_usuario.dart';
 import 'package:tipo/BDD.dart';
 import 'package:tipo/sesion_usuario.dart';
+import 'package:tipo/multijugador.dart';
+import 'package:tipo/tablero_visual.dart';
+
+export 'package:tipo/tablero_visual.dart' show TableroVisual;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -73,6 +76,30 @@ class _MenuPageState extends State<MenuPage> {
         builder: (_) => SeleccionNivelPage(
           supabaseClient: widget.supabaseClient,
           sesionUsuario: widget.sesionUsuario,
+        ),
+      ),
+    );
+  }
+
+  void _abrirMultijugador(BuildContext context) {
+    final session = widget.sesionUsuario;
+    final token = session?.token;
+    final username = session?.usuarioName;
+    final client = widget.supabaseClient;
+    if (token == null || username == null || client == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Inicia sesión para crear o unirte a una partida.'),
+        ),
+      );
+      return;
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => LobbyMultijugadorPage(
+          supabaseClient: client,
+          token: token,
+          usuario: username,
         ),
       ),
     );
@@ -250,6 +277,16 @@ class _MenuPageState extends State<MenuPage> {
                     child: const Padding(
                       padding: EdgeInsets.all(14),
                       child: Text('Jugar'),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    key: const ValueKey('multijugador'),
+                    onPressed: () => _abrirMultijugador(context),
+                    icon: const Icon(Icons.people_alt_outlined),
+                    label: const Padding(
+                      padding: EdgeInsets.all(14),
+                      child: Text('Multijugador'),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -830,112 +867,3 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
 }
 
 /// Componente reutilizable: 49 cuadrados y un espacio uniforme de 6 px.
-class TableroVisual extends StatelessWidget {
-  const TableroVisual({
-    super.key,
-    required this.valores,
-    required this.habilitado,
-    required this.onSeleccionar,
-    required this.config,
-    this.tablero,
-    this.iluminadas = const {},
-    this.onJugar,
-  });
-
-  final Map<String, int?> valores;
-  final bool habilitado;
-  final ValueChanged<String> onSeleccionar;
-  final NivelConfig config;
-  final Tablero? tablero;
-  final Set<Coordenada> iluminadas;
-  final ValueChanged<Coordenada>? onJugar;
-
-  @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      for (var y = 0; y < config.matriz.length; y++) ...[
-        if (y > 0) const SizedBox(height: 6),
-        Row(
-          children: [
-            for (var x = 0; x < config.matriz[y].length; x++) ...[
-              if (x > 0) const SizedBox(width: 6),
-              Expanded(child: AspectRatio(aspectRatio: 1, child: _celda(x, y))),
-            ],
-          ],
-        ),
-      ],
-    ],
-  );
-
-  Widget _celda(int x, int y) {
-    String? region;
-    for (final entrada in config.iniciales.entries) {
-      if (entrada.value.x == x && entrada.value.y == y) {
-        region = entrada.key;
-      }
-    }
-
-    final seleccionable = region;
-    final posicion = Coordenada(x, y);
-    final destacada = iluminadas.contains(posicion);
-    final numero = tablero?.valorEn(posicion) ?? valores[region];
-    final color = config.matriz[y][x];
-
-    final etiqueta =
-        'Fila ${y + 1}, columna ${x + 1}, ${color.nombre}'
-        '${region == null ? "" : ", $region, número ${numero ?? "sin asignar"}"}';
-
-    return Semantics(
-      label: destacada ? '$etiqueta, disponible para colocar' : etiqueta,
-      button: region != null,
-      child: Tooltip(
-        message: etiqueta,
-        child: Material(
-          key: ValueKey('celda-$x-$y'),
-          color: destacada
-              ? Color.lerp(color.color, Colors.white, 0.38)!
-              : color.color,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-            side: BorderSide(
-              color: destacada
-                  ? Colors.white
-                  : region != null
-                  ? const Color(0xFF193E37)
-                  : Colors.transparent,
-              width: destacada ? 3 : 2,
-            ),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: destacada && onJugar != null
-                ? () => onJugar!(posicion)
-                : habilitado && seleccionable != null
-                ? () => onSeleccionar(seleccionable)
-                : null,
-            child: Center(
-              child: numero != null
-                  ? Text(
-                      '$numero',
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF102A25),
-                      ),
-                    )
-                  : destacada
-                  ? const Icon(
-                      Icons.add_circle_outline,
-                      size: 22,
-                      color: Color(0xFF102A25),
-                    )
-                  : region != null
-                  ? const Icon(Icons.add, size: 18, color: Color(0xFF193E37))
-                  : const SizedBox.shrink(),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
