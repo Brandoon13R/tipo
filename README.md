@@ -11,13 +11,41 @@ Interfaz Flutter para la selección de los seis números iniciales y las primera
 4. Pulsa **Inicio** para guardar los valores en el modelo Tablero.
    Se muestra una confirmación con las coordenadas y se bloquea la selección.
 
-Al pulsar Inicio se lanzan automáticamente dos dados con valores 1–6. Toca uno como pivote: se iluminan las casillas vacías adyacentes por un lado a cualquier ficha con ese número que aceptan el valor del otro dado según la regla de su región. Puedes elegir el otro pivote, tocar una casilla iluminada para jugar, u omitir la tirada. Omitir descarta ambos valores y lanza automáticamente el siguiente par, incluso si existía una jugada posible. Después de colocar un número también se lanzan los dados para el siguiente turno. Reiniciar permite volver a elegir los números iniciales. Los números y contadores se conservan en memoria mientras la pantalla está abierta. Las zonas completadas otorgan una vez el premio de primer lugar y la tabla muestra el total. La partida es individual.
+Al pulsar Inicio se lanzan automáticamente dos dados con valores 1–6. Toca uno como pivote: se iluminan las casillas vacías adyacentes por un lado a cualquier ficha con ese número que aceptan el valor del otro dado según la regla de su región. Puedes elegir el otro pivote, tocar una casilla iluminada para jugar, u omitir la tirada. Omitir descarta ambos valores y lanza automáticamente el siguiente par, incluso si existía una jugada posible. Después de colocar un número también se lanzan los dados para el siguiente turno. Reiniciar permite volver a elegir los números iniciales. Los números y contadores se conservan en memoria mientras la pantalla está abierta. Las zonas completadas otorgan una vez el premio de primer lugar y la tabla muestra el total.
+
+## Partidas multijugador
+
+Las cuentas con sesión iniciada pueden crear un lobby o unirse con un código
+de seis dígitos. Ambas personas juegan en tableros independientes con el mismo
+nivel y la misma distribución inicial; cada quien obtiene sus propias tiradas.
+Cuando ambos tableros terminan, gana la puntuación más alta (o hay empate).
+Durante la partida se puede conceder y dar la victoria al rival.
+
+La app sincroniza el tablero después de cada jugada y reintenta al recuperar la
+conexión. Mientras no pueda sincronizar, bloquea nuevas jugadas para no perder
+el estado. Se puede recuperar una sala activa desde **Multijugador** usando el
+mismo código. Si el rival permanece desconectado durante dos minutos, se puede
+reclamar la victoria.
+
+El multijugador depende de `usuarios` y `sesiones_usuario`; aplica primero la
+migración de autenticación `20261030000000_custom_usuario_auth.sql` si aún no
+está aplicada. Después aplica
+`supabase/migrations/20261109000000_multijugador.sql` y despliega la función:
+
+```sh
+supabase functions deploy multijugador
+```
+
+La función valida el token de sesión propio de la app y es la única con acceso
+a los datos de las salas. No se debe conceder acceso directo a esas tablas a
+`anon` ni a `authenticated`. La función debe usar el mismo secreto
+`SUPABASE_SERVICE_ROLE_KEY` que `usuario-auth`.
 
 ## Estructura
 
 - `lib/tablero_config.dart`: matriz bidimensional inmutable 7 × 7, paleta
   solicitada y las seis posiciones señaladas en la imagen de referencia.
-- `TableroVisual` en `lib/main.dart`: 49 cuadrados con esquinas de 8 px,
+- `TableroVisual` en `lib/tablero_visual.dart`: 49 cuadrados con esquinas de 8 px,
   separación de 6 px y ancho adaptable, hasta 540 px.
 - `ValoresInicialesBloc`: BLoC local mediante StreamController; valida que estén
   los seis enteros entre 1 y 6 sin repetir y devuelve una copia de solo lectura.

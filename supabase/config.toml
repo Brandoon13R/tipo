@@ -1,2 +1,5 @@
 [functions.usuario-auth]
 verify_jwt = false
+
+[functions.multijugador]
+verify_jwt = false
