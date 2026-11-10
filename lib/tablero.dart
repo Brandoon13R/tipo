@@ -41,6 +41,22 @@ class Tablero {
     regiones: config.regionesDeJuego,
   );
 
+  void restaurarDatos(Map<Coordenada, int> datos) {
+    final restaurados = <Coordenada, int>{};
+    for (final entrada in datos.entries) {
+      if (!contiene(entrada.key) ||
+          regionEn(entrada.key) == null ||
+          entrada.value < 1 ||
+          entrada.value > 6) {
+        throw const FormatException('El estado contiene una casilla inválida.');
+      }
+      restaurados[entrada.key] = entrada.value;
+    }
+    _datos
+      ..clear()
+      ..addAll(restaurados);
+  }
+
   /// Copia de solo lectura de las casillas ocupadas.
   Map<Coordenada, int> get datos => Map<Coordenada, int>.unmodifiable(_datos);
 
