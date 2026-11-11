@@ -61,7 +61,7 @@ class TableroVisual extends StatelessWidget {
 
     return Semantics(
       label: destacada ? '$etiqueta, disponible para colocar' : etiqueta,
-      button: region != null,
+      button: destacada || region != null,
       child: Tooltip(
         message: etiqueta,
         child: Material(
