@@ -35,7 +35,7 @@ class EstadoSalaMultijugador {
   final String codigo;
   final String estado;
   final String configId;
-  final List<int> valoresIniciales;
+  final List<int>? valoresIniciales;
   final String usuarioAnfitrion;
   final String? usuarioOponente;
   final bool esAnfitrion;
@@ -56,9 +56,10 @@ class EstadoSalaMultijugador {
     final valores = json['initial_values'];
     final host = json['host_username'];
     final valoresValidos =
+        valores == null && estado == 'configurando' ||
         valores is List &&
-        valores.length == 6 &&
-        valores.every((value) => value is int);
+            valores.length == 6 &&
+            valores.every((value) => value is int);
     if (codigo is! String ||
         estado is! String ||
         configId is! String ||
@@ -95,7 +96,9 @@ class EstadoSalaMultijugador {
       codigo: codigo,
       estado: estado,
       configId: configId,
-      valoresIniciales: List<int>.unmodifiable(valores.cast<int>()),
+      valoresIniciales: valores == null
+          ? null
+          : List<int>.unmodifiable(valores.cast<int>()),
       usuarioAnfitrion: host,
       usuarioOponente: opponent as String?,
       esAnfitrion: json['is_host'] as bool,
@@ -128,6 +131,11 @@ class MultijugadorService {
 
   Future<EstadoSalaMultijugador> unirse(String codigo) =>
       _invoke('join', {'code': codigo});
+
+  Future<EstadoSalaMultijugador> iniciar({
+    required String codigo,
+    required List<int> valoresIniciales,
+  }) => _invoke('start', {'code': codigo, 'initial_values': valoresIniciales});
 
   Future<EstadoSalaMultijugador> consultar(String codigo) =>
       _invoke('state', {'code': codigo});

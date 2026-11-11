@@ -11,6 +11,13 @@ import 'package:tipo/tablero_config.dart';
 import 'package:tipo/tabla_puntos.dart';
 import 'package:tipo/tablero_visual.dart';
 
+bool _partidaSinJugadas(Map<String, dynamic>? state) =>
+    state == null ||
+    state['turns_played'] == 0 &&
+        state['turns_skipped'] == 0 &&
+        state['score'] == 0 &&
+        state['finished'] == false;
+
 class LobbyMultijugadorPage extends StatefulWidget {
   const LobbyMultijugadorPage({
     super.key,
@@ -31,7 +38,7 @@ class _LobbyMultijugadorPageState extends State<LobbyMultijugadorPage> {
   final _codigoController = TextEditingController();
   late final MultijugadorService _service;
   NivelConfig _config = Nivel1Config();
-  final Map<String, int?> _valores = {};
+  final Map<String, int?> _valoresIniciales = {};
   bool _ocupado = false;
   String? _error;
 
@@ -42,23 +49,17 @@ class _LobbyMultijugadorPageState extends State<LobbyMultijugadorPage> {
   }
 
   Future<void> _crearSala() async {
-    final valores = [
-      for (final region in _config.iniciales.keys) _valores[region],
-    ];
-    if (valores.any((value) => value == null) || valores.toSet().length != 6) {
+    final valores = _valoresSeleccionados();
+    if (valores == null) {
       setState(() => _error = 'Asigna los números del 1 al 6 sin repetir.');
       return;
     }
-
-    final tablero = Tablero.desdeConfig(_config);
-    for (final entry in _config.iniciales.entries) {
-      if (!tablero.agregar(entry.value, _valores[entry.key]!)) {
-        setState(
-          () => _error =
-              'Esa distribución inicial no cumple las reglas del nivel.',
-        );
-        return;
-      }
+    if (!_tableroInicialValido(valores)) {
+      setState(
+        () =>
+            _error = 'Esa distribución inicial no cumple las reglas del nivel.',
+      );
+      return;
     }
 
     setState(() {
@@ -68,7 +69,7 @@ class _LobbyMultijugadorPageState extends State<LobbyMultijugadorPage> {
     try {
       final room = await _service.crear(
         configId: _config.id,
-        valoresIniciales: valores.cast<int>(),
+        valoresIniciales: valores,
       );
       if (!mounted) return;
       await _abrirSala(room);
@@ -78,6 +79,65 @@ class _LobbyMultijugadorPageState extends State<LobbyMultijugadorPage> {
     } finally {
       if (mounted) setState(() => _ocupado = false);
     }
+  }
+
+  List<int>? _valoresSeleccionados() {
+    final values = [
+      for (final region in _config.iniciales.keys) _valoresIniciales[region],
+    ];
+    if (values.any((value) => value == null) || values.toSet().length != 6) {
+      return null;
+    }
+    return values.cast<int>();
+  }
+
+  bool _tableroInicialValido(List<int> values) {
+    final tablero = Tablero.desdeConfig(_config);
+    var index = 0;
+    for (final position in _config.iniciales.values) {
+      if (!tablero.agregar(position, values[index++])) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  Future<void> _elegirNumero(String region) async {
+    if (_ocupado) return;
+    final usadosEnOtrasRegiones = {
+      for (final entry in _valoresIniciales.entries)
+        if (entry.key != region && entry.value != null) entry.value,
+    };
+    final valor = await showDialog<int>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text('Número inicial · $region'),
+        children: [
+          for (var number = 1; number <= 6; number++)
+            SimpleDialogOption(
+              key: ValueKey('opcion-inicial-$number'),
+              onPressed: usadosEnOtrasRegiones.contains(number)
+                  ? null
+                  : () => Navigator.pop(context, number),
+              child: Text(
+                usadosEnOtrasRegiones.contains(number)
+                    ? '$number · ya asignado'
+                    : '$number',
+              ),
+            ),
+          SimpleDialogOption(
+            key: const ValueKey('borrar-inicial'),
+            onPressed: () => Navigator.pop(context, 0),
+            child: const Text('Borrar número'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || valor == null) return;
+    setState(() {
+      _valoresIniciales[region] = valor == 0 ? null : valor;
+      _error = null;
+    });
   }
 
   Future<void> _unirse() async {
@@ -103,6 +163,23 @@ class _LobbyMultijugadorPageState extends State<LobbyMultijugadorPage> {
   }
 
   Future<void> _abrirSala(EstadoSalaMultijugador room) async {
+    final segundoSinTablero =
+        !room.esAnfitrion &&
+        room.estado == 'activa' &&
+        _partidaSinJugadas(room.estadoPropio);
+    if ((!room.esAnfitrion && room.estado == 'configurando') ||
+        segundoSinTablero) {
+      await Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(
+          builder: (_) => ConfigurarTableroMultijugadorPage(
+            service: _service,
+            salaInicial: room,
+            usuario: widget.usuario,
+          ),
+        ),
+      );
+      return;
+    }
     if (room.estado == 'activa' || room.estado == 'finalizada') {
       await Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(
@@ -150,13 +227,14 @@ class _LobbyMultijugadorPageState extends State<LobbyMultijugadorPage> {
             padding: const EdgeInsets.all(24),
             children: [
               const Text(
-                'Crea una partida',
+                'Configura tu tablero inicial',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 8),
               const Text(
-                'Cada persona jugará en su propio tablero con la misma '
-                'configuración inicial.',
+                'Al crear una sala, elige el nivel y tus números iniciales. '
+                'Al unirte, ingresa el código: después podrás elegir tus '
+                'números en tu propio tablero.',
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
@@ -176,31 +254,30 @@ class _LobbyMultijugadorPageState extends State<LobbyMultijugadorPage> {
                         if (id == null) return;
                         setState(() {
                           _config = _configuracion(id);
-                          _valores.clear();
+                          _valoresIniciales.clear();
                           _error = null;
                         });
                       },
               ),
               const SizedBox(height: 12),
-              for (final region in _config.iniciales.keys)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: DropdownButtonFormField<int>(
-                    key: ValueKey('valor-inicial-$region'),
-                    initialValue: _valores[region],
-                    decoration: InputDecoration(labelText: region),
-                    items: [
-                      for (var value = 1; value <= 6; value++)
-                        DropdownMenuItem(value: value, child: Text('$value')),
-                    ],
-                    onChanged: _ocupado
-                        ? null
-                        : (value) => setState(() {
-                            _valores[region] = value;
-                            _error = null;
-                          }),
-                  ),
-                ),
+              Text(
+                '${_valoresIniciales.values.whereType<int>().length} '
+                'de 6 números asignados',
+                key: const ValueKey('progreso-inicial-multijugador'),
+              ),
+              const SizedBox(height: 12),
+              TableroVisual(
+                key: ValueKey('tablero-inicial-${_config.id}'),
+                valores: _valoresIniciales,
+                habilitado: !_ocupado,
+                onSeleccionar: _elegirNumero,
+                config: _config,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Las casillas pivote permanecen en la posición del nivel. '
+                'Solo se elige qué número va en cada una.',
+              ),
               const SizedBox(height: 8),
               FilledButton.icon(
                 key: const ValueKey('crear-sala'),
@@ -253,6 +330,273 @@ class _LobbyMultijugadorPageState extends State<LobbyMultijugadorPage> {
   );
 }
 
+class ConfigurarTableroMultijugadorPage extends StatefulWidget {
+  const ConfigurarTableroMultijugadorPage({
+    super.key,
+    required this.service,
+    required this.salaInicial,
+    required this.usuario,
+  });
+
+  final MultijugadorService service;
+  final EstadoSalaMultijugador salaInicial;
+  final String usuario;
+
+  @override
+  State<ConfigurarTableroMultijugadorPage> createState() =>
+      _ConfigurarTableroMultijugadorPageState();
+}
+
+class _ConfigurarTableroMultijugadorPageState
+    extends State<ConfigurarTableroMultijugadorPage> {
+  late final NivelConfig _config;
+  final Map<String, int?> _valores = {};
+  bool _ocupado = false;
+  bool _consultando = false;
+  String? _error;
+  Timer? _presencia;
+
+  @override
+  void initState() {
+    super.initState();
+    _config = _configuracion(widget.salaInicial.configId);
+    _presencia = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => _actualizarPresencia(),
+    );
+    unawaited(_actualizarPresencia());
+  }
+
+  Future<void> _actualizarPresencia() async {
+    if (_consultando || !mounted) return;
+    _consultando = true;
+    try {
+      await widget.service.consultar(widget.salaInicial.codigo);
+      if (mounted && _error?.startsWith('Sin conexión') == true) {
+        setState(() => _error = null);
+      }
+    } on MultijugadorException catch (error) {
+      if (mounted) setState(() => _error = 'Sin conexión: ${error.message}');
+    } finally {
+      _consultando = false;
+    }
+  }
+
+  List<int>? _valoresSeleccionados() {
+    final values = [
+      for (final region in _config.iniciales.keys) _valores[region],
+    ];
+    if (values.any((value) => value == null) || values.toSet().length != 6) {
+      return null;
+    }
+    return values.cast<int>();
+  }
+
+  bool _tableroInicialValido(List<int> values) {
+    final tablero = Tablero.desdeConfig(_config);
+    var index = 0;
+    for (final position in _config.iniciales.values) {
+      if (!tablero.agregar(position, values[index++])) return false;
+    }
+    return true;
+  }
+
+  Future<void> _elegirNumero(String region) async {
+    if (_ocupado) return;
+    final usadosEnOtrasRegiones = {
+      for (final entry in _valores.entries)
+        if (entry.key != region && entry.value != null) entry.value,
+    };
+    final value = await showDialog<int>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text('Número inicial · $region'),
+        children: [
+          for (var number = 1; number <= 6; number++)
+            SimpleDialogOption(
+              key: ValueKey('opcion-inicial-$number'),
+              onPressed: usadosEnOtrasRegiones.contains(number)
+                  ? null
+                  : () => Navigator.pop(context, number),
+              child: Text(
+                usadosEnOtrasRegiones.contains(number)
+                    ? '$number · ya asignado'
+                    : '$number',
+              ),
+            ),
+          SimpleDialogOption(
+            key: const ValueKey('borrar-inicial'),
+            onPressed: () => Navigator.pop(context, 0),
+            child: const Text('Borrar número'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || value == null) return;
+    setState(() {
+      _valores[region] = value == 0 ? null : value;
+      _error = null;
+    });
+  }
+
+  Future<void> _iniciarPartida() async {
+    final values = _valoresSeleccionados();
+    if (values == null) {
+      setState(() => _error = 'Asigna los números del 1 al 6 sin repetir.');
+      return;
+    }
+    if (!_tableroInicialValido(values)) {
+      setState(
+        () =>
+            _error = 'Esa distribución inicial no cumple las reglas del nivel.',
+      );
+      return;
+    }
+
+    setState(() {
+      _ocupado = true;
+      _error = null;
+    });
+    try {
+      final room = await _confirmarInicio(values);
+      if (!mounted) return;
+      await Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(
+          builder: (_) => PartidaMultijugadorPage(
+            service: widget.service,
+            salaInicial: room,
+            usuario: widget.usuario,
+          ),
+        ),
+      );
+    } on MultijugadorException catch (error) {
+      if (mounted) setState(() => _error = error.message);
+    } finally {
+      if (mounted) setState(() => _ocupado = false);
+    }
+  }
+
+  Future<EstadoSalaMultijugador> _confirmarInicio(List<int> values) async {
+    try {
+      return await widget.service.iniciar(
+        codigo: widget.salaInicial.codigo,
+        valoresIniciales: values,
+      );
+    } on MultijugadorException catch (error) {
+      if (error.message != 'Acción no reconocida.') rethrow;
+      if (widget.salaInicial.estado != 'activa' ||
+          !_partidaSinJugadas(widget.salaInicial.estadoPropio)) {
+        rethrow;
+      }
+
+      final juego = _crearJuegoInicial(values);
+      try {
+        return await widget.service.guardarEstado(
+          codigo: widget.salaInicial.codigo,
+          version: widget.salaInicial.versionPropia,
+          estado: juego.toJson(),
+        );
+      } finally {
+        juego.dispose();
+      }
+    }
+  }
+
+  JuegoBloc _crearJuegoInicial(List<int> values) {
+    final tablero = Tablero.desdeConfig(_config);
+    var index = 0;
+    for (final position in _config.iniciales.values) {
+      if (!tablero.agregar(position, values[index++])) {
+        throw StateError('La configuración inicial del servidor no es válida.');
+      }
+    }
+    return JuegoBloc(tablero);
+  }
+
+  @override
+  void dispose() {
+    _presencia?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(
+      title: const Text('Configura tu tablero'),
+      automaticallyImplyLeading: false,
+    ),
+    body: SafeArea(
+      child: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    '${_config.nombre} · Tu tablero',
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Elige los números para las seis casillas pivote. '
+                    'El anfitrión espera a que confirmes para iniciar la partida.',
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    '${_valores.values.whereType<int>().length} de 6 números asignados',
+                    key: const ValueKey('progreso-inicial-multijugador'),
+                  ),
+                  const SizedBox(height: 12),
+                  Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 520),
+                      child: TableroVisual(
+                        valores: _valores,
+                        habilitado: !_ocupado,
+                        onSeleccionar: _elegirNumero,
+                        config: _config,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Toca cada pivote para asignarle un número. '
+                    'No se pueden repetir.',
+                  ),
+                  if (_error != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      _error!,
+                      key: const ValueKey('error-configuracion-inicial'),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    key: const ValueKey('iniciar-partida-multijugador'),
+                    onPressed: _ocupado || _valoresSeleccionados() == null
+                        ? null
+                        : _iniciarPartida,
+                    child: Text(_ocupado ? 'Iniciando...' : 'Iniciar partida'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 class SalaMultijugadorPage extends StatefulWidget {
   const SalaMultijugadorPage({
     super.key,
@@ -281,7 +625,7 @@ class _SalaMultijugadorPageState extends State<SalaMultijugadorPage> {
     super.initState();
     _sala = widget.salaInicial;
     _programarConsulta();
-    if (_sala.estado == 'activa') {
+    if (_sala.estado == 'activa' && _sala.estadoOponente != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _abrirPartida(_sala);
       });
@@ -302,7 +646,9 @@ class _SalaMultijugadorPageState extends State<SalaMultijugadorPage> {
         _sala = sala;
         _error = null;
       });
-      if (sala.estado == 'activa') _abrirPartida(sala);
+      if (sala.estado == 'activa' && sala.estadoOponente != null) {
+        _abrirPartida(sala);
+      }
     } on MultijugadorException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } finally {
@@ -351,6 +697,9 @@ class _SalaMultijugadorPageState extends State<SalaMultijugadorPage> {
   @override
   Widget build(BuildContext context) {
     final esperando = _sala.estado == 'esperando';
+    final rivalConfigurando =
+        _sala.estado == 'configurando' ||
+        _sala.estado == 'activa' && _sala.estadoOponente == null;
     return Scaffold(
       appBar: AppBar(title: const Text('Lobby')),
       body: SafeArea(
@@ -370,7 +719,11 @@ class _SalaMultijugadorPageState extends State<SalaMultijugadorPage> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    esperando ? 'Esperando a tu rival' : 'Partida lista',
+                    esperando
+                        ? 'Esperando a tu rival'
+                        : rivalConfigurando
+                        ? 'Tu rival configura su tablero'
+                        : 'Partida lista',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 24,
@@ -409,6 +762,12 @@ class _SalaMultijugadorPageState extends State<SalaMultijugadorPage> {
                       'mismo código.',
                       textAlign: TextAlign.center,
                     )
+                  else if (rivalConfigurando)
+                    const Text(
+                      'Tu rival está eligiendo sus números iniciales. '
+                      'La partida comenzará cuando pulse “Iniciar partida”.',
+                      textAlign: TextAlign.center,
+                    )
                   else
                     Text(
                       'Rival: ${_sala.usuarioOponente ?? "conectado"}',
@@ -426,7 +785,7 @@ class _SalaMultijugadorPageState extends State<SalaMultijugadorPage> {
                       ),
                     ),
                   ],
-                  if (esperando) ...[
+                  if (esperando || rivalConfigurando) ...[
                     const SizedBox(height: 24),
                     OutlinedButton(
                       key: const ValueKey('cancelar-sala'),
@@ -500,9 +859,13 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
     if (sala.estadoPropio != null) {
       return JuegoBloc.restaurar(tablero, sala.estadoPropio!);
     }
+    final valoresIniciales = sala.valoresIniciales;
+    if (valoresIniciales == null) {
+      throw StateError('El tablero inicial aún no fue confirmado.');
+    }
     for (var index = 0; index < _config.iniciales.length; index++) {
       final position = _config.iniciales.values.elementAt(index);
-      if (!tablero.agregar(position, sala.valoresIniciales[index])) {
+      if (!tablero.agregar(position, valoresIniciales[index])) {
         throw StateError('La configuración inicial del servidor no es válida.');
       }
     }
