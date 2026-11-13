@@ -1,4 +1,4 @@
-# Tipo — Brilliant
+# Brilliant
 
 Interfaz Flutter para la selección de los seis números iniciales y las primeras jugadas.
 
