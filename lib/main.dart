@@ -106,10 +106,14 @@ class _MenuPageState extends State<MenuPage> {
   }
 
   Future<void> _cerrarSesion() async {
-    final client = widget.supabaseClient;
+    final authService =
+        widget.authService ??
+        (widget.supabaseClient == null
+            ? null
+            : AuthService(widget.supabaseClient!));
     final session = widget.sesionUsuario;
     final token = session?.token;
-    if (client == null ||
+    if (authService == null ||
         session == null ||
         token == null ||
         _cerrandoSesion ||
@@ -119,7 +123,7 @@ class _MenuPageState extends State<MenuPage> {
 
     setState(() => _cerrandoSesion = true);
     try {
-      await AuthService(client).cerrarSesion(token);
+      await authService.cerrarSesion(token);
       await session.limpiar();
     } on AuthServiceException catch (error) {
       if (!mounted) return;
@@ -227,120 +231,212 @@ class _MenuPageState extends State<MenuPage> {
     );
   }
 
-  Widget _buildMenu(BuildContext context, bool sesionActiva) {
+  Widget _botonAccesoEsquina(BuildContext context, bool sesionActiva) {
     final client = widget.supabaseClient;
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 480),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: PerfilUsuario(sesion: widget.sesionUsuario),
-                  ),
-                  if (widget.sesionUsuario?.error case final error?) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      error,
-                      key: const ValueKey('error-restaurar-sesion'),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                  ],
-                  const Icon(
-                    Icons.grid_view_rounded,
-                    size: 56,
-                    color: Color(0xFF193E37),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'BRILLIANT',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      letterSpacing: 3,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 28,
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-                  FilledButton(
-                    key: const ValueKey('jugar'),
-                    onPressed: () => _jugar(context),
-                    child: const Padding(
-                      padding: EdgeInsets.all(14),
-                      child: Text('Jugar'),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  OutlinedButton.icon(
-                    key: const ValueKey('multijugador'),
-                    onPressed: () => _abrirMultijugador(context),
-                    icon: const Icon(Icons.people_alt_outlined),
-                    label: const Padding(
-                      padding: EdgeInsets.all(14),
-                      child: Text('Multijugador'),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  OutlinedButton(
-                    key: ValueKey(
-                      sesionActiva ? 'cerrar-sesion' : 'iniciar-sesion',
-                    ),
-                    onPressed: _cerrandoSesion || _eliminandoCuenta
-                        ? null
-                        : sesionActiva
-                        ? _cerrarSesion
-                        : () => Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => LoginPage(
-                                supabaseClient: client,
-                                sesionUsuario: widget.sesionUsuario,
-                              ),
-                            ),
-                          ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: Text(
-                        _cerrandoSesion
-                            ? 'Cerrando sesión...'
-                            : _eliminandoCuenta
-                            ? 'Eliminando cuenta...'
-                            : sesionActiva
-                            ? 'Cerrar sesión'
-                            : 'Iniciar sesión',
+    final ocupada = _cerrandoSesion || _eliminandoCuenta;
+    final username = widget.sesionUsuario?.usuarioName;
+
+    if (!sesionActiva || username == null) {
+      return Tooltip(
+        message: 'Iniciar sesión',
+        child: Material(
+          color: Colors.white,
+          shape: const CircleBorder(
+            side: BorderSide(color: Color(0xFF193E37), width: 1.5),
+          ),
+          elevation: 1,
+          child: InkWell(
+            key: const ValueKey('iniciar-sesion'),
+            customBorder: const CircleBorder(),
+            onTap: ocupada
+                ? null
+                : () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => LoginPage(
+                        supabaseClient: client,
+                        sesionUsuario: widget.sesionUsuario,
                       ),
                     ),
                   ),
-                  if (sesionActiva) ...[
-                    const SizedBox(height: 8),
-                    TextButton.icon(
-                      key: const ValueKey('eliminar-cuenta'),
-                      onPressed: _cerrandoSesion || _eliminandoCuenta
-                          ? null
-                          : _confirmarEliminarCuenta,
-                      icon: const Icon(Icons.delete_outline),
-                      label: const Text('Eliminar cuenta'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                  ],
-                ],
+            child: const Padding(
+              padding: EdgeInsets.all(12),
+              child: Icon(
+                Icons.person_outline_rounded,
+                color: Color(0xFF193E37),
+                size: 24,
               ),
             ),
+          ),
+        ),
+      );
+    }
+
+    return PopupMenuButton<String>(
+      key: const ValueKey('perfil-usuario'),
+      tooltip: 'Menú de perfil',
+      enabled: !ocupada,
+      position: PopupMenuPosition.under,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      onSelected: (opcion) {
+        if (opcion == 'cerrar_sesion') {
+          _cerrarSesion();
+        } else if (opcion == 'eliminar_cuenta') {
+          _confirmarEliminarCuenta();
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem<String>(
+          key: const ValueKey('cerrar-sesion'),
+          value: 'cerrar_sesion',
+          child: Row(
+            children: [
+              const Icon(Icons.logout_rounded, size: 20, color: Color(0xFF193E37)),
+              const SizedBox(width: 10),
+              Text(_cerrandoSesion ? 'Cerrando sesión...' : 'Cerrar sesión'),
+            ],
+          ),
+        ),
+        PopupMenuItem<String>(
+          key: const ValueKey('eliminar-cuenta'),
+          value: 'eliminar_cuenta',
+          child: Row(
+            children: [
+              Icon(
+                Icons.delete_outline_rounded,
+                size: 20,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                _eliminandoCuenta ? 'Eliminando cuenta...' : 'Eliminar cuenta',
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ],
+          ),
+        ),
+      ],
+      child: Material(
+        color: Colors.white,
+        shape: const StadiumBorder(
+          side: BorderSide(color: Color(0xFF193E37), width: 1.5),
+        ),
+        elevation: 1,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircleAvatar(
+                radius: 14,
+                backgroundColor: const Color(0xFF193E37),
+                child: Text(
+                  username.isNotEmpty ? username[0].toUpperCase() : 'U',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 140),
+                child: Text(
+                  username,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF193E37),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              const Icon(
+                Icons.arrow_drop_down_rounded,
+                color: Color(0xFF193E37),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
+
+  Widget _buildMenu(BuildContext context, bool sesionActiva) => Scaffold(
+    body: SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Align(
+              alignment: Alignment.topRight,
+              child: _botonAccesoEsquina(context, sesionActiva),
+            ),
+            Expanded(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 440),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (widget.sesionUsuario?.error case final error?) ...[
+                        Text(
+                          error,
+                          key: const ValueKey('error-restaurar-sesion'),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                      const Icon(
+                        Icons.grid_view_rounded,
+                        size: 56,
+                        color: Color(0xFF193E37),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'BRILLIANT',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          letterSpacing: 3,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 28,
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                      FilledButton(
+                        key: const ValueKey('jugar'),
+                        onPressed: () => _jugar(context),
+                        child: const Padding(
+                          padding: EdgeInsets.all(14),
+                          child: Text('Jugar'),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      OutlinedButton.icon(
+                        key: const ValueKey('multijugador'),
+                        onPressed: () => _abrirMultijugador(context),
+                        icon: const Icon(Icons.people_alt_outlined),
+                        label: const Padding(
+                          padding: EdgeInsets.all(14),
+                          child: Text('Multijugador'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 class SeleccionNivelPage extends StatelessWidget {
@@ -520,121 +616,218 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
     });
   }
 
+  Widget _fichaEstadistica({
+    required IconData icono,
+    required String etiqueta,
+    required String valor,
+    Key? valorKey,
+  }) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(10),
+      border: Border.all(color: const Color(0xFFDCE5DF)),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icono, size: 18, color: const Color(0xFF193E37)),
+        const SizedBox(width: 8),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              etiqueta,
+              style: const TextStyle(
+                fontSize: 11,
+                color: Colors.black54,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            Text(
+              valor,
+              key: valorKey,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF102A25),
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+
+  Widget _resumenPartidaIndividual(JuegoBloc juego) {
+    final totalCasillas = _config.matriz.length * _config.matriz.first.length;
+    final ocupadas = juego.tablero.datos.length;
+    final zonasCompletas = juego.puntosPorZona.length;
+    final totalZonas = _config.regiones.length;
+
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: [
+        _fichaEstadistica(
+          icono: Icons.stars_rounded,
+          etiqueta: 'Puntuación',
+          valor: '${juego.puntos} pts',
+        ),
+        _fichaEstadistica(
+          icono: Icons.grid_on_rounded,
+          etiqueta: 'Casillas',
+          valor: '$ocupadas / $totalCasillas',
+        ),
+        _fichaEstadistica(
+          icono: Icons.layers_outlined,
+          etiqueta: 'Zonas completas',
+          valor: '$zonasCompletas / $totalZonas',
+        ),
+      ],
+    );
+  }
+
   Widget _controlesJuego(JuegoBloc juego) {
     final pendientes = juego.tiradaPendiente;
     final pivote = juego.pivote;
     final posibles = juego.casillasIluminadas.length;
     final bloqueado = juego.bloqueado;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (bloqueado) ...[
-          Container(
-            key: const ValueKey('aviso-bloqueo'),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFE2E0),
-              border: Border.all(color: const Color(0xFFB3261E)),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Text(
-              'Partida bloqueada: no quedan jugadas válidas. '
-              'Reinicia para comenzar una partida nueva.',
-              style: TextStyle(
-                color: Color(0xFF8C1D18),
-                fontWeight: FontWeight.w700,
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFDCE5DF)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (bloqueado) ...[
+            Container(
+              key: const ValueKey('aviso-bloqueo'),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFE2E0),
+                border: Border.all(color: const Color(0xFFB3261E)),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'Partida bloqueada: no quedan jugadas válidas. '
+                'Reinicia para comenzar una partida nueva.',
+                style: TextStyle(
+                  color: Color(0xFF8C1D18),
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 10),
-        ],
-        const Text(
-          'Turno de juego',
-          style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          bloqueado
-              ? 'No hay casillas vacías que puedan completarse con las reglas.'
-              : pendientes
-              ? pivote == null
-                    ? 'Elige un dado como pivote. Colocarás el valor del otro.'
-                    : posibles == 0
-                    ? 'No hay casillas válidas con ese pivote. '
-                          'Prueba el otro dado o pulsa Omitir.'
-                    : 'Toca una casilla iluminada para colocar '
-                          '${juego.valorAColocar}.'
-              : 'Elige un dado como pivote.',
-          key: const ValueKey('instruccion-turno'),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            for (var i = 0; i < 2; i++) ...[
-              if (i > 0) const SizedBox(width: 10),
-              Expanded(
-                child: OutlinedButton(
-                  key: ValueKey('dado-$i'),
-                  onPressed: pendientes && !bloqueado
-                      ? () => juego.elegirPivote(i)
-                      : null,
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: pivote == i
-                        ? const Color(0xFFD4F4D8)
-                        : Colors.white,
-                    side: BorderSide(
-                      color: pivote == i
-                          ? const Color(0xFF193E37)
-                          : Colors.black38,
-                      width: pivote == i ? 2 : 1,
-                    ),
-                  ),
-                  child: Text(
-                    '${i == 0 ? juego.dadoA ?? "–" : juego.dadoB ?? "–"}',
-                    style: const TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+            const SizedBox(height: 10),
+          ],
+          Row(
+            children: [
+              const Icon(
+                Icons.casino_outlined,
+                color: Color(0xFF193E37),
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Turno de juego',
+                  style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
+                ),
+              ),
+              Text(
+                'Jugadas: ${juego.turnosJugados} · '
+                'Omitidas: ${juego.turnosOmitidos}',
+                key: const ValueKey('contador-turnos'),
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF193E37),
                 ),
               ),
             ],
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                key: const ValueKey('omitir'),
-                onPressed: pendientes && !bloqueado ? juego.omitir : null,
-                child: const Text('Omitir'),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            bloqueado
+                ? 'No hay casillas vacías que puedan completarse con las reglas.'
+                : pendientes
+                ? pivote == null
+                      ? 'Elige un dado como pivote. Colocarás el valor del otro.'
+                      : posibles == 0
+                      ? 'No hay casillas válidas con ese pivote. '
+                            'Prueba el otro dado o pulsa Omitir.'
+                      : 'Toca una casilla iluminada para colocar '
+                            '${juego.valorAColocar}.'
+                : 'Elige un dado como pivote.',
+            key: const ValueKey('instruccion-turno'),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              for (var i = 0; i < 2; i++) ...[
+                if (i > 0) const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton(
+                    key: ValueKey('dado-$i'),
+                    onPressed: pendientes && !bloqueado
+                        ? () => juego.elegirPivote(i)
+                        : null,
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: pivote == i
+                          ? const Color(0xFFD4F4D8)
+                          : const Color(0xFFF8FAF8),
+                      side: BorderSide(
+                        color: pivote == i
+                            ? const Color(0xFF193E37)
+                            : Colors.black38,
+                        width: pivote == i ? 2 : 1,
+                      ),
+                    ),
+                    child: Text(
+                      '${i == 0 ? juego.dadoA ?? "–" : juego.dadoB ?? "–"}',
+                      style: const TextStyle(
+                        fontSize: 25,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  key: const ValueKey('omitir'),
+                  onPressed: pendientes && !bloqueado ? juego.omitir : null,
+                  child: const Text('Omitir'),
+                ),
               ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: OutlinedButton(
-                key: const ValueKey('reiniciar'),
-                onPressed: () {
-                  setState(() {
-                    _tableroIniciado = null;
-                    _juego?.dispose();
-                    _juego = null;
-                  });
-                },
-                child: const Text('Reiniciar'),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton(
+                  key: const ValueKey('reiniciar'),
+                  onPressed: () {
+                    setState(() {
+                      _tableroIniciado = null;
+                      _juego?.dispose();
+                      _juego = null;
+                    });
+                  },
+                  child: const Text('Reiniciar'),
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Jugadas: ${juego.turnosJugados} · '
-          'Omitidas: ${juego.turnosOmitidos}',
-          key: const ValueKey('contador-turnos'),
-        ),
-      ],
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -672,10 +865,17 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: tableroVisual),
+              Expanded(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 460),
+                    child: tableroVisual,
+                  ),
+                ),
+              ),
               const SizedBox(width: 12),
               SizedBox(
-                width: 205,
+                width: 215,
                 child: TablaPuntos(
                   puntos: juego!.puntos,
                   obtenidos: juego.puntosPorZona,
@@ -736,16 +936,19 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
                           onPressed: () => Navigator.of(context).pop(),
                           icon: const Icon(Icons.arrow_back),
                         ),
-                        Icon(Icons.grid_view_rounded, color: Color(0xFF193E37)),
-                        SizedBox(width: 10),
-                        Text(
+                        const Icon(
+                          Icons.grid_view_rounded,
+                          color: Color(0xFF193E37),
+                        ),
+                        const SizedBox(width: 10),
+                        const Text(
                           'BRILLIANT',
                           style: TextStyle(
                             letterSpacing: 2,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        Spacer(),
+                        const Spacer(),
                         Text(
                           '${_config.matriz.first.length} × ${_config.matriz.length}',
                         ),
@@ -755,27 +958,28 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
                       alignment: Alignment.centerRight,
                       child: PerfilUsuario(sesion: widget.sesionUsuario),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 12),
                     const Text(
                       'Mapa de colores',
                       style: TextStyle(
-                        fontSize: 28,
+                        fontSize: 26,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF193E37),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
                     const Text(
                       'Toca las seis casillas con + y distribuye '
                       'los números del 1 al 6 sin repetir.',
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 14),
                     StreamBuilder<int>(
                       stream: _juego?.cambios,
                       initialData: 0,
                       builder: (context, _) {
                         final juego = _juego;
                         return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             _tableroConPuntos(
                               valores: valores,
@@ -783,78 +987,97 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
                               juego: juego,
                             ),
                             if (juego != null) ...[
-                              const SizedBox(height: 18),
+                              const SizedBox(height: 12),
                               _controlesJuego(juego),
+                              const SizedBox(height: 12),
+                              _resumenPartidaIndividual(juego),
                             ],
                           ],
                         );
                       },
                     ),
-                    const SizedBox(height: 20),
-                    Text(
-                      '$cantidad DE 6 NÚMEROS COLOCADOS',
-                      key: const ValueKey('progreso'),
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      iniciado
-                          ? 'Datos iniciales guardados en el tablero.'
-                          : completos
-                          ? 'Todo listo. Puedes pulsar Inicio.'
-                          : cantidad == 6
-                          ? 'Hay números repetidos. '
-                                'Usa cada número una sola vez.'
-                          : 'Completa las seis casillas '
-                                'para habilitar Inicio.',
-                      key: const ValueKey('estado'),
-                    ),
-                    const SizedBox(height: 20),
-                    Wrap(
-                      spacing: 14,
-                      runSpacing: 8,
-                      children: [
-                        for (final color in ColorCasilla.values)
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFDCE5DF)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            '$cantidad DE 6 NÚMEROS COLOCADOS',
+                            key: const ValueKey('progreso'),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF193E37),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            iniciado
+                                ? 'Datos iniciales guardados en el tablero.'
+                                : completos
+                                ? 'Todo listo. Puedes pulsar Inicio.'
+                                : cantidad == 6
+                                ? 'Hay números repetidos. '
+                                      'Usa cada número una sola vez.'
+                                : 'Completa las seis casillas '
+                                      'para habilitar Inicio.',
+                            key: const ValueKey('estado'),
+                          ),
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 6,
                             children: [
-                              Container(
-                                width: 9,
-                                height: 9,
-                                decoration: BoxDecoration(
-                                  color: color.color,
-                                  borderRadius: BorderRadius.circular(2),
+                              for (final color in ColorCasilla.values)
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 9,
+                                      height: 9,
+                                      decoration: BoxDecoration(
+                                        color: color.color,
+                                        borderRadius: BorderRadius.circular(2),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Text(
+                                      color.nombre,
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                color.nombre,
-                                style: const TextStyle(fontSize: 12),
-                              ),
                             ],
                           ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    FilledButton(
-                      key: const ValueKey('inicio'),
-                      onPressed: completos && !iniciado ? _iniciar : null,
-                      child: const Text('Inicio'),
-                    ),
-                    if (iniciado) ...[
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Selección inicial confirmada',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                          const SizedBox(height: 14),
+                          FilledButton(
+                            key: const ValueKey('inicio'),
+                            onPressed: completos && !iniciado ? _iniciar : null,
+                            child: const Text('Inicio'),
+                          ),
+                          if (iniciado) ...[
+                            const Divider(height: 20),
+                            const Text(
+                              'Selección inicial confirmada',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 4),
+                            for (final entrada in _config.iniciales.entries)
+                              Text(
+                                '${entrada.key} · '
+                                'fila ${entrada.value.y + 1}, '
+                                'columna ${entrada.value.x + 1}: '
+                                '${_tableroIniciado!.valorEn(entrada.value)}',
+                              ),
+                          ],
+                        ],
                       ),
-                      for (final entrada in _config.iniciales.entries)
-                        Text(
-                          '${entrada.key} · '
-                          'fila ${entrada.value.y + 1}, '
-                          'columna ${entrada.value.x + 1}: '
-                          '${_tableroIniciado!.valorEn(entrada.value)}',
-                        ),
-                    ],
+                    ),
                   ],
                 );
               },
