@@ -494,4 +494,82 @@ void main() {
       expect(find.text('+6'), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'seleccionar un dado ilumina las casillas con + sin parpadear durante la sincronización',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1200));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      final client = crearClientePrueba();
+      final estadoPropio = {
+        'cells': [
+          {'x': 2, 'y': 0, 'value': 1},
+          {'x': 5, 'y': 1, 'value': 2},
+          {'x': 1, 'y': 3, 'value': 3},
+          {'x': 4, 'y': 3, 'value': 4},
+          {'x': 2, 'y': 5, 'value': 5},
+          {'x': 4, 'y': 6, 'value': 6},
+        ],
+        'die_a': 1,
+        'die_b': 1,
+        'pivot': null,
+        'turns_played': 0,
+        'turns_skipped': 0,
+        'score': 0,
+        'finished': false,
+        'zone_times': <String, int>{},
+      };
+      final sala = EstadoSalaMultijugador(
+        codigo: '123123',
+        estado: 'activa',
+        configId: 'nivel_1',
+        valoresIniciales: const [1, 2, 3, 4, 5, 6],
+        usuarioAnfitrion: 'anfitrion',
+        usuarioOponente: 'rival',
+        esAnfitrion: true,
+        oponenteConectado: true,
+        reclamarDesde: null,
+        horaServidor: DateTime.now(),
+        horaLocalRecibida: DateTime.now(),
+        estadoPropio: estadoPropio,
+        versionPropia: 1,
+        estadoOponente: estadoPropio,
+        ganador: null,
+        motivoFinalizacion: null,
+      );
+      final service = _FakeMultijugadorService(client, 'test-token', sala);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: PartidaMultijugadorPage(
+            service: service,
+            salaInicial: sala,
+            usuario: 'anfitrion',
+          ),
+        ),
+      );
+
+      // Selecciona el primer dado como pivote
+      final dado0 = find.byKey(const ValueKey('dado-multijugador-0'));
+      await tester.ensureVisible(dado0);
+      await tester.tap(dado0);
+      await tester.pump();
+
+      // Las casillas válidas con el signo + deben iluminarse de inmediato en el primer frame
+      final cantidadIluminadas = tester
+          .widgetList(find.byIcon(Icons.add_circle_outline))
+          .length;
+      expect(cantidadIluminadas, greaterThan(0));
+
+      // Avanza el reloj 1s, 2s y 3s (disparando el polling periódico) y verifica que no desaparecen
+      for (var segundo = 1; segundo <= 4; segundo++) {
+        await tester.pump(const Duration(seconds: 1));
+        expect(
+          tester.widgetList(find.byIcon(Icons.add_circle_outline)).length,
+          cantidadIluminadas,
+        );
+      }
+    },
+  );
 }

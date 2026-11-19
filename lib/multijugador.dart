@@ -1053,7 +1053,9 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
     _observacionInicialCompleta = true;
     _timer = Timer.periodic(const Duration(seconds: 3), (_) => _sincronizar());
     _reloj = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
+      if (mounted && _hayRivalDesconectado && _sala.estado == 'activa') {
+        setState(() {});
+      }
     });
     if ((_sala.estadoPropio == null ||
             _sala.estadoPropio!['zone_times'] == null ||
@@ -1104,33 +1106,42 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
     _sincronizando = true;
     try {
       if (_pendiente != null) {
-        try {
-          final saved = await widget.service.guardarEstado(
-            codigo: _sala.codigo,
-            version: _sala.versionPropia,
-            estado: _pendiente!,
-          );
+        while (_pendiente != null && mounted) {
+          final aGuardar = _pendiente!;
           _pendiente = null;
-          _aplicarSala(saved);
-        } on MultijugadorException catch (error) {
-          if (error.statusCode != 409) rethrow;
-          final current = await widget.service.consultar(_sala.codigo);
-          if (current.versionPropia > _sala.versionPropia &&
-              current.estadoPropio != null) {
-            _pendiente = null;
-            _reemplazarEstado(current.estadoPropio!);
+          try {
+            final saved = await widget.service.guardarEstado(
+              codigo: _sala.codigo,
+              version: _sala.versionPropia,
+              estado: aGuardar,
+            );
+            _aplicarSala(saved);
+          } on MultijugadorException catch (error) {
+            if (error.statusCode != 409) {
+              _pendiente ??= aGuardar;
+              rethrow;
+            }
+            final current = await widget.service.consultar(_sala.codigo);
+            if (_pendiente == null &&
+                current.versionPropia > _sala.versionPropia &&
+                current.estadoPropio != null) {
+              _reemplazarEstado(current.estadoPropio!);
+            }
+            _aplicarSala(current);
           }
-          _aplicarSala(current);
         }
       } else {
         final current = await widget.service.consultar(_sala.codigo);
-        if (current.versionPropia > _sala.versionPropia &&
+        if (_pendiente == null &&
+            current.versionPropia > _sala.versionPropia &&
             current.estadoPropio != null) {
           _reemplazarEstado(current.estadoPropio!);
         }
         _aplicarSala(current);
       }
-      if (mounted) setState(() => _errorConexion = null);
+      if (mounted && _errorConexion != null) {
+        setState(() => _errorConexion = null);
+      }
     } on MultijugadorException catch (error) {
       if (mounted) setState(() => _errorConexion = error.message);
     } catch (error) {
@@ -1139,7 +1150,9 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
       }
     } finally {
       _sincronizando = false;
-      if (mounted) setState(() {});
+      if (mounted && _pendiente != null) {
+        unawaited(_sincronizar());
+      }
     }
   }
 
@@ -1254,12 +1267,26 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
     }
   }
 
+  void _seleccionarPivote(int index) {
+    if (_sala.estado != 'activa' ||
+        _sala.eliminadoPropio ||
+        _errorConexion != null ||
+        _juego.finalizada) {
+      return;
+    }
+    try {
+      setState(() => _juego.elegirPivote(index));
+    } on StateError catch (error) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+    }
+  }
+
   void _actuar(void Function() accion) {
     if (_sala.estado != 'activa' ||
         _sala.eliminadoPropio ||
         _errorConexion != null ||
-        _pendiente != null ||
-        _sincronizando ||
         _juego.finalizada) {
       return;
     }
@@ -1417,8 +1444,6 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
         !_sala.eliminadoPropio &&
         _sala.estado == 'activa' &&
         _errorConexion == null &&
-        _pendiente == null &&
-        !_sincronizando &&
         !_juego.finalizada;
     final rivales = _sala.rivalesEfectivos;
     final vistasRivales = _construirVistasRivales(_sala);
@@ -2375,7 +2400,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                     OutlinedButton(
                       key: ValueKey('dado-multijugador-$index'),
                       onPressed: puedeJugar && _juego.tiradaPendiente
-                          ? () => _actuar(() => _juego.elegirPivote(index))
+                          ? () => _seleccionarPivote(index)
                           : null,
                       style: OutlinedButton.styleFrom(
                         backgroundColor: _juego.pivote == index
