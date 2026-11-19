@@ -70,21 +70,33 @@ class _MenuPageState extends State<MenuPage> {
   bool _cerrandoSesion = false;
   bool _eliminandoCuenta = false;
 
+  SesionUsuario get _sesionEfectiva =>
+      widget.sesionUsuario ?? SesionUsuario.instance;
+
   void _jugar(BuildContext context) {
+    final session = _sesionEfectiva;
+    if (!session.activa) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Inicia sesión o crea una cuenta para jugar.'),
+        ),
+      );
+      return;
+    }
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => SeleccionNivelPage(
           supabaseClient: widget.supabaseClient,
-          sesionUsuario: widget.sesionUsuario,
+          sesionUsuario: session,
         ),
       ),
     );
   }
 
   void _abrirMultijugador(BuildContext context) {
-    final session = widget.sesionUsuario;
-    final token = session?.token;
-    final username = session?.usuarioName;
+    final session = _sesionEfectiva;
+    final token = session.token;
+    final username = session.usuarioName;
     final client = widget.supabaseClient;
     if (token == null || username == null || client == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -111,10 +123,9 @@ class _MenuPageState extends State<MenuPage> {
         (widget.supabaseClient == null
             ? null
             : AuthService(widget.supabaseClient!));
-    final session = widget.sesionUsuario;
-    final token = session?.token;
+    final session = _sesionEfectiva;
+    final token = session.token;
     if (authService == null ||
-        session == null ||
         token == null ||
         _cerrandoSesion ||
         _eliminandoCuenta) {
@@ -175,9 +186,9 @@ class _MenuPageState extends State<MenuPage> {
     if (confirmacion != true || !mounted) return;
     if (_cerrandoSesion || _eliminandoCuenta) return;
 
-    final session = widget.sesionUsuario;
-    final token = session?.token;
-    if (session == null || token == null) return;
+    final session = _sesionEfectiva;
+    final token = session.token;
+    if (token == null) return;
 
     final authService =
         widget.authService ??
@@ -223,18 +234,27 @@ class _MenuPageState extends State<MenuPage> {
 
   @override
   Widget build(BuildContext context) {
-    final session = widget.sesionUsuario;
-    if (session == null) return _buildMenu(context, false);
+    final session = _sesionEfectiva;
     return AnimatedBuilder(
       animation: session,
-      builder: (context, _) => _buildMenu(context, session.activa),
+      builder: (context, _) {
+        if (!session.activa) {
+          return LoginPage(
+            authService: widget.authService,
+            supabaseClient: widget.supabaseClient,
+            sesionUsuario: session,
+          );
+        }
+        return _buildMenu(context, true);
+      },
     );
   }
 
   Widget _botonAccesoEsquina(BuildContext context, bool sesionActiva) {
     final client = widget.supabaseClient;
     final ocupada = _cerrandoSesion || _eliminandoCuenta;
-    final username = widget.sesionUsuario?.usuarioName;
+    final session = _sesionEfectiva;
+    final username = session.usuarioName;
 
     if (!sesionActiva || username == null) {
       return Tooltip(
@@ -254,7 +274,7 @@ class _MenuPageState extends State<MenuPage> {
                     MaterialPageRoute<void>(
                       builder: (_) => LoginPage(
                         supabaseClient: client,
-                        sesionUsuario: widget.sesionUsuario,
+                        sesionUsuario: session,
                       ),
                     ),
                   ),
