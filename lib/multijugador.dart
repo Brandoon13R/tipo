@@ -6,9 +6,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tipo/juego_bloc.dart';
 import 'package:tipo/multijugador_service.dart';
 import 'package:tipo/nivel_config.dart';
+import 'package:tipo/puntuacion.dart';
+import 'package:tipo/region.dart';
+import 'package:tipo/tabla_puntos.dart';
 import 'package:tipo/tablero.dart';
 import 'package:tipo/tablero_config.dart';
-import 'package:tipo/tabla_puntos.dart';
 import 'package:tipo/tablero_visual.dart';
 
 bool _partidaSinJugadas(Map<String, dynamic>? state) =>
@@ -163,12 +165,30 @@ class _LobbyMultijugadorPageState extends State<LobbyMultijugadorPage> {
   }
 
   Future<void> _abrirSala(EstadoSalaMultijugador room) async {
+    final perteneceASala =
+        room.esAnfitrion ||
+        room.usuarioOponente == widget.usuario ||
+        room.jugadores.isEmpty ||
+        room.jugadores.any((j) => j.usuario == widget.usuario);
+    if (!perteneceASala &&
+        (room.estado == 'activa' || room.estado == 'finalizada')) {
+      setState(() {
+        _error = 'La partida ya comenzó. No puedes unirte a una sala en curso.';
+      });
+      return;
+    }
+    final invitadoSinTablero =
+        !room.esAnfitrion &&
+        room.valoresIniciales == null &&
+        (room.estado == 'configurando' ||
+            room.estado == 'esperando' ||
+            (room.estado == 'activa' && _partidaSinJugadas(room.estadoPropio)));
     final segundoSinTablero =
         !room.esAnfitrion &&
         room.estado == 'activa' &&
-        _partidaSinJugadas(room.estadoPropio);
-    if ((!room.esAnfitrion && room.estado == 'configurando') ||
-        segundoSinTablero) {
+        _partidaSinJugadas(room.estadoPropio) &&
+        room.estadoPropio == null;
+    if (invitadoSinTablero || segundoSinTablero) {
       await Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(
           builder: (_) => ConfigurarTableroMultijugadorPage(
@@ -232,9 +252,9 @@ class _LobbyMultijugadorPageState extends State<LobbyMultijugadorPage> {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Al crear una sala, elige el nivel y tus números iniciales. '
-                'Al unirte, ingresa el código: después podrás elegir tus '
-                'números en tu propio tablero.',
+                'Al crear una sala (hasta 6 jugadores), elige el nivel y tus '
+                'números iniciales. Al unirte, ingresa el código: después '
+                'podrás elegir tus números en tu propio tablero.',
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
@@ -460,15 +480,27 @@ class _ConfigurarTableroMultijugadorPageState
     try {
       final room = await _confirmarInicio(values);
       if (!mounted) return;
-      await Navigator.of(context).pushReplacement(
-        MaterialPageRoute<void>(
-          builder: (_) => PartidaMultijugadorPage(
-            service: widget.service,
-            salaInicial: room,
-            usuario: widget.usuario,
+      if (room.estado == 'activa' || room.estado == 'finalizada') {
+        await Navigator.of(context).pushReplacement(
+          MaterialPageRoute<void>(
+            builder: (_) => PartidaMultijugadorPage(
+              service: widget.service,
+              salaInicial: room,
+              usuario: widget.usuario,
+            ),
           ),
-        ),
-      );
+        );
+      } else {
+        await Navigator.of(context).pushReplacement(
+          MaterialPageRoute<void>(
+            builder: (_) => SalaMultijugadorPage(
+              service: widget.service,
+              salaInicial: room,
+              usuario: widget.usuario,
+            ),
+          ),
+        );
+      }
     } on MultijugadorException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } finally {
@@ -618,6 +650,7 @@ class _SalaMultijugadorPageState extends State<SalaMultijugadorPage> {
   Timer? _timer;
   bool _consultando = false;
   bool _navegando = false;
+  bool _iniciando = false;
   String? _error;
 
   @override
@@ -625,19 +658,23 @@ class _SalaMultijugadorPageState extends State<SalaMultijugadorPage> {
     super.initState();
     _sala = widget.salaInicial;
     _programarConsulta();
-    if (_sala.estado == 'activa' && _sala.estadoOponente != null) {
+    if (_puedeEntrarAPartida(_sala)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _abrirPartida(_sala);
       });
     }
   }
 
+  bool _puedeEntrarAPartida(EstadoSalaMultijugador sala) =>
+      sala.estado == 'activa' &&
+      (sala.todosListos || sala.estadoOponente != null);
+
   void _programarConsulta() {
     _timer = Timer.periodic(const Duration(seconds: 3), (_) => _consultar());
   }
 
   Future<void> _consultar() async {
-    if (_consultando || _navegando || !mounted) return;
+    if (_consultando || _navegando || _iniciando || !mounted) return;
     _consultando = true;
     try {
       final sala = await widget.service.consultar(_sala.codigo);
@@ -646,13 +683,33 @@ class _SalaMultijugadorPageState extends State<SalaMultijugadorPage> {
         _sala = sala;
         _error = null;
       });
-      if (sala.estado == 'activa' && sala.estadoOponente != null) {
-        _abrirPartida(sala);
+      if (_puedeEntrarAPartida(sala)) {
+        await _abrirPartida(sala);
       }
     } on MultijugadorException catch (error) {
       if (mounted) setState(() => _error = error.message);
     } finally {
       _consultando = false;
+    }
+  }
+
+  Future<void> _iniciarComoAnfitrion() async {
+    if (_iniciando || _navegando || !mounted) return;
+    setState(() {
+      _iniciando = true;
+      _error = null;
+    });
+    try {
+      final sala = await widget.service.iniciar(codigo: _sala.codigo);
+      if (!mounted) return;
+      setState(() => _sala = sala);
+      if (sala.estado == 'activa') {
+        await _abrirPartida(sala);
+      }
+    } on MultijugadorException catch (error) {
+      if (mounted) setState(() => _error = error.message);
+    } finally {
+      if (mounted) setState(() => _iniciando = false);
     }
   }
 
@@ -696,17 +753,21 @@ class _SalaMultijugadorPageState extends State<SalaMultijugadorPage> {
 
   @override
   Widget build(BuildContext context) {
-    final esperando = _sala.estado == 'esperando';
+    final rivales = _sala.rivalesEfectivos;
+    final jugadores = _sala.jugadoresEfectivos;
+    final esperando = _sala.estado == 'esperando' || rivales.isEmpty;
     final rivalConfigurando =
-        _sala.estado == 'configurando' ||
-        _sala.estado == 'activa' && _sala.estadoOponente == null;
+        !esperando &&
+        (!_sala.todosListos &&
+            (_sala.estado == 'configurando' ||
+                (_sala.estado == 'activa' && _sala.estadoOponente == null)));
     return Scaffold(
       appBar: AppBar(title: const Text('Lobby')),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 480),
-            child: Padding(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -720,10 +781,10 @@ class _SalaMultijugadorPageState extends State<SalaMultijugadorPage> {
                   const SizedBox(height: 16),
                   Text(
                     esperando
-                        ? 'Esperando a tu rival'
+                        ? 'Esperando jugadores'
                         : rivalConfigurando
-                        ? 'Tu rival configura su tablero'
-                        : 'Partida lista',
+                        ? 'Configurando tableros'
+                        : 'Partida lista para iniciar',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 24,
@@ -732,7 +793,7 @@ class _SalaMultijugadorPageState extends State<SalaMultijugadorPage> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Comparte este código con tu rival:',
+                    'Comparte este código (máximo ${_sala.maxJugadores} jugadores):',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
@@ -755,22 +816,81 @@ class _SalaMultijugadorPageState extends State<SalaMultijugadorPage> {
                     label: const Text('Copiar código'),
                   ),
                   const SizedBox(height: 16),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'Jugadores en la sala (${jugadores.length}/${_sala.maxJugadores})',
+                            key: const ValueKey('contador-jugadores-sala'),
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 8),
+                          for (final jugador in jugadores)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    jugador.listo
+                                        ? Icons.check_circle
+                                        : Icons.hourglass_bottom,
+                                    size: 18,
+                                    color: jugador.listo
+                                        ? const Color(0xFF193E37)
+                                        : Colors.orange,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      '${jugador.usuario}'
+                                      '${jugador.esAnfitrion ? " (Anfitrión)" : ""}',
+                                    ),
+                                  ),
+                                  Text(
+                                    jugador.listo
+                                        ? 'Listo'
+                                        : 'Configurando tablero...',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: jugador.listo
+                                          ? const Color(0xFF193E37)
+                                          : Colors.black54,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   if (esperando)
                     const Text(
-                      'La sala se mantiene activa mientras esperas. '
+                      'La sala admite de 2 a 6 jugadores. '
                       'Si cierras la app, podrás volver a entrar usando el '
                       'mismo código.',
                       textAlign: TextAlign.center,
                     )
                   else if (rivalConfigurando)
                     const Text(
-                      'Tu rival está eligiendo sus números iniciales. '
-                      'La partida comenzará cuando pulse “Iniciar partida”.',
+                      'Esperando a que todos los jugadores unidos elijan sus '
+                      'números iniciales.',
+                      textAlign: TextAlign.center,
+                    )
+                  else if (_sala.esAnfitrion)
+                    const Text(
+                      'Todos los jugadores unidos están listos. Puedes '
+                      'iniciar la partida o esperar a más jugadores (hasta 6).',
                       textAlign: TextAlign.center,
                     )
                   else
-                    Text(
-                      'Rival: ${_sala.usuarioOponente ?? "conectado"}',
+                    const Text(
+                      'Tu tablero está listo. Esperando a que el anfitrión '
+                      'inicie la partida.',
                       textAlign: TextAlign.center,
                     ),
                   if (_error != null) ...[
@@ -785,8 +905,24 @@ class _SalaMultijugadorPageState extends State<SalaMultijugadorPage> {
                       ),
                     ),
                   ],
-                  if (esperando || rivalConfigurando) ...[
-                    const SizedBox(height: 24),
+                  if (_sala.esAnfitrion && !esperando) ...[
+                    const SizedBox(height: 16),
+                    FilledButton.icon(
+                      key: const ValueKey('anfitrion-iniciar-partida'),
+                      onPressed: _sala.todosListos && !_iniciando
+                          ? _iniciarComoAnfitrion
+                          : null,
+                      icon: const Icon(Icons.play_arrow),
+                      label: Text(
+                        _iniciando ? 'Iniciando...' : 'Iniciar partida',
+                      ),
+                    ),
+                  ],
+                  if (_sala.esAnfitrion &&
+                      (esperando ||
+                          rivalConfigurando ||
+                          _sala.estado != 'activa')) ...[
+                    const SizedBox(height: 12),
                     OutlinedButton(
                       key: const ValueKey('cancelar-sala'),
                       onPressed: _cancelarSala,
@@ -800,6 +936,76 @@ class _SalaMultijugadorPageState extends State<SalaMultijugadorPage> {
         ),
       ),
     );
+  }
+}
+
+class _VistaTableroRival {
+  _VistaTableroRival({
+    required this.rival,
+    required NivelConfig config,
+    Map<String, int>? tiemposObservados,
+  }) : tablero = _construirTablero(rival, config) {
+    puntuacion = PuntuacionPartida(
+      tablero,
+      tiemposIniciales: tiemposObservados,
+    );
+    if (rival.estado != null) {
+      puntuacion.restaurarDesdeEstado(rival.estado!);
+    }
+  }
+
+  final JugadorMultijugador rival;
+  final Tablero tablero;
+  late final PuntuacionPartida puntuacion;
+
+  int get puntos => puntuacion.obtenidos.isNotEmpty
+      ? puntuacion.total
+      : (rival.estado?['score'] is int
+            ? rival.estado!['score'] as int
+            : puntuacion.total);
+
+  Map<String, int> get puntosPorZona => puntuacion.obtenidos;
+  Map<String, int> get posicionesPorZona => puntuacion.posicionesObtenidas;
+  Map<String, int> get tiemposPorZona => puntuacion.tiemposCompletado;
+  int get turnosJugados => rival.turnosJugados;
+  int get turnosOmitidos => rival.turnosOmitidos;
+  bool get terminado => rival.terminado;
+
+  static Tablero _construirTablero(
+    JugadorMultijugador rival,
+    NivelConfig config,
+  ) {
+    final tablero = Tablero.desdeConfig(config);
+    final celdas = rival.estado?['cells'];
+    if (celdas is List) {
+      final datos = <Coordenada, int>{};
+      for (final celda in celdas) {
+        if (celda is Map &&
+            celda['x'] is int &&
+            celda['y'] is int &&
+            celda['value'] is int) {
+          datos[Coordenada(celda['x'] as int, celda['y'] as int)] =
+              celda['value'] as int;
+        }
+      }
+      if (datos.isNotEmpty) {
+        try {
+          tablero.restaurarDatos(datos);
+          return tablero;
+        } on FormatException {
+          tablero.reiniciar();
+        }
+      }
+    }
+
+    final iniciales = rival.valoresIniciales;
+    if (iniciales != null && iniciales.length == config.iniciales.length) {
+      for (var index = 0; index < config.iniciales.length; index++) {
+        final posicion = config.iniciales.values.elementAt(index);
+        tablero.agregar(posicion, iniciales[index]);
+      }
+    }
+    return tablero;
   }
 }
 
@@ -831,6 +1037,10 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
   bool _sincronizando = false;
   bool _concediendo = false;
   String? _errorConexion;
+  String? _rivalSeleccionado;
+  final Map<String, Map<String, int>> _tiemposObservadosRivales = {};
+  bool _observacionInicialCompleta = false;
+  late final int _marcaInicioVista = DateTime.now().millisecondsSinceEpoch;
 
   @override
   void initState() {
@@ -839,11 +1049,16 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
     _sala = widget.salaInicial;
     _config = _configuracion(_sala.configId);
     _juego = _crearJuego(_sala);
+    _sincronizarPosicionesDeZonas(_sala);
+    _observacionInicialCompleta = true;
     _timer = Timer.periodic(const Duration(seconds: 3), (_) => _sincronizar());
     _reloj = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) setState(() {});
     });
-    if (_sala.estadoPropio == null && _sala.estado == 'activa') {
+    if ((_sala.estadoPropio == null ||
+            _sala.estadoPropio!['zone_times'] == null ||
+            _sala.estadoPropio!['score'] != _juego.puntos) &&
+        _sala.estado == 'activa') {
       _pendiente = _juego.toJson();
       unawaited(_sincronizar());
     }
@@ -857,7 +1072,13 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
   JuegoBloc _crearJuego(EstadoSalaMultijugador sala) {
     final tablero = Tablero.desdeConfig(_config);
     if (sala.estadoPropio != null) {
-      return JuegoBloc.restaurar(tablero, sala.estadoPropio!);
+      final estado = Map<String, dynamic>.from(sala.estadoPropio!);
+      if (estado['zone_times'] is! Map) {
+        estado['zone_times'] = <String, int>{
+          for (final region in _config.regiones) region.id: _marcaInicioVista,
+        };
+      }
+      return JuegoBloc.restaurar(tablero, estado);
     }
     final valoresIniciales = sala.valoresIniciales;
     if (valoresIniciales == null) {
@@ -922,12 +1143,120 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
     }
   }
 
+  Map<String, _VistaTableroRival> _construirVistasRivales(
+    EstadoSalaMultijugador sala,
+  ) {
+    final rivales = sala.rivalesEfectivos;
+    final ahora = DateTime.now().millisecondsSinceEpoch;
+    final misTiempos = _juego.puntuacion.tiemposCompletado;
+    final vistas = <String, _VistaTableroRival>{};
+
+    for (final rival in rivales) {
+      final observados = _tiemposObservadosRivales.putIfAbsent(
+        rival.usuario,
+        () => <String, int>{},
+      );
+      final explicitos = PuntuacionPartida.extraerMapaEnteros(
+        rival.estado?['zone_times'],
+      );
+      observados.addAll(explicitos);
+
+      final vista = _VistaTableroRival(
+        rival: rival,
+        config: _config,
+        tiemposObservados: Map<String, int>.from(observados),
+      );
+      for (final entrada in vista.tiemposPorZona.entries) {
+        if (!observados.containsKey(entrada.key)) {
+          if (!_observacionInicialCompleta) {
+            observados[entrada.key] = _marcaInicioVista;
+          } else {
+            final miTiempo = misTiempos[entrada.key];
+            observados[entrada.key] = (miTiempo != null && ahora <= miTiempo)
+                ? miTiempo + 1
+                : ahora;
+          }
+        }
+      }
+      // Reconstruir con los tiempos observados ya consolidados
+      vistas[rival.usuario] = _VistaTableroRival(
+        rival: rival,
+        config: _config,
+        tiemposObservados: Map<String, int>.from(observados),
+      );
+    }
+
+    final todosLosJugadores = <({String usuario, Map<String, int> tiemposZonas})>[
+      (usuario: widget.usuario, tiemposZonas: _juego.tiemposPorZona),
+      for (final entrada in vistas.entries)
+        (usuario: entrada.key, tiemposZonas: entrada.value.tiemposPorZona),
+    ];
+
+    _juego.puntuacion.sincronizarConRivales(
+      usuarioPropio: widget.usuario,
+      rivales: todosLosJugadores,
+    );
+    for (final entrada in vistas.entries) {
+      entrada.value.puntuacion.sincronizarConRivales(
+        usuarioPropio: entrada.key,
+        rivales: todosLosJugadores,
+      );
+    }
+    return vistas;
+  }
+
+  Map<String, int> _calcularTiemposMinimosRivales(
+    EstadoSalaMultijugador sala,
+  ) {
+    final vistas = _construirVistasRivales(sala);
+    final maxPorZona = <String, int>{};
+    for (final vista in vistas.values) {
+      for (final entry in vista.tiemposPorZona.entries) {
+        final actual = maxPorZona[entry.key];
+        if (actual == null || entry.value > actual) {
+          maxPorZona[entry.key] = entry.value;
+        }
+      }
+    }
+    return maxPorZona;
+  }
+
+  bool _sincronizarPosicionesDeZonas(EstadoSalaMultijugador sala) {
+    final puntajeAntes = _juego.puntos;
+    final posicionesAntes = Map<String, int>.from(_juego.posicionesPorZona);
+    _construirVistasRivales(sala);
+    if (_juego.puntos != puntajeAntes) return true;
+    if (_juego.posicionesPorZona.length != posicionesAntes.length) return true;
+    for (final entry in _juego.posicionesPorZona.entries) {
+      if (posicionesAntes[entry.key] != entry.value) return true;
+    }
+    return false;
+  }
+
   void _aplicarSala(EstadoSalaMultijugador sala) {
-    if (mounted) setState(() => _sala = sala);
+    final cambioPropio = _sincronizarPosicionesDeZonas(sala);
+    if (mounted) {
+      setState(() {
+        _sala = sala;
+        if (cambioPropio &&
+            _pendiente == null &&
+            sala.estado == 'activa' &&
+            !sala.eliminadoPropio) {
+          _pendiente = _juego.toJson();
+        }
+      });
+      if (cambioPropio &&
+          _pendiente != null &&
+          !_sincronizando &&
+          sala.estado == 'activa') {
+        unawaited(_sincronizar());
+      }
+    }
   }
 
   void _actuar(void Function() accion) {
     if (_sala.estado != 'activa' ||
+        _sala.eliminadoPropio ||
         _errorConexion != null ||
         _pendiente != null ||
         _sincronizando ||
@@ -935,7 +1264,11 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
       return;
     }
     try {
+      _juego.actualizarTiemposMinimosZonas(
+        _calcularTiemposMinimosRivales(_sala),
+      );
       accion();
+      _sincronizarPosicionesDeZonas(_sala);
       setState(() => _pendiente = _juego.toJson());
       unawaited(_sincronizar());
     } on StateError catch (error) {
@@ -946,13 +1279,18 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
   }
 
   Future<void> _conceder() async {
+    final rivalesActivos = _sala.rivalesEfectivos
+        .where((rival) => !rival.eliminado)
+        .length;
+    final mensaje = rivalesActivos > 1
+        ? 'Quedarás eliminado de la partida y los demás jugadores continuarán '
+              'hasta terminar. Esta acción no se puede deshacer.'
+        : 'Tu rival ganará inmediatamente. Esta acción no se puede deshacer.';
     final confirmar = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('¿Conceder la partida?'),
-        content: const Text(
-          'Tu rival ganará inmediatamente. Esta acción no se puede deshacer.',
-        ),
+        content: Text(mensaje),
         actions: [
           TextButton(
             key: const ValueKey('cancelar-concesion'),
@@ -997,19 +1335,37 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
   String _motivoFinal() => switch (_sala.motivoFinalizacion) {
     'concesion' => 'La partida terminó por concesión.',
     'desconexion' => 'La partida terminó por desconexión.',
-    'puntuacion' => 'Ambos tableros terminaron.',
+    'puntuacion' => 'Todos los tableros activos terminaron.',
     _ => 'Partida finalizada.',
   };
 
-  String _tiempoParaReclamar() {
-    final until = _sala.reclamarDesde;
+  String _tiempoParaReclamarDesde(DateTime? until) {
     if (until == null) return '';
     final seconds = until.difference(_horaServidor).inSeconds;
-    if (seconds <= 0) return 'ya puedes reclamar la victoria.';
+    if (seconds <= 0) return 'ya puedes reclamar la desconexión.';
     final minutes = seconds ~/ 60;
     final remainder = seconds % 60;
     return 'espera ${minutes.toString().padLeft(2, '0')}:'
         '${remainder.toString().padLeft(2, '0')} para reclamarla.';
+  }
+
+  DateTime? get _proximoReclamoDisponible {
+    DateTime? earliest = _sala.reclamarDesde;
+    for (final rival in _sala.rivalesEfectivos) {
+      if (rival.eliminado || rival.conectado || rival.reclamarDesde == null) {
+        continue;
+      }
+      if (earliest == null || rival.reclamarDesde!.isBefore(earliest)) {
+        earliest = rival.reclamarDesde;
+      }
+    }
+    return earliest;
+  }
+
+  bool get _hayRivalDesconectado {
+    final rivales = _sala.rivalesEfectivos.where((r) => !r.eliminado).toList();
+    if (rivales.isEmpty) return !_sala.oponenteConectado;
+    return rivales.any((r) => !r.conectado);
   }
 
   DateTime get _horaServidor =>
@@ -1017,6 +1373,25 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
         DateTime.now().difference(_sala.horaLocalRecibida),
       ) ??
       DateTime.now();
+
+  String _descripcionEstadoRival(
+    JugadorMultijugador rival,
+    _VistaTableroRival vista,
+  ) {
+    if (rival.eliminado) {
+      final motivo = rival.motivoEliminacion == 'concesion'
+          ? 'se rindió'
+          : 'desconexión';
+      return 'Eliminado ($motivo)';
+    }
+    if (vista.terminado) {
+      return 'Tablero terminado';
+    }
+    if (rival.conectado) {
+      return 'Conectado · En juego';
+    }
+    return 'Sin conexión';
+  }
 
   @override
   void dispose() {
@@ -1030,19 +1405,32 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
   @override
   Widget build(BuildContext context) {
     final finalizada = _sala.estado == 'finalizada';
+    final reclamoDesde = _proximoReclamoDisponible;
     final puedeReclamar =
         !finalizada &&
-        !_sala.oponenteConectado &&
-        _sala.reclamarDesde != null &&
-        !_horaServidor.isBefore(_sala.reclamarDesde!);
+        !_sala.eliminadoPropio &&
+        _hayRivalDesconectado &&
+        reclamoDesde != null &&
+        !_horaServidor.isBefore(reclamoDesde);
     final puedeJugar =
         !finalizada &&
+        !_sala.eliminadoPropio &&
         _sala.estado == 'activa' &&
         _errorConexion == null &&
         _pendiente == null &&
         !_sincronizando &&
         !_juego.finalizada;
-    final rival = _sala.usuarioOponente ?? 'Rival';
+    final rivales = _sala.rivalesEfectivos;
+    final vistasRivales = _construirVistasRivales(_sala);
+    JugadorMultijugador? rivalSeleccionado;
+    if (_rivalSeleccionado != null) {
+      for (final rival in rivales) {
+        if (rival.usuario == _rivalSeleccionado) {
+          rivalSeleccionado = rival;
+          break;
+        }
+      }
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -1068,7 +1456,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
           padding: const EdgeInsets.all(16),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1000),
+              constraints: const BoxConstraints(maxWidth: 1280),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -1094,39 +1482,38 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                       ),
                     )
                   else
+                    _tarjetaEstadoRivales(
+                      rivales: rivales,
+                      vistasRivales: vistasRivales,
+                      puedeReclamar: puedeReclamar,
+                      reclamoDesde: reclamoDesde,
+                    ),
+                  if (_sala.eliminadoPropio && !finalizada) ...[
+                    const SizedBox(height: 8),
                     Card(
+                      key: const ValueKey('jugador-eliminado-aviso'),
+                      color: const Color(0xFFFFE2E0),
                       child: Padding(
                         padding: const EdgeInsets.all(12),
                         child: Column(
                           children: [
-                            Text(
-                              _sala.oponenteConectado
-                                  ? '$rival está conectado'
-                                  : '$rival perdió la conexión; '
-                                        '${_tiempoParaReclamar()}',
-                              key: const ValueKey('estado-oponente'),
+                            const Text(
+                              'Quedaste eliminado de la partida. Puedes seguir '
+                              'viendo los tableros de los demás jugadores.',
                               textAlign: TextAlign.center,
+                              style: TextStyle(fontWeight: FontWeight.w600),
                             ),
-                            if (_sala.estadoOponente != null)
-                              Text(
-                                'Puntuación rival: '
-                                '${_sala.estadoOponente!['score'] ?? 0}'
-                                '${_sala.estadoOponente!['finished'] == true ? " · tablero terminado" : ""}',
-                              ),
-                            if (puedeReclamar) ...[
-                              const SizedBox(height: 8),
-                              FilledButton.tonal(
-                                key: const ValueKey('reclamar-victoria'),
-                                onPressed: _reclamarVictoria,
-                                child: const Text(
-                                  'Reclamar victoria por desconexión',
-                                ),
-                              ),
-                            ],
+                            const SizedBox(height: 8),
+                            OutlinedButton(
+                              key: const ValueKey('salir-partida-eliminado'),
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text('Volver al menú'),
+                            ),
                           ],
                         ),
                       ),
                     ),
+                  ],
                   if (_errorConexion != null) ...[
                     const SizedBox(height: 8),
                     MaterialBanner(
@@ -1144,83 +1531,65 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                       ],
                     ),
                   ],
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      const Icon(Icons.grid_view_rounded),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          '${_config.nombre} · Tu tablero',
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      Text('Tú: ${_juego.puntos} pts'),
-                    ],
-                  ),
+                  if (rivales.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    _selectorTableros(
+                      rivales: rivales,
+                      vistasRivales: vistasRivales,
+                      rivalSeleccionado: rivalSeleccionado,
+                    ),
+                  ],
                   const SizedBox(height: 12),
                   LayoutBuilder(
                     builder: (context, constraints) {
-                      final board = ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 560),
-                        child: TableroVisual(
-                          valores: const {},
-                          habilitado: false,
-                          onSeleccionar: (_) {},
-                          tablero: _juego.tablero,
-                          config: _config,
-                          iluminadas: puedeJugar
-                              ? _juego.casillasIluminadas
-                              : const {},
-                          onJugar: puedeJugar
-                              ? (position) => _actuar(() {
-                                  if (!_juego.colocar(position)) {
-                                    throw StateError(
-                                      'Esa jugada ya no es válida.',
-                                    );
-                                  }
-                                })
-                              : null,
-                        ),
-                      );
-                      final scores = TablaPuntos(
-                        puntos: _juego.puntos,
-                        obtenidos: _juego.puntosPorZona,
-                        config: _config,
-                      );
-                      if (constraints.maxWidth >= 760) {
+                      final vistaLadoALado =
+                          constraints.maxWidth >= 1100 && rivales.isNotEmpty;
+                      if (vistaLadoALado) {
+                        final rivalEnVista = rivalSeleccionado ?? rivales.first;
+                        final vistaRival = vistasRivales[rivalEnVista.usuario]!;
                         return Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(child: Center(child: board)),
-                            const SizedBox(width: 16),
-                            SizedBox(width: 210, child: scores),
+                            Expanded(
+                              child: _seccionTableroPropio(
+                                puedeJugar: puedeJugar,
+                                finalizada: finalizada,
+                              ),
+                            ),
+                            const SizedBox(width: 24),
+                            Expanded(
+                              child: _seccionTableroRival(
+                                rival: rivalEnVista,
+                                vista: vistaRival,
+                                mostrarBotonVolver: false,
+                              ),
+                            ),
                           ],
                         );
                       }
-                      return Column(
-                        children: [
-                          Center(child: board),
-                          const SizedBox(height: 12),
-                          scores,
-                        ],
+
+                      if (rivalSeleccionado != null) {
+                        final vistaRival =
+                            vistasRivales[rivalSeleccionado.usuario]!;
+                        return _seccionTableroRival(
+                          rival: rivalSeleccionado,
+                          vista: vistaRival,
+                          mostrarBotonVolver: true,
+                        );
+                      }
+
+                      return _seccionTableroPropio(
+                        puedeJugar: puedeJugar,
+                        finalizada: finalizada,
                       );
                     },
-                  ),
-                  const SizedBox(height: 16),
-                  StreamBuilder<int>(
-                    stream: _juego.cambios,
-                    initialData: 0,
-                    builder: (context, _) => _controles(puedeJugar, finalizada),
                   ),
                   const SizedBox(height: 12),
                   FilledButton.tonal(
                     key: const ValueKey('conceder-partida'),
                     onPressed:
                         finalizada ||
+                            _sala.eliminadoPropio ||
                             _concediendo ||
                             _sincronizando ||
                             _pendiente != null ||
@@ -1251,70 +1620,804 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
     );
   }
 
-  Widget _controles(bool puedeJugar, bool finalizada) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      if (_juego.finalizada && !finalizada)
-        const Text(
-          'Tu tablero terminó. Se guardará tu puntuación y se espera al rival.',
-          key: ValueKey('tablero-propio-finalizado'),
-          textAlign: TextAlign.center,
+  Widget _insigniaDato({
+    required IconData icono,
+    required String texto,
+    Key? textoKey,
+    Color fondo = const Color(0xFFF4F7F4),
+  }) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(
+      color: fondo,
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(color: const Color(0xFFDCE5DF)),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icono, size: 15, color: const Color(0xFF193E37)),
+        const SizedBox(width: 6),
+        Text(
+          texto,
+          key: textoKey,
+          style: const TextStyle(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF102A25),
+          ),
         ),
-      const Text(
-        'Turno de juego',
-        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-      ),
-      const SizedBox(height: 8),
-      Text(
-        _juego.bloqueado && !_juego.finalizada
-            ? 'No quedan jugadas válidas.'
-            : _juego.pivote == null
-            ? 'Elige un dado como pivote.'
-            : _juego.casillasIluminadas.isEmpty
-            ? 'No hay casillas válidas con este pivote. '
-                  'Prueba el otro dado o pulsa Omitir.'
-            : 'Toca una casilla iluminada para colocar '
-                  '${_juego.valorAColocar}.',
-        key: const ValueKey('instruccion-multijugador'),
-      ),
-      const SizedBox(height: 10),
-      Row(
-        children: [
-          for (var index = 0; index < 2; index++) ...[
-            if (index > 0) const SizedBox(width: 10),
-            Expanded(
-              child: OutlinedButton(
-                key: ValueKey('dado-multijugador-$index'),
-                onPressed: puedeJugar && _juego.tiradaPendiente
-                    ? () => _actuar(() => _juego.elegirPivote(index))
-                    : null,
-                style: OutlinedButton.styleFrom(
-                  backgroundColor: _juego.pivote == index
-                      ? const Color(0xFFD4F4D8)
-                      : Colors.white,
+      ],
+    ),
+  );
+
+  Widget _tarjetaEstadoRivales({
+    required List<JugadorMultijugador> rivales,
+    required Map<String, _VistaTableroRival> vistasRivales,
+    required bool puedeReclamar,
+    required DateTime? reclamoDesde,
+  }) {
+    final totalCasillas = _config.matriz.length * _config.matriz.first.length;
+    if (rivales.length <= 1) {
+      final rival = rivales.isNotEmpty
+          ? rivales.first
+          : JugadorMultijugador(
+              usuario: _sala.usuarioOponente ?? 'Rival',
+              esAnfitrion: !_sala.esAnfitrion,
+              conectado: _sala.oponenteConectado,
+              listo: _sala.estadoOponente != null,
+              estado: _sala.estadoOponente,
+              reclamarDesde: _sala.reclamarDesde,
+            );
+      final vista = vistasRivales[rival.usuario];
+      final puntos = vista?.puntos ?? (_sala.estadoOponente?['score'] ?? 0);
+      final terminado =
+          vista?.terminado ?? (_sala.estadoOponente?['finished'] == true);
+      final casillasRival = vista?.tablero.datos.length ?? 6;
+
+      return Card(
+        key: const ValueKey('marcador-1v1'),
+        elevation: 0,
+        color: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: const BorderSide(color: Color(0xFFDCE5DF)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF4F7F4),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.person,
+                                size: 16,
+                                color: Color(0xFF193E37),
+                              ),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  '${widget.usuario} (Tú)',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${_juego.puntos} pts',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF193E37),
+                            ),
+                          ),
+                          Text(
+                            'Casillas: ${_juego.tablero.datos.length}/$totalCasillas · '
+                            'Turnos: ${_juego.turnosJugados}',
+                            style: const TextStyle(
+                              fontSize: 11.5,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF193E37),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        'VS',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF4F7F4),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: rival.eliminado
+                                      ? Colors.red
+                                      : rival.conectado
+                                      ? const Color(0xFF2ECC71)
+                                      : Colors.orange,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              Flexible(
+                                child: Text(
+                                  rival.usuario,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          if (_sala.estadoOponente != null || vista != null)
+                            Text(
+                              'Puntuación rival: $puntos'
+                              '${terminado ? " · tablero terminado" : ""}',
+                              textAlign: TextAlign.right,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF193E37),
+                              ),
+                            ),
+                          Text(
+                            'Casillas: $casillasRival/$totalCasillas · '
+                            'Turnos: ${vista?.turnosJugados ?? 0}',
+                            textAlign: TextAlign.right,
+                            style: const TextStyle(
+                              fontSize: 11.5,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                rival.eliminado
+                    ? '${rival.usuario} quedó eliminado'
+                    : rival.conectado
+                    ? '${rival.usuario} está conectado'
+                    : '${rival.usuario} perdió la conexión; '
+                          '${_tiempoParaReclamarDesde(reclamoDesde)}',
+                key: const ValueKey('estado-oponente'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 12.5, color: Colors.black54),
+              ),
+              if (puedeReclamar) ...[
+                const SizedBox(height: 8),
+                FilledButton.tonal(
+                  key: const ValueKey('reclamar-victoria'),
+                  onPressed: _reclamarVictoria,
+                  child: const Text('Reclamar victoria por desconexión'),
                 ),
+              ],
+            ],
+          ),
+        ),
+      );
+    }
+
+    final activos = rivales.where((r) => !r.eliminado).length;
+    return Card(
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: const BorderSide(color: Color(0xFFDCE5DF)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Rivales en la partida ($activos activos de ${rivales.length})',
+              key: const ValueKey('estado-oponente'),
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 10,
+              runSpacing: 8,
+              alignment: WrapAlignment.center,
+              children: [
+                for (final rival in rivales)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF4F7F4),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '${rival.usuario} · ${vistasRivales[rival.usuario]?.puntos ?? 0} pts · '
+                      '${_descripcionEstadoRival(rival, vistasRivales[rival.usuario]!)}',
+                      style: const TextStyle(fontSize: 12.5),
+                    ),
+                  ),
+              ],
+            ),
+            if (_hayRivalDesconectado && !puedeReclamar && reclamoDesde != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
                 child: Text(
-                  '${index == 0 ? _juego.dadoA ?? "–" : _juego.dadoB ?? "–"}',
-                  style: const TextStyle(fontSize: 24),
+                  'Rival sin conexión; ${_tiempoParaReclamarDesde(reclamoDesde)}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 12, color: Colors.black54),
                 ),
               ),
-            ),
+            if (puedeReclamar) ...[
+              const SizedBox(height: 8),
+              Center(
+                child: FilledButton.tonal(
+                  key: const ValueKey('reclamar-victoria'),
+                  onPressed: _reclamarVictoria,
+                  child: Text(
+                    activos <= 1
+                        ? 'Reclamar victoria por desconexión'
+                        : 'Eliminar rival por desconexión',
+                  ),
+                ),
+              ),
+            ],
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _selectorTableros({
+    required List<JugadorMultijugador> rivales,
+    required Map<String, _VistaTableroRival> vistasRivales,
+    required JugadorMultijugador? rivalSeleccionado,
+  }) => Card(
+    key: const ValueKey('selector-tableros'),
+    elevation: 0,
+    color: Colors.white,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(14),
+      side: const BorderSide(color: Color(0xFFDCE5DF)),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.dashboard_customize_outlined,
+                size: 18,
+                color: Color(0xFF193E37),
+              ),
+              const SizedBox(width: 6),
+              const Expanded(
+                child: Text(
+                  'Ver tableros de la partida',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                ),
+              ),
+              Text(
+                '${rivales.length + 1} jugadores',
+                style: const TextStyle(fontSize: 12, color: Colors.black54),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ChoiceChip(
+                key: const ValueKey('ver-tablero-propio'),
+                avatar: const Icon(Icons.person, size: 18),
+                label: Text('Tu tablero (${_juego.puntos} pts)'),
+                selected: rivalSeleccionado == null,
+                onSelected: (_) {
+                  setState(() => _rivalSeleccionado = null);
+                },
+              ),
+              for (final rival in rivales)
+                ChoiceChip(
+                  key: ValueKey('ver-tablero-${rival.usuario}'),
+                  avatar: Icon(
+                    rival.eliminado
+                        ? Icons.block
+                        : (vistasRivales[rival.usuario]?.terminado ?? false)
+                        ? Icons.check_circle_outline
+                        : rival.conectado
+                        ? Icons.grid_on
+                        : Icons.wifi_off,
+                    size: 18,
+                  ),
+                  label: Text(
+                    '${rival.usuario} '
+                    '(${vistasRivales[rival.usuario]?.puntos ?? 0} pts)',
+                  ),
+                  selected: rivalSeleccionado?.usuario == rival.usuario,
+                  onSelected: (_) {
+                    setState(() => _rivalSeleccionado = rival.usuario);
+                  },
+                ),
+            ],
+          ),
         ],
       ),
-      const SizedBox(height: 8),
-      OutlinedButton(
-        key: const ValueKey('omitir-multijugador'),
-        onPressed: puedeJugar && _juego.tiradaPendiente
-            ? () => _actuar(_juego.omitir)
-            : null,
-        child: const Text('Omitir tirada'),
+    ),
+  );
+
+  Widget _seccionTableroPropio({
+    required bool puedeJugar,
+    required bool finalizada,
+  }) {
+    final totalCasillas = _config.matriz.length * _config.matriz.first.length;
+    return Card(
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: const BorderSide(color: Color(0xFFDCE5DF)),
       ),
-      Text(
-        'Jugadas: ${_juego.turnosJugados} · Omitidas: ${_juego.turnosOmitidos}',
-        textAlign: TextAlign.center,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.grid_view_rounded, color: Color(0xFF193E37)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '${_config.nombre} · Tu tablero',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEAF2EE),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    'Tú: ${_juego.puntos} pts',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF193E37),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _insigniaDato(
+                  icono: Icons.grid_on_rounded,
+                  texto:
+                      'Casillas: ${_juego.tablero.datos.length}/$totalCasillas',
+                ),
+                _insigniaDato(
+                  icono: Icons.layers_outlined,
+                  texto:
+                      'Zonas: ${_juego.puntosPorZona.length}/${_config.regiones.length}',
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final board = ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 560),
+                  child: TableroVisual(
+                    valores: const {},
+                    habilitado: false,
+                    onSeleccionar: (_) {},
+                    tablero: _juego.tablero,
+                    config: _config,
+                    iluminadas: puedeJugar
+                        ? _juego.casillasIluminadas
+                        : const {},
+                    onJugar: puedeJugar
+                        ? (position) => _actuar(() {
+                            if (!_juego.colocar(position)) {
+                              throw StateError('Esa jugada ya no es válida.');
+                            }
+                          })
+                        : null,
+                  ),
+                );
+                final scores = TablaPuntos(
+                  puntos: _juego.puntos,
+                  obtenidos: _juego.puntosPorZona,
+                  posiciones: _juego.posicionesPorZona,
+                  config: _config,
+                );
+                if (constraints.maxWidth >= 760) {
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: Center(child: board)),
+                      const SizedBox(width: 16),
+                      SizedBox(width: 220, child: scores),
+                    ],
+                  );
+                }
+                return Column(
+                  children: [
+                    Center(child: board),
+                    const SizedBox(height: 12),
+                    scores,
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            StreamBuilder<int>(
+              stream: _juego.cambios,
+              initialData: 0,
+              builder: (context, _) => _controles(puedeJugar, finalizada),
+            ),
+          ],
+        ),
       ),
-    ],
+    );
+  }
+
+  Widget _seccionTableroRival({
+    required JugadorMultijugador rival,
+    required _VistaTableroRival vista,
+    required bool mostrarBotonVolver,
+  }) {
+    final totalCasillas = _config.matriz.length * _config.matriz.first.length;
+    return Card(
+      key: ValueKey('panel-tablero-rival-${rival.usuario}'),
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: const BorderSide(color: Color(0xFFDCE5DF)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.visibility_outlined,
+                  color: Color(0xFF193E37),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '${_config.nombre} · Tablero de ${rival.usuario}',
+                    key: const ValueKey('titulo-tablero-rival'),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEAF2EE),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '${rival.usuario}: ${vista.puntos} pts',
+                    key: const ValueKey('puntaje-tablero-rival'),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF193E37),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Estado: ${_descripcionEstadoRival(rival, vista)}',
+                    key: const ValueKey('estado-detalle-rival'),
+                    style: const TextStyle(color: Colors.black54),
+                  ),
+                ),
+                if (mostrarBotonVolver)
+                  TextButton.icon(
+                    key: const ValueKey('volver-tablero-propio'),
+                    onPressed: () => setState(() => _rivalSeleccionado = null),
+                    icon: const Icon(Icons.arrow_back, size: 18),
+                    label: const Text('Volver a mi tablero'),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _insigniaDato(
+                  icono: Icons.grid_on_rounded,
+                  texto:
+                      'Casillas: ${vista.tablero.datos.length}/$totalCasillas',
+                ),
+                _insigniaDato(
+                  icono: Icons.layers_outlined,
+                  texto:
+                      'Zonas: ${vista.puntosPorZona.length}/${_config.regiones.length}',
+                ),
+                _insigniaDato(
+                  icono: Icons.history_rounded,
+                  texto:
+                      'Jugadas: ${vista.turnosJugados} · '
+                      'Omitidas: ${vista.turnosOmitidos}',
+                  textoKey: const ValueKey('contador-turnos-rival'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final board = ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 560),
+                  child: TableroVisual(
+                    key: ValueKey('tablero-rival-${rival.usuario}'),
+                    prefijoCelda: 'celda-rival',
+                    valores: const {},
+                    habilitado: false,
+                    onSeleccionar: (_) {},
+                    tablero: vista.tablero,
+                    config: _config,
+                  ),
+                );
+                final scores = TablaPuntos(
+                  prefijoKey: 'rival-',
+                  puntos: vista.puntos,
+                  obtenidos: vista.puntosPorZona,
+                  posiciones: vista.posicionesPorZona,
+                  config: _config,
+                );
+                if (constraints.maxWidth >= 760) {
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: Center(child: board)),
+                      const SizedBox(width: 16),
+                      SizedBox(width: 220, child: scores),
+                    ],
+                  );
+                }
+                return Column(
+                  children: [
+                    Center(child: board),
+                    const SizedBox(height: 12),
+                    scores,
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _controles(bool puedeJugar, bool finalizada) => Container(
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: const Color(0xFFF4F7F4),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: const Color(0xFFDCE5DF)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (_juego.finalizada && !finalizada) ...[
+          const Text(
+            'Tu tablero terminó. Se guardará tu puntuación y se espera a los demás jugadores.',
+            key: ValueKey('tablero-propio-finalizado'),
+            textAlign: TextAlign.center,
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+        ],
+        Row(
+          children: [
+            const Icon(
+              Icons.casino_outlined,
+              size: 20,
+              color: Color(0xFF193E37),
+            ),
+            const SizedBox(width: 8),
+            const Expanded(
+              child: Text(
+                'Turno de juego',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+              ),
+            ),
+            if (_juego.pivote != null && !_juego.finalizada)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 3,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD4F4D8),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  'Colocar: ${_juego.valorAColocar} '
+                  '(${_juego.casillasIluminadas.length} opciones)',
+                  style: const TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF193E37),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          _juego.bloqueado && !_juego.finalizada
+              ? 'No quedan jugadas válidas.'
+              : _juego.pivote == null
+              ? 'Elige un dado como pivote.'
+              : _juego.casillasIluminadas.isEmpty
+              ? 'No hay casillas válidas con este pivote. '
+                    'Prueba el otro dado o pulsa Omitir.'
+              : 'Toca una casilla iluminada para colocar '
+                    '${_juego.valorAColocar}.',
+          key: const ValueKey('instruccion-multijugador'),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            for (var index = 0; index < 2; index++) ...[
+              if (index > 0) const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Text(
+                        _juego.pivote == null
+                            ? 'Dado ${index + 1}'
+                            : _juego.pivote == index
+                            ? 'Dado ${index + 1} · Pivote'
+                            : 'Dado ${index + 1} · Valor a colocar',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: _juego.pivote == index
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          color: _juego.pivote == index
+                              ? const Color(0xFF193E37)
+                              : Colors.black54,
+                        ),
+                      ),
+                    ),
+                    OutlinedButton(
+                      key: ValueKey('dado-multijugador-$index'),
+                      onPressed: puedeJugar && _juego.tiradaPendiente
+                          ? () => _actuar(() => _juego.elegirPivote(index))
+                          : null,
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: _juego.pivote == index
+                            ? const Color(0xFFD4F4D8)
+                            : Colors.white,
+                        side: BorderSide(
+                          color: _juego.pivote == index
+                              ? const Color(0xFF193E37)
+                              : const Color(0xFFCBD5D0),
+                          width: _juego.pivote == index ? 2 : 1,
+                        ),
+                      ),
+                      child: Text(
+                        '${index == 0 ? _juego.dadoA ?? "–" : _juego.dadoB ?? "–"}',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton(
+          key: const ValueKey('omitir-multijugador'),
+          onPressed: puedeJugar && _juego.tiradaPendiente
+              ? () => _actuar(_juego.omitir)
+              : null,
+          child: const Text('Omitir tirada'),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Jugadas: ${_juego.turnosJugados} · Omitidas: ${_juego.turnosOmitidos}',
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+        ),
+      ],
+    ),
   );
 }
 
