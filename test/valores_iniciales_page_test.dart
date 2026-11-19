@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tipo/main.dart';
+import 'package:tipo/sesion_usuario.dart';
 
 void main() {
   testWidgets('selecciona seis números, bloquea duplicados y confirma Inicio', (
@@ -8,7 +9,7 @@ void main() {
   ) async {
     await tester.binding.setSurfaceSize(const Size(800, 1200));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(const MainApp());
+    await tester.pumpWidget(MainApp(sesionUsuario: SesionUsuario.activa()));
     await tester.tap(find.byKey(const ValueKey('jugar')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('seleccionar-nivel_1')));
@@ -86,7 +87,7 @@ void main() {
   ) async {
     await tester.binding.setSurfaceSize(const Size(360, 800));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(const MainApp());
+    await tester.pumpWidget(MainApp(sesionUsuario: SesionUsuario.activa()));
     await tester.tap(find.byKey(const ValueKey('jugar')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('seleccionar-nivel_1')));
