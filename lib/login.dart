@@ -69,7 +69,9 @@ class _LoginPageState extends State<LoginPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Sesión iniciada correctamente.')),
       );
-      Navigator.of(context).pop();
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
     } on AuthServiceException catch (error) {
       if (!mounted) return;
       setState(() {
@@ -112,33 +114,52 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
-                    children: [
-                      IconButton(
-                        key: const ValueKey('login-volver'),
-                        tooltip: 'Volver al inicio',
-                        onPressed: _cargando
-                            ? null
-                            : () => Navigator.of(context).pop(),
-                        icon: const Icon(Icons.arrow_back),
-                      ),
-                      const Spacer(),
-                      PerfilUsuario(sesion: widget.sesionUsuario),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
+                  if (Navigator.of(context).canPop())
+                    Row(
+                      children: [
+                        IconButton(
+                          key: const ValueKey('login-volver'),
+                          tooltip: 'Volver al inicio',
+                          onPressed: _cargando
+                              ? null
+                              : () => Navigator.of(context).pop(),
+                          icon: const Icon(Icons.arrow_back),
+                        ),
+                        const Spacer(),
+                        PerfilUsuario(sesion: widget.sesionUsuario),
+                      ],
+                    ),
+                  const SizedBox(height: 8),
                   const Icon(
-                    Icons.account_circle_outlined,
-                    size: 64,
+                    Icons.grid_view_rounded,
+                    size: 52,
                     color: Color(0xFF193E37),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'BRILLIANT',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      letterSpacing: 3,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 24,
+                      color: Color(0xFF193E37),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   const Text(
                     'Iniciar sesión',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
                   ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Inicia sesión o crea una cuenta para jugar en solitario '
+                    'y multijugador.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.black54),
+                  ),
+                  const SizedBox(height: 24),
                   TextFormField(
                     key: const ValueKey('login-usuario'),
                     controller: _usuarioController,
