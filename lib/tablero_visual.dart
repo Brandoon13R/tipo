@@ -14,6 +14,7 @@ class TableroVisual extends StatelessWidget {
     this.tablero,
     this.iluminadas = const {},
     this.onJugar,
+    this.prefijoCelda = 'celda',
   });
 
   final Map<String, int?> valores;
@@ -23,6 +24,7 @@ class TableroVisual extends StatelessWidget {
   final Tablero? tablero;
   final Set<Coordenada> iluminadas;
   final ValueChanged<Coordenada>? onJugar;
+  final String prefijoCelda;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -65,7 +67,7 @@ class TableroVisual extends StatelessWidget {
       child: Tooltip(
         message: etiqueta,
         child: Material(
-          key: ValueKey('celda-$x-$y'),
+          key: ValueKey('$prefijoCelda-$x-$y'),
           color: destacada
               ? Color.lerp(color.color, Colors.white, 0.38)!
               : color.color,

@@ -50,7 +50,7 @@ class JuegoBloc {
     }
 
     tablero.restaurarDatos(datos);
-    return JuegoBloc._restaurado(
+    final restaurado = JuegoBloc._restaurado(
       tablero,
       dadoA: dadoA as int?,
       dadoB: dadoB as int?,
@@ -58,6 +58,8 @@ class JuegoBloc {
       jugados: jugados,
       omitidos: omitidos,
     );
+    restaurado.puntuacion.restaurarDesdeEstado(estado);
+    return restaurado;
   }
 
   JuegoBloc._restaurado(
@@ -83,12 +85,19 @@ class JuegoBloc {
   int? _pivote;
   int turnosJugados = 0;
   int turnosOmitidos = 0;
+  Map<String, int> _tiemposMinimosZonas = const {};
   late final PuntuacionPartida puntuacion = PuntuacionPartida(tablero);
 
   int get puntos => puntuacion.total;
   Map<String, int> get puntosPorZona => puntuacion.obtenidos;
+  Map<String, int> get posicionesPorZona => puntuacion.posicionesObtenidas;
+  Map<String, int> get tiemposPorZona => puntuacion.tiemposCompletado;
   bool get finalizada =>
       tablero.datos.length == tablero.filas * tablero.columnas || bloqueado;
+
+  void actualizarTiemposMinimosZonas(Map<String, int> tiemposMinimos) {
+    _tiemposMinimosZonas = Map<String, int>.unmodifiable(tiemposMinimos);
+  }
 
   Map<String, dynamic> toJson() => {
     'cells': [
@@ -102,6 +111,9 @@ class JuegoBloc {
     'turns_skipped': turnosOmitidos,
     'score': puntos,
     'finished': finalizada,
+    'zone_times': puntuacion.tiemposCompletado,
+    'zone_ranks': puntuacion.posicionesObtenidas,
+    'zone_scores': puntuacion.obtenidos,
   };
 
   Stream<int> get cambios => _cambios.stream;
@@ -175,7 +187,9 @@ class JuegoBloc {
     if (bloqueado) return false;
     if (!casillasIluminadas.contains(coordenada)) return false;
     if (!tablero.agregar(coordenada, valorAColocar!)) return false;
-    puntuacion.revisarZonasCompletadas();
+    puntuacion.revisarZonasCompletadas(
+      tiemposMinimosPorZona: _tiemposMinimosZonas,
+    );
     turnosJugados++;
     _terminarTirada();
     return true;
