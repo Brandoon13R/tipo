@@ -6,6 +6,14 @@ class SesionUsuario extends ChangeNotifier {
   SesionUsuario({FlutterSecureStorage? storage})
     : _storage = storage ?? const FlutterSecureStorage();
 
+  SesionUsuario.activa({
+    String usuarioName = 'jugador',
+    String token = 'test-session-token',
+    FlutterSecureStorage? storage,
+  }) : _storage = storage ?? const FlutterSecureStorage(),
+       _usuarioName = usuarioName,
+       _token = token;
+
   static final SesionUsuario instance = SesionUsuario();
 
   static const _tokenKey = 'session_token';
