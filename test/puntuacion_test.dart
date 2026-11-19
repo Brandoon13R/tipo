@@ -88,4 +88,67 @@ void main() {
     expect(find.byKey(const ValueKey('premio-azul_superior')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  test(
+    'asigna los premios de 1.º, 2.º y 3.º lugar según el orden de finalización entre jugadores',
+    () {
+      final zonaVerdeDer = premiosZonas.singleWhere(
+        (zona) => zona.id == 'verde_derecho',
+      );
+
+      final tablero1 = TableroConfig.crearTablero();
+      final tablero2 = TableroConfig.crearTablero();
+      final tablero3 = TableroConfig.crearTablero();
+
+      for (final pos in zonaVerdeDer.posicionesEn(tablero1)) {
+        expect(tablero1.agregar(pos, 1), isTrue);
+        expect(tablero2.agregar(pos, 1), isTrue);
+        expect(tablero3.agregar(pos, 1), isTrue);
+      }
+
+      final puntuacion1 = PuntuacionPartida(
+        tablero1,
+        tiemposIniciales: const {'verde_derecho': 1000},
+      );
+      final puntuacion2 = PuntuacionPartida(
+        tablero2,
+        tiemposIniciales: const {'verde_derecho': 2000},
+      );
+      final puntuacion3 = PuntuacionPartida(
+        tablero3,
+        tiemposIniciales: const {'verde_derecho': 3000},
+      );
+
+      final participantes = [
+        (usuario: 'jugador_1', tiemposZonas: puntuacion1.tiemposCompletado),
+        (usuario: 'jugador_2', tiemposZonas: puntuacion2.tiemposCompletado),
+        (usuario: 'jugador_3', tiemposZonas: puntuacion3.tiemposCompletado),
+      ];
+
+      puntuacion1.sincronizarConRivales(
+        usuarioPropio: 'jugador_1',
+        rivales: participantes,
+      );
+      puntuacion2.sincronizarConRivales(
+        usuarioPropio: 'jugador_2',
+        rivales: participantes,
+      );
+      puntuacion3.sincronizarConRivales(
+        usuarioPropio: 'jugador_3',
+        rivales: participantes,
+      );
+
+      expect(puntuacion1.posicionesObtenidas['verde_derecho'], 1);
+      expect(puntuacion1.obtenidos['verde_derecho'], 4);
+      expect(puntuacion1.total, 4);
+
+      expect(puntuacion2.posicionesObtenidas['verde_derecho'], 2);
+      expect(puntuacion2.obtenidos['verde_derecho'], 3);
+      expect(puntuacion2.total, 3);
+
+      expect(puntuacion3.posicionesObtenidas['verde_derecho'], 3);
+      expect(puntuacion3.obtenidos['verde_derecho'], 2);
+      expect(puntuacion3.total, 2);
+    },
+  );
 }
