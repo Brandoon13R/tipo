@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tipo/main.dart';
 import 'package:tipo/puntuacion.dart';
 import 'package:tipo/region.dart';
+import 'package:tipo/sesion_usuario.dart';
 import 'package:tipo/tablero.dart';
 import 'package:tipo/tablero_config.dart';
 
@@ -181,7 +182,7 @@ void main() {
   });
 
   testWidgets('la selección navega al nivel elegido', (tester) async {
-    await tester.pumpWidget(const MainApp());
+    await tester.pumpWidget(MainApp(sesionUsuario: SesionUsuario.activa()));
     await tester.tap(find.byKey(const ValueKey('jugar')));
     await tester.pumpAndSettle();
     expect(find.byType(SeleccionNivelPage), findsOneWidget);

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tipo/main.dart';
 import 'package:tipo/region.dart';
+import 'package:tipo/sesion_usuario.dart';
 import 'package:tipo/tablero.dart';
 import 'package:tipo/tablero_config.dart';
 
@@ -99,7 +100,7 @@ void main() {
   });
 
   testWidgets('Nivel 4 aparece en el menú y abre el tablero', (tester) async {
-    await tester.pumpWidget(const MainApp());
+    await tester.pumpWidget(MainApp(sesionUsuario: SesionUsuario.activa()));
     await tester.tap(find.byKey(const ValueKey('jugar')));
     await tester.pumpAndSettle();
     expect(find.text('Nivel 4'), findsOneWidget);
@@ -113,7 +114,7 @@ void main() {
   });
 
   testWidgets('el botón Menú vuelve a la selección de niveles', (tester) async {
-    await tester.pumpWidget(const MainApp());
+    await tester.pumpWidget(MainApp(sesionUsuario: SesionUsuario.activa()));
     await tester.tap(find.byKey(const ValueKey('jugar')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('cerrar-aplicacion')), findsOneWidget);

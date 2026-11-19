@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tipo/main.dart';
+import 'package:tipo/sesion_usuario.dart';
 
 void main() {
   testWidgets('Camino feliz: Configuración inicial y primer turno de juego', (
     WidgetTester tester,
   ) async {
     // 1. Cargar la aplicación
-    await tester.pumpWidget(const MainApp());
+    await tester.pumpWidget(MainApp(sesionUsuario: SesionUsuario.activa()));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('jugar')));
     await tester.pumpAndSettle();

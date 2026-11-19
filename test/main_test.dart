@@ -11,7 +11,9 @@ void main() {
     testWidgets(
       'Montaje inicial muestra interfaz base y botón Inicio deshabilitado',
       (WidgetTester tester) async {
-        await tester.pumpWidget(const MainApp());
+        await tester.pumpWidget(
+          MainApp(sesionUsuario: SesionUsuario.activa()),
+        );
         await tester.tap(find.byKey(const ValueKey('jugar')));
         await tester.pumpAndSettle();
         await tester.tap(find.byKey(const ValueKey('seleccionar-nivel_1')));
@@ -44,7 +46,9 @@ void main() {
     testWidgets(
       'Tocar una casilla inicial abre el diálogo y actualiza el progreso',
       (WidgetTester tester) async {
-        await tester.pumpWidget(const MainApp());
+        await tester.pumpWidget(
+          MainApp(sesionUsuario: SesionUsuario.activa()),
+        );
         await tester.tap(find.byKey(const ValueKey('jugar')));
         await tester.pumpAndSettle();
         await tester.tap(find.byKey(const ValueKey('seleccionar-nivel_1')));
@@ -76,58 +80,53 @@ void main() {
       },
     );
 
-    testWidgets('el menú abre la pantalla de inicio de sesión', (
-      WidgetTester tester,
-    ) async {
-      await tester.pumpWidget(const MainApp());
+    testWidgets(
+      'al iniciar sin sesión pide primero iniciar sesión o crear cuenta antes de mostrar Jugar y Multijugador',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(MainApp(sesionUsuario: SesionUsuario()));
 
-      expect(find.byType(MenuPage), findsOneWidget);
-      expect(find.text('Jugar'), findsOneWidget);
-      expect(find.text('Multijugador'), findsOneWidget);
-      expect(find.byKey(const ValueKey('iniciar-sesion')), findsOneWidget);
+        // La primera pantalla es LoginPage y no muestra Jugar ni Multijugador
+        expect(find.byType(LoginPage), findsOneWidget);
+        expect(find.byKey(const ValueKey('jugar')), findsNothing);
+        expect(find.byKey(const ValueKey('multijugador')), findsNothing);
+        expect(find.text('Nombre de usuario'), findsOneWidget);
+        expect(find.text('Contraseña'), findsOneWidget);
+        expect(find.text('¿No tienes cuenta? Crea tu cuenta'), findsOneWidget);
 
-      await tester.tap(find.byKey(const ValueKey('iniciar-sesion')));
-      await tester.pumpAndSettle();
-      expect(find.byType(LoginPage), findsOneWidget);
-      expect(find.text('Nombre de usuario'), findsOneWidget);
-      expect(find.text('Contraseña'), findsOneWidget);
-      expect(find.text('¿No tienes cuenta? Crea tu cuenta'), findsOneWidget);
+        // Puede ir a crear cuenta y volver al login
+        await tester.tap(find.byKey(const ValueKey('login-crear-cuenta')));
+        await tester.pumpAndSettle();
+        expect(find.byType(RegistroPage), findsOneWidget);
+        expect(find.text('Nombre de usuario'), findsOneWidget);
 
-      await tester.tap(find.byKey(const ValueKey('login-crear-cuenta')));
-      await tester.pumpAndSettle();
-      expect(find.byType(RegistroPage), findsOneWidget);
-      expect(find.text('Nombre de usuario'), findsOneWidget);
+        await tester.tap(find.byKey(const ValueKey('registro-volver')));
+        await tester.pumpAndSettle();
+        expect(find.byType(LoginPage), findsOneWidget);
+      },
+    );
 
-      await tester.tap(find.byKey(const ValueKey('registro-volver')));
-      await tester.pumpAndSettle();
+    testWidgets(
+      'con sesión activa permite acceder a Jugar en solitario y Multijugador',
+      (WidgetTester tester) async {
+        final session = _FakeSesionUsuario();
+        await tester.pumpWidget(MainApp(sesionUsuario: session));
 
-      await tester.tap(find.byKey(const ValueKey('login-volver')));
-      await tester.pumpAndSettle();
-      expect(find.byType(MenuPage), findsOneWidget);
+        expect(find.byKey(const ValueKey('jugar')), findsOneWidget);
+        expect(find.byKey(const ValueKey('multijugador')), findsOneWidget);
+        expect(find.byKey(const ValueKey('perfil-usuario')), findsOneWidget);
 
-      await tester.tap(find.byKey(const ValueKey('jugar')));
-      await tester.pumpAndSettle();
-      expect(find.byType(SeleccionNivelPage), findsOneWidget);
-    });
-
-    testWidgets('multijugador requiere una sesión activa', (
-      WidgetTester tester,
-    ) async {
-      await tester.pumpWidget(const MainApp());
-      await tester.tap(find.byKey(const ValueKey('multijugador')));
-      await tester.pump();
-
-      expect(find.text('Crea una partida'), findsNothing);
-      expect(
-        find.text('Inicia sesión para crear o unirte a una partida.'),
-        findsOneWidget,
-      );
-    });
+        await tester.tap(find.byKey(const ValueKey('jugar')));
+        await tester.pumpAndSettle();
+        expect(find.byType(SeleccionNivelPage), findsOneWidget);
+      },
+    );
 
     testWidgets('niveles permite regresar al inicio y cerrar la aplicación', (
       WidgetTester tester,
     ) async {
-      await tester.pumpWidget(const MainApp());
+      await tester.pumpWidget(
+        MainApp(sesionUsuario: SesionUsuario.activa()),
+      );
       await tester.tap(find.byKey(const ValueKey('jugar')));
       await tester.pumpAndSettle();
 
@@ -139,7 +138,7 @@ void main() {
 
       expect(find.byType(MenuPage), findsOneWidget);
       expect(find.text('Jugar'), findsOneWidget);
-      expect(find.byKey(const ValueKey('iniciar-sesion')), findsOneWidget);
+      expect(find.byKey(const ValueKey('perfil-usuario')), findsOneWidget);
     });
 
     testWidgets('cancelar la confirmación conserva la cuenta', (
@@ -174,7 +173,7 @@ void main() {
       expect(find.byKey(const ValueKey('perfil-usuario')), findsOneWidget);
     });
 
-    testWidgets('confirmar elimina la cuenta y limpia la sesión local', (
+    testWidgets('confirmar elimina la cuenta y regresa a la pantalla de inicio de sesión', (
       WidgetTester tester,
     ) async {
       final session = _FakeSesionUsuario();
@@ -195,8 +194,8 @@ void main() {
       expect(authService.deletedToken, 'test-session-token');
       expect(session.activa, isFalse);
       expect(find.text('La cuenta se eliminó correctamente.'), findsOneWidget);
-      expect(find.byKey(const ValueKey('perfil-usuario')), findsNothing);
-      expect(find.byKey(const ValueKey('iniciar-sesion')), findsOneWidget);
+      expect(find.byType(LoginPage), findsOneWidget);
+      expect(find.byKey(const ValueKey('jugar')), findsNothing);
     });
   });
 }
