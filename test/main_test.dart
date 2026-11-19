@@ -83,7 +83,8 @@ void main() {
 
       expect(find.byType(MenuPage), findsOneWidget);
       expect(find.text('Jugar'), findsOneWidget);
-      expect(find.text('Iniciar sesión'), findsOneWidget);
+      expect(find.text('Multijugador'), findsOneWidget);
+      expect(find.byKey(const ValueKey('iniciar-sesion')), findsOneWidget);
 
       await tester.tap(find.byKey(const ValueKey('iniciar-sesion')));
       await tester.pumpAndSettle();
@@ -138,7 +139,7 @@ void main() {
 
       expect(find.byType(MenuPage), findsOneWidget);
       expect(find.text('Jugar'), findsOneWidget);
-      expect(find.text('Iniciar sesión'), findsOneWidget);
+      expect(find.byKey(const ValueKey('iniciar-sesion')), findsOneWidget);
     });
 
     testWidgets('cancelar la confirmación conserva la cuenta', (
@@ -152,6 +153,14 @@ void main() {
         ),
       );
 
+      expect(find.byKey(const ValueKey('perfil-usuario')), findsOneWidget);
+      expect(find.text('jugador'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('perfil-usuario')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('cerrar-sesion')), findsOneWidget);
+      expect(find.byKey(const ValueKey('eliminar-cuenta')), findsOneWidget);
+
       await tester.tap(find.byKey(const ValueKey('eliminar-cuenta')));
       await tester.pumpAndSettle();
       expect(find.text('¿Eliminar cuenta?'), findsOneWidget);
@@ -162,7 +171,7 @@ void main() {
 
       expect(authService.deletedToken, isNull);
       expect(session.activa, isTrue);
-      expect(find.byKey(const ValueKey('eliminar-cuenta')), findsOneWidget);
+      expect(find.byKey(const ValueKey('perfil-usuario')), findsOneWidget);
     });
 
     testWidgets('confirmar elimina la cuenta y limpia la sesión local', (
@@ -176,6 +185,8 @@ void main() {
         ),
       );
 
+      await tester.tap(find.byKey(const ValueKey('perfil-usuario')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('eliminar-cuenta')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('confirmar-eliminar-cuenta')));
@@ -184,7 +195,8 @@ void main() {
       expect(authService.deletedToken, 'test-session-token');
       expect(session.activa, isFalse);
       expect(find.text('La cuenta se eliminó correctamente.'), findsOneWidget);
-      expect(find.byKey(const ValueKey('eliminar-cuenta')), findsNothing);
+      expect(find.byKey(const ValueKey('perfil-usuario')), findsNothing);
+      expect(find.byKey(const ValueKey('iniciar-sesion')), findsOneWidget);
     });
   });
 }
