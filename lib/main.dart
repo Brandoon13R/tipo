@@ -108,7 +108,7 @@ class _MenuPageState extends State<MenuPage> {
     }
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => LobbyMultijugadorPage(
+        builder: (_) => SeleccionModoMultijugadorPage(
           supabaseClient: client,
           token: token,
           usuario: username,
