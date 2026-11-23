@@ -372,32 +372,59 @@ class RankingService {
     required String usuario,
     required int deltaElo,
   }) async {
-    // 1. Intenta actualizar directamente en la tabla usuarios ("Elo")
+    final usuarioLimpio = usuario.trim();
+    final usuarioMinusculas = usuarioLimpio.toLowerCase();
+
+    // 1. Intenta actualizar directamente en la tabla usuarios verificando con .select()
+    // que realmente se haya modificado la fila en Postgres (con la política RLS de usuarios).
     try {
-      final actual = await obtenerRanking(usuario);
+      final actual = await obtenerRanking(usuarioLimpio);
       final nuevoElo = max(0, actual.perfilActual.elo + deltaElo);
-      try {
-        await _supabase
-            .from('usuarios')
-            .update({'Elo': nuevoElo})
-            .eq('usuario_name', usuario);
-        return nuevoElo;
-      } catch (_) {
-        await _supabase
-            .from('usuarios')
-            .update({'elo': nuevoElo})
-            .eq('usuario_name', usuario);
-        return nuevoElo;
+      for (final candidato in {usuarioLimpio, usuarioMinusculas}) {
+        try {
+          final dynamic actualizadas = await _supabase
+              .from('usuarios')
+              .update({'Elo': nuevoElo})
+              .eq('usuario_name', candidato)
+              .select('usuario_name, Elo');
+          if (actualizadas is List && actualizadas.isNotEmpty) {
+            final fila = Map<String, dynamic>.from(actualizadas.first as Map);
+            return _extraerElo(fila);
+          }
+        } catch (_) {
+          try {
+            final dynamic actualizadas = await _supabase
+                .from('usuarios')
+                .update({'elo': nuevoElo})
+                .eq('usuario_name', candidato)
+                .select('usuario_name, elo');
+            if (actualizadas is List && actualizadas.isNotEmpty) {
+              final fila = Map<String, dynamic>.from(actualizadas.first as Map);
+              return _extraerElo(fila);
+            }
+          } catch (_) {}
+        }
       }
     } catch (_) {}
 
-    // 2. Fallback mediante Edge Function usuario-auth
+    // 2. Fallback mediante RPC security definer (actualizar_elo_usuario)
+    for (final paramDelta in ['p_delta_elo', 'p_delta']) {
+      try {
+        final dynamic res = await _supabase.rpc(
+          'actualizar_elo_usuario',
+          params: {'p_usuario_name': usuarioMinusculas, paramDelta: deltaElo},
+        );
+        if (res is num) return res.toInt();
+      } catch (_) {}
+    }
+
+    // 3. Fallback mediante Edge Function usuario-auth (con service_role)
     try {
       final response = await _supabase.functions.invoke(
         'usuario-auth',
         body: {
           'action': 'update_elo',
-          'usuario_name': usuario,
+          'usuario_name': usuarioMinusculas,
           'delta_elo': deltaElo,
           if (_token != null) 'session_token': _token,
         },
@@ -408,15 +435,6 @@ class RankingService {
       if (raw is Map && raw['elo'] is num) {
         return (raw['elo'] as num).toInt();
       }
-    } catch (_) {}
-
-    // 3. Fallback mediante RPC actualizar_elo_usuario
-    try {
-      final dynamic res = await _supabase.rpc(
-        'actualizar_elo_usuario',
-        params: {'p_usuario_name': usuario, 'p_delta': deltaElo},
-      );
-      if (res is num) return res.toInt();
     } catch (_) {}
 
     return null;
