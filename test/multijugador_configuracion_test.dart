@@ -234,7 +234,7 @@ void main() {
   );
 
   testWidgets(
-    'muestra tu tablero y el tablero del rival lado a lado en pantallas anchas',
+    'en pantallas anchas (PC) muestra un solo tablero a la vez y cambia mediante las pestañas',
     (tester) async {
       await tester.binding.setSurfaceSize(const Size(1280, 900));
       addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -305,13 +305,22 @@ void main() {
         ),
       );
 
+      // Por defecto muestra únicamente Tu tablero, sin saturar la pantalla con el del rival
       expect(find.text('Nivel 1 · Tu tablero'), findsOneWidget);
+      expect(find.text('Nivel 1 · Tablero de rival_1'), findsNothing);
+      expect(find.byKey(const ValueKey('tabla-puntos')), findsOneWidget);
+      expect(find.byKey(const ValueKey('rival-tabla-puntos')), findsNothing);
+
+      // Al tocar la pestaña de rival_1, cambia para mostrar únicamente el tablero del rival
+      await tester.tap(find.byKey(const ValueKey('ver-tablero-rival_1')));
+      await tester.pump();
+
+      expect(find.text('Nivel 1 · Tu tablero'), findsNothing);
       expect(find.text('Nivel 1 · Tablero de rival_1'), findsOneWidget);
       expect(
         find.byKey(const ValueKey('tablero-rival-rival_1')),
         findsOneWidget,
       );
-      expect(find.byKey(const ValueKey('tabla-puntos')), findsOneWidget);
       expect(find.byKey(const ValueKey('rival-tabla-puntos')), findsOneWidget);
     },
   );
@@ -486,6 +495,10 @@ void main() {
       expect(find.text('Verde der. (1.º)'), findsOneWidget);
       expect(find.text('+4'), findsOneWidget);
       expect(find.text('+7'), findsOneWidget);
+
+      // Cambia a la pestaña del jugador derecho para verificar su tabla
+      await tester.tap(find.byKey(const ValueKey('ver-tablero-jugador_der')));
+      await tester.pump();
 
       // Jugador derecho: 2.º en Verde der. (+3) y 1.º en Rojo inf. (+6) = 9 pts
       expect(find.text('Puntos: 9'), findsOneWidget);

@@ -1481,7 +1481,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
           padding: const EdgeInsets.all(16),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1280),
+              constraints: const BoxConstraints(maxWidth: 1000),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -1565,50 +1565,17 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                     ),
                   ],
                   const SizedBox(height: 12),
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final vistaLadoALado =
-                          constraints.maxWidth >= 1100 && rivales.isNotEmpty;
-                      if (vistaLadoALado) {
-                        final rivalEnVista = rivalSeleccionado ?? rivales.first;
-                        final vistaRival = vistasRivales[rivalEnVista.usuario]!;
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: _seccionTableroPropio(
-                                puedeJugar: puedeJugar,
-                                finalizada: finalizada,
-                              ),
-                            ),
-                            const SizedBox(width: 24),
-                            Expanded(
-                              child: _seccionTableroRival(
-                                rival: rivalEnVista,
-                                vista: vistaRival,
-                                mostrarBotonVolver: false,
-                              ),
-                            ),
-                          ],
-                        );
-                      }
-
-                      if (rivalSeleccionado != null) {
-                        final vistaRival =
-                            vistasRivales[rivalSeleccionado.usuario]!;
-                        return _seccionTableroRival(
-                          rival: rivalSeleccionado,
-                          vista: vistaRival,
-                          mostrarBotonVolver: true,
-                        );
-                      }
-
-                      return _seccionTableroPropio(
-                        puedeJugar: puedeJugar,
-                        finalizada: finalizada,
-                      );
-                    },
-                  ),
+                  if (rivalSeleccionado != null)
+                    _seccionTableroRival(
+                      rival: rivalSeleccionado,
+                      vista: vistasRivales[rivalSeleccionado.usuario]!,
+                      mostrarBotonVolver: true,
+                    )
+                  else
+                    _seccionTableroPropio(
+                      puedeJugar: puedeJugar,
+                      finalizada: finalizada,
+                    ),
                   const SizedBox(height: 12),
                   FilledButton.tonal(
                     key: const ValueKey('conceder-partida'),
