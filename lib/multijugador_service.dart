@@ -349,6 +349,9 @@ class MultijugadorService {
   final SupabaseClient _supabase;
   final String _token;
 
+  SupabaseClient get supabaseClient => _supabase;
+  String get sessionToken => _token;
+
   Future<EstadoSalaMultijugador> crear({
     required String configId,
     required List<int> valoresIniciales,

@@ -1862,6 +1862,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
   bool _finalizadaPorPodio = false;
   bool _eloActualizado = false;
   int? _nuevoEloGuardado;
+  bool _errorGuardandoElo = false;
 
   bool get _esPartidaClasificatoria =>
       widget.esClasificatoria ||
@@ -1936,21 +1937,26 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
     if (_esPartidaClasificatoria && !_eloActualizado) {
       _eloActualizado = true;
       final podio = _calcularPodioActual(sala);
-      final servicio = widget.rankingService;
-      if (servicio != null) {
-        unawaited(
-          servicio
-              .aplicarCambioElo(
-                usuario: widget.usuario,
-                deltaElo: podio.propio.deltaElo,
-              )
-              .then((nuevoElo) {
-                if (mounted && nuevoElo != null) {
-                  setState(() => _nuevoEloGuardado = nuevoElo);
-                }
-              }),
-        );
-      }
+      final servicio =
+          widget.rankingService ??
+          RankingService(
+            widget.service.supabaseClient,
+            token: widget.service.sessionToken,
+          );
+      unawaited(
+        servicio
+            .aplicarCambioElo(
+              usuario: widget.usuario,
+              deltaElo: podio.propio.deltaElo,
+            )
+            .then((nuevoElo) {
+              if (!mounted) return;
+              setState(() {
+                _nuevoEloGuardado = nuevoElo;
+                _errorGuardandoElo = nuevoElo == null;
+              });
+            }),
+      );
     }
   }
 
@@ -2649,6 +2655,17 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
               key: const ValueKey('nuevo-elo-guardado'),
               textAlign: TextAlign.center,
               style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ] else if (_errorGuardandoElo) ...[
+            const SizedBox(height: 4),
+            Text(
+              'No se pudo guardar el Elo en Supabase (revisa el permiso UPDATE y la política RLS para el rol anon en public.usuarios).',
+              key: const ValueKey('error-guardando-elo'),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.error,
+              ),
             ),
           ],
           const Divider(height: 16),
