@@ -3,6 +3,32 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tipo/multijugador.dart';
 import 'package:tipo/multijugador_service.dart';
+import 'package:tipo/ranking_service.dart';
+
+class _FakeRankingService extends RankingService {
+  _FakeRankingService(super.supabase, this.filas) : super(token: 'test-token');
+
+  final List<Map<String, dynamic>> filas;
+  int? ultimoDeltaAplicado;
+  String? ultimoUsuarioActualizado;
+
+  @override
+  Future<ResumenRankingUsuario> obtenerRanking(String usuarioActual) async =>
+      RankingService.construirResumenDesdeFilas(
+        filas: filas,
+        usuarioActual: usuarioActual,
+      );
+
+  @override
+  Future<int?> aplicarCambioElo({
+    required String usuario,
+    required int deltaElo,
+  }) async {
+    ultimoUsuarioActualizado = usuario;
+    ultimoDeltaAplicado = deltaElo;
+    return 100 + deltaElo;
+  }
+}
 
 class _FakeMultijugadorService extends MultijugadorService {
   _FakeMultijugadorService(super.supabase, super.token, this.salaActual);
@@ -583,6 +609,261 @@ void main() {
           cantidadIluminadas,
         );
       }
+    },
+  );
+
+  testWidgets(
+    'Clasificatorias muestra Crear Partida, el Top 10 y tu perfil con tu puesto abajo',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(900, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      final client = crearClientePrueba();
+      final filas = [
+        for (var i = 1; i <= 12; i++)
+          {'usuario_name': 'jugador_$i', 'Elo': (13 - i) * 25},
+      ];
+      final rankingService = _FakeRankingService(client, filas);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SeleccionModoMultijugadorPage(
+            supabaseClient: client,
+            token: 'test-token',
+            usuario: 'jugador_12',
+            rankingService: rankingService,
+          ),
+        ),
+      );
+
+      expect(
+        find.byKey(const ValueKey('opcion-clasificatorias')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('opcion-salas-amistosas')),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.byKey(const ValueKey('opcion-clasificatorias')));
+      await tester.pumpAndSettle();
+
+      // Verifica botón Crear Partida, Tabla Top 10 y tarjeta de perfil propio en puesto #12
+      expect(
+        find.byKey(const ValueKey('crear-partida-clasificatoria')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('tabla-clasificacion-top10')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('fila-top10-1')), findsOneWidget);
+      expect(find.byKey(const ValueKey('fila-top10-10')), findsOneWidget);
+      expect(find.byKey(const ValueKey('fila-top10-11')), findsNothing);
+      expect(find.byKey(const ValueKey('tarjeta-mi-ranking')), findsOneWidget);
+      expect(
+        find.text('Puesto #12 en la clasificación general'),
+        findsOneWidget,
+      );
+      expect(find.text('25 Elo'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'Partida clasificatoria termina automáticamente al ocuparse los 3 primeros puestos y asigna Elo según Método 2',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(900, 1200));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      final client = crearClientePrueba();
+      final rankingService = _FakeRankingService(client, const []);
+      List<Map<String, int>> celdasIniciales() => const [
+        {'x': 2, 'y': 0, 'value': 1},
+        {'x': 5, 'y': 1, 'value': 2},
+        {'x': 1, 'y': 3, 'value': 3},
+        {'x': 4, 'y': 3, 'value': 4},
+        {'x': 2, 'y': 5, 'value': 5},
+        {'x': 4, 'y': 6, 'value': 6},
+      ];
+
+      // 4 jugadores en sala clasificatoria: 3 ya terminaron (ocupando 1.º, 2.º y 3.º)
+      // y el 4.º aún no había terminado su tablero, pero la partida debe finalizar automáticamente.
+      final estadoJugador1 = {
+        'cells': celdasIniciales(),
+        'die_a': 1,
+        'die_b': 2,
+        'pivot': null,
+        'turns_played': 12,
+        'turns_skipped': 0,
+        'score': 20,
+        'finished': true,
+        'ranked': true,
+      };
+      final rivales = [
+        JugadorMultijugador(
+          usuario: 'jugador_2',
+          esAnfitrion: false,
+          conectado: true,
+          listo: true,
+          valoresIniciales: const [1, 2, 3, 4, 5, 6],
+          estado: {
+            'cells': celdasIniciales(),
+            'die_a': 1,
+            'die_b': 2,
+            'pivot': null,
+            'turns_played': 12,
+            'turns_skipped': 1,
+            'score': 15,
+            'finished': true,
+            'ranked': true,
+          },
+        ),
+        JugadorMultijugador(
+          usuario: 'jugador_3',
+          esAnfitrion: false,
+          conectado: true,
+          listo: true,
+          valoresIniciales: const [1, 2, 3, 4, 5, 6],
+          estado: {
+            'cells': celdasIniciales(),
+            'die_a': 1,
+            'die_b': 2,
+            'pivot': null,
+            'turns_played': 12,
+            'turns_skipped': 2,
+            'score': 10,
+            'finished': true,
+            'ranked': true,
+          },
+        ),
+        JugadorMultijugador(
+          usuario: 'jugador_4',
+          esAnfitrion: false,
+          conectado: true,
+          listo: true,
+          valoresIniciales: const [1, 2, 3, 4, 5, 6],
+          estado: {
+            'cells': celdasIniciales(),
+            'die_a': 1,
+            'die_b': 2,
+            'pivot': null,
+            'turns_played': 8,
+            'turns_skipped': 3,
+            'score': 6,
+            'finished': false,
+            'ranked': true,
+          },
+        ),
+      ];
+
+      final sala = EstadoSalaMultijugador(
+        codigo: '777888',
+        estado: 'activa',
+        configId: 'nivel_1',
+        valoresIniciales: const [1, 2, 3, 4, 5, 6],
+        usuarioAnfitrion: 'jugador_1',
+        usuarioOponente: 'jugador_2',
+        esAnfitrion: true,
+        oponenteConectado: true,
+        reclamarDesde: null,
+        horaServidor: DateTime.now(),
+        horaLocalRecibida: DateTime.now(),
+        estadoPropio: estadoJugador1,
+        versionPropia: 1,
+        estadoOponente: rivales.first.estado,
+        ganador: null,
+        motivoFinalizacion: null,
+        rivales: rivales,
+      );
+      final service = _FakeMultijugadorService(client, 'test-token', sala);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: PartidaMultijugadorPage(
+            service: service,
+            salaInicial: sala,
+            usuario: 'jugador_1',
+            esClasificatoria: true,
+            rankingService: rankingService,
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // Verifica que la partida terminó automáticamente al ocuparse los 3 primeros puestos
+      expect(
+        find.text('Se completaron los puestos del podio (1.º, 2.º y 3.º).'),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('resumen-elo-clasificatoria')),
+        findsOneWidget,
+      );
+      // Método 2:
+      // 1.º puesto (jugador_1 con 0 pts de zonas en celdasIniciales -> +12 + 0 = +12 Elo)
+      // Verificamos también la fórmula directa de Método 2 con distintos puntajes:
+      final cambio1 = RankingService.calcularCambioElo(
+        puesto: 1,
+        puntosPartida: 20,
+        totalJugadores: 4,
+      );
+      final cambio2 = RankingService.calcularCambioElo(
+        puesto: 2,
+        puntosPartida: 15,
+        totalJugadores: 4,
+      );
+      final cambio3 = RankingService.calcularCambioElo(
+        puesto: 3,
+        puntosPartida: 10,
+        totalJugadores: 4,
+      );
+      final cambio4 = RankingService.calcularCambioElo(
+        puesto: 4,
+        puntosPartida: 6,
+        totalJugadores: 4,
+      );
+      expect(cambio1.deltaElo, 32); // 12 + 20
+      expect(cambio2.deltaElo, 23); // 8 + 15
+      expect(cambio3.deltaElo, 15); // 5 + 10
+      expect(cambio4.deltaElo, lessThan(0)); // 4.º pierde puntos
+      expect(rankingService.ultimoUsuarioActualizado, 'jugador_1');
+      expect(rankingService.ultimoDeltaAplicado, 32);
+    },
+  );
+
+  test(
+    'en partida de 2 jugadores con 46 pts cada uno, quien termina primero es 1.º (+58 Elo) y el 2.º recibe +8 + 46 (+54 Elo)',
+    () {
+      final podio = RankingService.calcularPodioSala(
+        usuarioPropio: 'brandoon13r',
+        puntosPropios: 46,
+        turnosOmitidosPropios: 2,
+        propioTerminado: true,
+        propioEliminado: false,
+        propioTerminadoEn: 1000,
+        propioZonasPrimerLugar: 5,
+        rivales: const [
+          (
+            usuario: 'brand',
+            puntos: 46,
+            turnosOmitidos: 1,
+            terminado: true,
+            eliminado: false,
+            terminadoEn: 2000,
+            zonasPrimerLugar: 4,
+          ),
+        ],
+      );
+
+      expect(podio.clasificacion.first.usuario, 'brandoon13r');
+      expect(podio.clasificacion.first.puesto, 1);
+      expect(podio.clasificacion.first.bonoPuesto, 12);
+      expect(podio.clasificacion.first.deltaElo, 58); // 12 + 46
+
+      expect(podio.clasificacion.last.usuario, 'brand');
+      expect(podio.clasificacion.last.puesto, 2);
+      expect(podio.clasificacion.last.bonoPuesto, 8);
+      expect(podio.clasificacion.last.deltaElo, 54); // 8 + 46
     },
   );
 }

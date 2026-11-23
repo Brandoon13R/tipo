@@ -7,6 +7,7 @@ import 'package:tipo/juego_bloc.dart';
 import 'package:tipo/multijugador_service.dart';
 import 'package:tipo/nivel_config.dart';
 import 'package:tipo/puntuacion.dart';
+import 'package:tipo/ranking_service.dart';
 import 'package:tipo/region.dart';
 import 'package:tipo/tabla_puntos.dart';
 import 'package:tipo/tablero.dart';
@@ -19,6 +20,805 @@ bool _partidaSinJugadas(Map<String, dynamic>? state) =>
         state['turns_skipped'] == 0 &&
         state['score'] == 0 &&
         state['finished'] == false;
+
+class SeleccionModoMultijugadorPage extends StatelessWidget {
+  const SeleccionModoMultijugadorPage({
+    super.key,
+    required this.supabaseClient,
+    required this.token,
+    required this.usuario,
+    this.rankingService,
+  });
+
+  final SupabaseClient supabaseClient;
+  final String token;
+  final String usuario;
+  final RankingService? rankingService;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(
+      title: const Text('Multijugador'),
+      leading: IconButton(
+        key: const ValueKey('volver-menu-multijugador'),
+        onPressed: () => Navigator.of(context).pop(),
+        icon: const Icon(Icons.arrow_back),
+      ),
+    ),
+    body: SafeArea(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: ListView(
+            padding: const EdgeInsets.all(24),
+            children: [
+              const Icon(
+                Icons.people_alt_rounded,
+                size: 52,
+                color: Color(0xFF193E37),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Elige el modo de juego',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF193E37),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Compite por puntos de Elo en Clasificatorias o juega '
+                'partidas personalizadas en Salas Amistosas.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.black54),
+              ),
+              const SizedBox(height: 28),
+              Card(
+                elevation: 0,
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  side: const BorderSide(color: Color(0xFF193E37), width: 1.5),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(
+                            Icons.emoji_events_rounded,
+                            color: Color(0xFF193E37),
+                            size: 28,
+                          ),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Clasificatorias (Elo)',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Gana Elo según tu puesto (1.º +12, 2.º +8, 3.º +5 '
+                        '+ los puntos de tu tablero). Cuando se ocupan los '
+                        '3 primeros puestos, la partida finaliza '
+                        'automáticamente para todos.',
+                        style: TextStyle(fontSize: 13, color: Colors.black87),
+                      ),
+                      const SizedBox(height: 14),
+                      FilledButton.icon(
+                        key: const ValueKey('opcion-clasificatorias'),
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => ClasificatoriasPage(
+                                supabaseClient: supabaseClient,
+                                token: token,
+                                usuario: usuario,
+                                rankingService: rankingService,
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.leaderboard_rounded),
+                        label: const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: Text('Entrar a Clasificatorias'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Card(
+                elevation: 0,
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  side: const BorderSide(color: Color(0xFFDCE5DF)),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(
+                            Icons.sports_esports_outlined,
+                            color: Color(0xFF193E37),
+                            size: 28,
+                          ),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Salas Amistosas',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Crea o únete a una sala privada con código para '
+                        'jugar con amigos (hasta 6 jugadores) sin alterar tu '
+                        'puntuación de Elo.',
+                        style: TextStyle(fontSize: 13, color: Colors.black87),
+                      ),
+                      const SizedBox(height: 14),
+                      OutlinedButton.icon(
+                        key: const ValueKey('opcion-salas-amistosas'),
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => LobbyMultijugadorPage(
+                                supabaseClient: supabaseClient,
+                                token: token,
+                                usuario: usuario,
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.meeting_room_outlined),
+                        label: const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: Text('Entrar a Salas Amistosas'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class ClasificatoriasPage extends StatefulWidget {
+  const ClasificatoriasPage({
+    super.key,
+    required this.supabaseClient,
+    required this.token,
+    required this.usuario,
+    this.service,
+    this.rankingService,
+  });
+
+  final SupabaseClient supabaseClient;
+  final String token;
+  final String usuario;
+  final MultijugadorService? service;
+  final RankingService? rankingService;
+
+  @override
+  State<ClasificatoriasPage> createState() => _ClasificatoriasPageState();
+}
+
+class _ClasificatoriasPageState extends State<ClasificatoriasPage> {
+  final _codigoController = TextEditingController();
+  late final MultijugadorService _service;
+  late final RankingService _rankingService;
+  NivelConfig _config = Nivel1Config();
+  final Map<String, int?> _valoresIniciales = {};
+  bool _ocupado = false;
+  bool _cargandoRanking = true;
+  String? _error;
+  ResumenRankingUsuario? _resumenRanking;
+
+  @override
+  void initState() {
+    super.initState();
+    _service =
+        widget.service ??
+        MultijugadorService(widget.supabaseClient, widget.token);
+    _rankingService =
+        widget.rankingService ??
+        RankingService(widget.supabaseClient, token: widget.token);
+    unawaited(_cargarRanking());
+  }
+
+  Future<void> _cargarRanking() async {
+    setState(() => _cargandoRanking = true);
+    try {
+      final resumen = await _rankingService.obtenerRanking(widget.usuario);
+      if (!mounted) return;
+      setState(() {
+        _resumenRanking = resumen;
+        _cargandoRanking = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _cargandoRanking = false);
+    }
+  }
+
+  List<int>? _valoresSeleccionados() {
+    final values = [
+      for (final region in _config.iniciales.keys) _valoresIniciales[region],
+    ];
+    if (values.any((value) => value == null) || values.toSet().length != 6) {
+      return null;
+    }
+    return values.cast<int>();
+  }
+
+  bool _tableroInicialValido(List<int> values) {
+    final tablero = Tablero.desdeConfig(_config);
+    var index = 0;
+    for (final position in _config.iniciales.values) {
+      if (!tablero.agregar(position, values[index++])) return false;
+    }
+    return true;
+  }
+
+  Future<void> _elegirNumero(String region) async {
+    if (_ocupado) return;
+    final usadosEnOtrasRegiones = {
+      for (final entry in _valoresIniciales.entries)
+        if (entry.key != region && entry.value != null) entry.value,
+    };
+    final valor = await showDialog<int>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text('Número inicial · $region'),
+        children: [
+          for (var number = 1; number <= 6; number++)
+            SimpleDialogOption(
+              key: ValueKey('opcion-clasificatoria-$number'),
+              onPressed: usadosEnOtrasRegiones.contains(number)
+                  ? null
+                  : () => Navigator.pop(context, number),
+              child: Text(
+                usadosEnOtrasRegiones.contains(number)
+                    ? '$number · ya asignado'
+                    : '$number',
+              ),
+            ),
+          SimpleDialogOption(
+            key: const ValueKey('borrar-clasificatoria'),
+            onPressed: () => Navigator.pop(context, 0),
+            child: const Text('Borrar número'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || valor == null) return;
+    setState(() {
+      _valoresIniciales[region] = valor == 0 ? null : valor;
+      _error = null;
+    });
+  }
+
+  Future<void> _crearPartidaClasificatoria() async {
+    final valores = _valoresSeleccionados();
+    if (valores == null) {
+      setState(() => _error = 'Asigna los números del 1 al 6 sin repetir.');
+      return;
+    }
+    if (!_tableroInicialValido(valores)) {
+      setState(
+        () =>
+            _error = 'Esa distribución inicial no cumple las reglas del nivel.',
+      );
+      return;
+    }
+
+    setState(() {
+      _ocupado = true;
+      _error = null;
+    });
+    try {
+      final room = await _service.crear(
+        configId: _config.id,
+        valoresIniciales: valores,
+      );
+      if (!mounted) return;
+      await _abrirSalaClasificatoria(room);
+    } on MultijugadorException catch (error) {
+      if (mounted) setState(() => _error = error.message);
+    } finally {
+      if (mounted) setState(() => _ocupado = false);
+    }
+  }
+
+  Future<void> _unirseClasificatoria() async {
+    final code = _codigoController.text.trim();
+    if (!RegExp(r'^\d{6}$').hasMatch(code)) {
+      setState(() => _error = 'Escribe un código de seis dígitos.');
+      return;
+    }
+    setState(() {
+      _ocupado = true;
+      _error = null;
+    });
+    try {
+      final room = await _service.unirse(code);
+      if (!mounted) return;
+      await _abrirSalaClasificatoria(room);
+    } on MultijugadorException catch (error) {
+      if (mounted) setState(() => _error = error.message);
+    } finally {
+      if (mounted) setState(() => _ocupado = false);
+    }
+  }
+
+  Future<void> _abrirSalaClasificatoria(EstadoSalaMultijugador room) async {
+    final perteneceASala =
+        room.esAnfitrion ||
+        room.usuarioOponente == widget.usuario ||
+        room.jugadores.isEmpty ||
+        room.jugadores.any((j) => j.usuario == widget.usuario);
+    if (!perteneceASala &&
+        (room.estado == 'activa' || room.estado == 'finalizada')) {
+      setState(() {
+        _error = 'La partida ya comenzó. No puedes unirte a una sala en curso.';
+      });
+      return;
+    }
+    final invitadoSinTablero =
+        !room.esAnfitrion &&
+        room.valoresIniciales == null &&
+        (room.estado == 'configurando' ||
+            room.estado == 'esperando' ||
+            (room.estado == 'activa' && _partidaSinJugadas(room.estadoPropio)));
+    final segundoSinTablero =
+        !room.esAnfitrion &&
+        room.estado == 'activa' &&
+        _partidaSinJugadas(room.estadoPropio) &&
+        room.estadoPropio == null;
+    if (invitadoSinTablero || segundoSinTablero) {
+      await Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(
+          builder: (_) => ConfigurarTableroMultijugadorPage(
+            service: _service,
+            salaInicial: room,
+            usuario: widget.usuario,
+            esClasificatoria: true,
+            rankingService: _rankingService,
+          ),
+        ),
+      );
+      return;
+    }
+    if (room.estado == 'activa' || room.estado == 'finalizada') {
+      await Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(
+          builder: (_) => PartidaMultijugadorPage(
+            service: _service,
+            salaInicial: room,
+            usuario: widget.usuario,
+            esClasificatoria: true,
+            rankingService: _rankingService,
+          ),
+        ),
+      );
+    } else {
+      await Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(
+          builder: (_) => SalaMultijugadorPage(
+            service: _service,
+            salaInicial: room,
+            usuario: widget.usuario,
+            esClasificatoria: true,
+            rankingService: _rankingService,
+          ),
+        ),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _codigoController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final resumen = _resumenRanking;
+    final top10 = resumen?.top10 ?? const <EntradaRankingElo>[];
+    final miPerfil =
+        resumen?.perfilActual ??
+        EntradaRankingElo(posicion: 1, usuario: widget.usuario, elo: 0);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Clasificatorias · Ranking Elo'),
+        leading: IconButton(
+          key: const ValueKey('salir-clasificatorias'),
+          onPressed: _ocupado ? null : () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back),
+        ),
+        actions: [
+          IconButton(
+            key: const ValueKey('recargar-ranking'),
+            tooltip: 'Actualizar tabla de clasificación',
+            onPressed: _cargandoRanking ? null : _cargarRanking,
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 620),
+            child: ListView(
+              padding: const EdgeInsets.all(20),
+              children: [
+                Card(
+                  elevation: 0,
+                  color: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    side: const BorderSide(color: Color(0xFFDCE5DF)),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(
+                              Icons.add_circle_outline_rounded,
+                              color: Color(0xFF193E37),
+                            ),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Crear Partida Clasificatoria',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          '1.º puesto: +12 Elo + puntos · '
+                          '2.º puesto: +8 Elo + puntos · '
+                          '3.º puesto: +5 Elo + puntos. '
+                          'La partida termina al ocuparse los 3 primeros puestos.',
+                          style: TextStyle(fontSize: 12.5, color: Colors.black54),
+                        ),
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<String>(
+                          key: ValueKey('nivel-clasificatoria-${_config.id}'),
+                          initialValue: _config.id,
+                          decoration: const InputDecoration(labelText: 'Nivel'),
+                          items: [
+                            for (final config in _niveles)
+                              DropdownMenuItem(
+                                value: config.id,
+                                child: Text(config.nombre),
+                              ),
+                          ],
+                          onChanged: _ocupado
+                              ? null
+                              : (id) {
+                                  if (id == null) return;
+                                  setState(() {
+                                    _config = _configuracion(id);
+                                    _valoresIniciales.clear();
+                                    _error = null;
+                                  });
+                                },
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          '${_valoresIniciales.values.whereType<int>().length} '
+                          'de 6 números asignados',
+                          key: const ValueKey('progreso-inicial-clasificatoria'),
+                        ),
+                        const SizedBox(height: 10),
+                        TableroVisual(
+                          key: ValueKey('tablero-clasificatoria-${_config.id}'),
+                          valores: _valoresIniciales,
+                          habilitado: !_ocupado,
+                          onSeleccionar: _elegirNumero,
+                          config: _config,
+                        ),
+                        const SizedBox(height: 12),
+                        FilledButton.icon(
+                          key: const ValueKey('crear-partida-clasificatoria'),
+                          onPressed: _ocupado ? null : _crearPartidaClasificatoria,
+                          icon: const Icon(Icons.emoji_events_outlined),
+                          label: Text(
+                            _ocupado ? 'Creando partida...' : 'Crear Partida',
+                          ),
+                        ),
+                        const Divider(height: 28),
+                        const Text(
+                          'Unirse a una partida clasificatoria',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                key: const ValueKey(
+                                  'codigo-invitacion-clasificatoria',
+                                ),
+                                controller: _codigoController,
+                                keyboardType: TextInputType.number,
+                                maxLength: 6,
+                                decoration: const InputDecoration(
+                                  labelText: 'Código de sala',
+                                  hintText: '123456',
+                                  border: OutlineInputBorder(),
+                                  counterText: '',
+                                  isDense: true,
+                                ),
+                                onChanged: (_) {
+                                  if (_error != null) {
+                                    setState(() => _error = null);
+                                  }
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            OutlinedButton.icon(
+                              key: const ValueKey('unirse-sala-clasificatoria'),
+                              onPressed: _ocupado ? null : _unirseClasificatoria,
+                              icon: const Icon(Icons.login),
+                              label: const Text('Unirse'),
+                            ),
+                          ],
+                        ),
+                        if (_error != null) ...[
+                          const SizedBox(height: 10),
+                          Text(
+                            _error!,
+                            key: const ValueKey('error-clasificatoria'),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Card(
+                  key: const ValueKey('tabla-clasificacion-top10'),
+                  elevation: 0,
+                  color: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    side: const BorderSide(color: Color(0xFFDCE5DF)),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.leaderboard_rounded,
+                              color: Color(0xFF193E37),
+                            ),
+                            const SizedBox(width: 8),
+                            const Expanded(
+                              child: Text(
+                                'Tabla de Clasificaciones · Top 10',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            if (_cargandoRanking)
+                              const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                          ],
+                        ),
+                        const Divider(height: 20),
+                        if (top10.isEmpty && !_cargandoRanking)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            child: Text(
+                              'Aún no hay jugadores registrados en el ranking.',
+                              textAlign: TextAlign.center,
+                            ),
+                          )
+                        else
+                          for (final entrada in top10)
+                            Container(
+                              key: ValueKey('fila-top10-${entrada.posicion}'),
+                              margin: const EdgeInsets.symmetric(vertical: 3),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color:
+                                    entrada.usuario.toLowerCase() ==
+                                        widget.usuario.toLowerCase()
+                                    ? const Color(0xFFD4F4D8)
+                                    : const Color(0xFFF8FAF8),
+                                borderRadius: BorderRadius.circular(8),
+                                border:
+                                    entrada.usuario.toLowerCase() ==
+                                        widget.usuario.toLowerCase()
+                                    ? Border.all(color: const Color(0xFF193E37))
+                                    : null,
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 32,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 3,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: entrada.posicion == 1
+                                          ? const Color(0xFFF1C40F)
+                                          : entrada.posicion == 2
+                                          ? const Color(0xFFBDC3C7)
+                                          : entrada.posicion == 3
+                                          ? const Color(0xFFE67E22)
+                                          : const Color(0xFFEAF2EE),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      '${entrada.posicion}.º',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w800,
+                                        color: entrada.posicion <= 3
+                                            ? Colors.black87
+                                            : const Color(0xFF193E37),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      entrada.usuario,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                  Text(
+                                    '${entrada.elo} Elo',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      color: Color(0xFF193E37),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        const Divider(height: 24),
+                        Container(
+                          key: const ValueKey('tarjeta-mi-ranking'),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEAF2EE),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: const Color(0xFF193E37)),
+                          ),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 18,
+                                backgroundColor: const Color(0xFF193E37),
+                                child: Text(
+                                  widget.usuario.isNotEmpty
+                                      ? widget.usuario[0].toUpperCase()
+                                      : 'U',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Tu perfil · ${miPerfil.usuario}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    Text(
+                                      resumen?.estaEnTop10 == true
+                                          ? 'Puesto #${miPerfil.posicion} (En el Top 10)'
+                                          : 'Puesto #${miPerfil.posicion} en la clasificación general',
+                                      key: const ValueKey('mi-puesto-ranking'),
+                                      style: const TextStyle(
+                                        fontSize: 12.5,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  '${miPerfil.elo} Elo',
+                                  key: const ValueKey('mi-elo-ranking'),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFF193E37),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class LobbyMultijugadorPage extends StatefulWidget {
   const LobbyMultijugadorPage({
@@ -356,11 +1156,15 @@ class ConfigurarTableroMultijugadorPage extends StatefulWidget {
     required this.service,
     required this.salaInicial,
     required this.usuario,
+    this.esClasificatoria = false,
+    this.rankingService,
   });
 
   final MultijugadorService service;
   final EstadoSalaMultijugador salaInicial;
   final String usuario;
+  final bool esClasificatoria;
+  final RankingService? rankingService;
 
   @override
   State<ConfigurarTableroMultijugadorPage> createState() =>
@@ -487,6 +1291,8 @@ class _ConfigurarTableroMultijugadorPageState
               service: widget.service,
               salaInicial: room,
               usuario: widget.usuario,
+              esClasificatoria: widget.esClasificatoria,
+              rankingService: widget.rankingService,
             ),
           ),
         );
@@ -497,6 +1303,8 @@ class _ConfigurarTableroMultijugadorPageState
               service: widget.service,
               salaInicial: room,
               usuario: widget.usuario,
+              esClasificatoria: widget.esClasificatoria,
+              rankingService: widget.rankingService,
             ),
           ),
         );
@@ -635,11 +1443,15 @@ class SalaMultijugadorPage extends StatefulWidget {
     required this.service,
     required this.salaInicial,
     required this.usuario,
+    this.esClasificatoria = false,
+    this.rankingService,
   });
 
   final MultijugadorService service;
   final EstadoSalaMultijugador salaInicial;
   final String usuario;
+  final bool esClasificatoria;
+  final RankingService? rankingService;
 
   @override
   State<SalaMultijugadorPage> createState() => _SalaMultijugadorPageState();
@@ -723,6 +1535,8 @@ class _SalaMultijugadorPageState extends State<SalaMultijugadorPage> {
           service: widget.service,
           salaInicial: sala,
           usuario: widget.usuario,
+          esClasificatoria: widget.esClasificatoria,
+          rankingService: widget.rankingService,
         ),
       ),
     );
@@ -1015,11 +1829,15 @@ class PartidaMultijugadorPage extends StatefulWidget {
     required this.service,
     required this.salaInicial,
     required this.usuario,
+    this.esClasificatoria = false,
+    this.rankingService,
   });
 
   final MultijugadorService service;
   final EstadoSalaMultijugador salaInicial;
   final String usuario;
+  final bool esClasificatoria;
+  final RankingService? rankingService;
 
   @override
   State<PartidaMultijugadorPage> createState() =>
@@ -1041,6 +1859,150 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
   final Map<String, Map<String, int>> _tiemposObservadosRivales = {};
   bool _observacionInicialCompleta = false;
   late final int _marcaInicioVista = DateTime.now().millisecondsSinceEpoch;
+  bool _finalizadaPorPodio = false;
+  bool _eloActualizado = false;
+  int? _nuevoEloGuardado;
+
+  bool get _esPartidaClasificatoria =>
+      widget.esClasificatoria ||
+      _sala.estadoPropio?['ranked'] == true ||
+      _sala.rivalesEfectivos.any((r) => r.estado?['ranked'] == true);
+
+  bool _podioClasificatorioCompleto(EstadoSalaMultijugador sala) {
+    if (!_esPartidaClasificatoria) return false;
+    final rivales = sala.rivalesEfectivos;
+    if (rivales.isEmpty) return false;
+    final propioTerminado =
+        _juego.finalizada || sala.estadoPropio?['finished'] == true;
+    return RankingService.podioCompleto(
+      propioTerminado: propioTerminado,
+      propioEliminado: sala.eliminadoPropio,
+      rivales: rivales,
+    );
+  }
+
+  int? _extraerMarcaFin(
+    Map<String, dynamic>? estado,
+    Map<String, int> tiemposZonas,
+    bool terminado,
+  ) {
+    if (!terminado) return null;
+    final explicito = estado?['finished_at'];
+    if (explicito is int) return explicito;
+    if (tiemposZonas.isEmpty) return null;
+    var maximo = 0;
+    for (final tiempo in tiemposZonas.values) {
+      if (tiempo > maximo) maximo = tiempo;
+    }
+    return maximo > 0 ? maximo : null;
+  }
+
+  Map<String, dynamic> _serializarEstadoPropio({bool forzarFinalizado = false}) {
+    final json = _juego.toJson();
+    if (_esPartidaClasificatoria) {
+      json['ranked'] = true;
+    }
+    if (forzarFinalizado) {
+      json['finished'] = true;
+    }
+    if (_juego.finalizada) {
+      final marcaFin = _extraerMarcaFin(
+        _sala.estadoPropio,
+        _juego.tiemposPorZona,
+        true,
+      );
+      json['finished_at'] = marcaFin ?? DateTime.now().millisecondsSinceEpoch;
+    }
+    return json;
+  }
+
+  void _verificarFinClasificatoria(EstadoSalaMultijugador sala) {
+    final terminada =
+        sala.estado == 'finalizada' || _podioClasificatorioCompleto(sala);
+    if (!terminada) return;
+
+    final requiereMarcarFinServidor =
+        _esPartidaClasificatoria &&
+        sala.estado == 'activa' &&
+        !_juego.finalizada &&
+        sala.estadoPropio?['finished'] != true &&
+        !sala.eliminadoPropio;
+
+    _finalizadaPorPodio = true;
+    if (requiereMarcarFinServidor && _pendiente == null) {
+      _pendiente = _serializarEstadoPropio(forzarFinalizado: true);
+    }
+
+    if (_esPartidaClasificatoria && !_eloActualizado) {
+      _eloActualizado = true;
+      final podio = _calcularPodioActual(sala);
+      final servicio = widget.rankingService;
+      if (servicio != null) {
+        unawaited(
+          servicio
+              .aplicarCambioElo(
+                usuario: widget.usuario,
+                deltaElo: podio.propio.deltaElo,
+              )
+              .then((nuevoElo) {
+                if (mounted && nuevoElo != null) {
+                  setState(() => _nuevoEloGuardado = nuevoElo);
+                }
+              }),
+        );
+      }
+    }
+  }
+
+  ResultadoPodioClasificatoria _calcularPodioActual(
+    EstadoSalaMultijugador sala,
+  ) {
+    final vistas = _construirVistasRivales(sala);
+    final puntosPropios = _juego.puntosPorZona.isNotEmpty
+        ? _juego.puntos
+        : (sala.estadoPropio?['score'] is int
+              ? sala.estadoPropio!['score'] as int
+              : _juego.puntos);
+    final propioTerminado =
+        _juego.finalizada || sala.estadoPropio?['finished'] == true;
+    final propioTerminadoEn = _extraerMarcaFin(
+      sala.estadoPropio,
+      _juego.tiemposPorZona,
+      propioTerminado,
+    );
+    final propioZonasPrimero = _juego.posicionesPorZona.values
+        .where((pos) => pos == 1)
+        .length;
+
+    return RankingService.calcularPodioSala(
+      usuarioPropio: widget.usuario,
+      puntosPropios: puntosPropios,
+      turnosOmitidosPropios: _juego.turnosOmitidos,
+      propioTerminado: propioTerminado,
+      propioEliminado: sala.eliminadoPropio,
+      propioTerminadoEn: propioTerminadoEn,
+      propioZonasPrimerLugar: propioZonasPrimero,
+      rivales: [
+        for (final rival in sala.rivalesEfectivos)
+          (
+            usuario: rival.usuario,
+            puntos: vistas[rival.usuario]?.puntos ?? rival.puntos,
+            turnosOmitidos: rival.turnosOmitidos,
+            terminado: rival.terminado,
+            eliminado: rival.eliminado,
+            terminadoEn: _extraerMarcaFin(
+              rival.estado,
+              vistas[rival.usuario]?.tiemposPorZona ?? const {},
+              rival.terminado,
+            ),
+            zonasPrimerLugar:
+                (vistas[rival.usuario]?.posicionesPorZona.values ?? const [])
+                    .where((pos) => pos == 1)
+                    .length,
+          ),
+      ],
+    );
+  }
 
   @override
   void initState() {
@@ -1051,6 +2013,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
     _juego = _crearJuego(_sala);
     _sincronizarPosicionesDeZonas(_sala);
     _observacionInicialCompleta = true;
+    _verificarFinClasificatoria(_sala);
     _timer = Timer.periodic(const Duration(seconds: 3), (_) => _sincronizar());
     _reloj = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted && _hayRivalDesconectado && _sala.estado == 'activa') {
@@ -1059,9 +2022,13 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
     });
     if ((_sala.estadoPropio == null ||
             _sala.estadoPropio!['zone_times'] == null ||
-            _sala.estadoPropio!['score'] != _juego.puntos) &&
+            _sala.estadoPropio!['score'] != _juego.puntos ||
+            (_esPartidaClasificatoria &&
+                _sala.estadoPropio!['ranked'] != true)) &&
         _sala.estado == 'activa') {
-      _pendiente = _juego.toJson();
+      _pendiente ??= _serializarEstadoPropio(
+        forzarFinalizado: _finalizadaPorPodio,
+      );
       unawaited(_sincronizar());
     }
   }
@@ -1251,17 +2218,17 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
     if (mounted) {
       setState(() {
         _sala = sala;
+        _verificarFinClasificatoria(sala);
         if (cambioPropio &&
             _pendiente == null &&
             sala.estado == 'activa' &&
             !sala.eliminadoPropio) {
-          _pendiente = _juego.toJson();
+          _pendiente = _serializarEstadoPropio(
+            forzarFinalizado: _finalizadaPorPodio,
+          );
         }
       });
-      if (cambioPropio &&
-          _pendiente != null &&
-          !_sincronizando &&
-          sala.estado == 'activa') {
+      if (_pendiente != null && !_sincronizando && sala.estado == 'activa') {
         unawaited(_sincronizar());
       }
     }
@@ -1269,6 +2236,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
 
   void _seleccionarPivote(int index) {
     if (_sala.estado != 'activa' ||
+        _finalizadaPorPodio ||
         _sala.eliminadoPropio ||
         _errorConexion != null ||
         _juego.finalizada) {
@@ -1285,6 +2253,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
 
   void _actuar(void Function() accion) {
     if (_sala.estado != 'activa' ||
+        _finalizadaPorPodio ||
         _sala.eliminadoPropio ||
         _errorConexion != null ||
         _juego.finalizada) {
@@ -1296,7 +2265,12 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
       );
       accion();
       _sincronizarPosicionesDeZonas(_sala);
-      setState(() => _pendiente = _juego.toJson());
+      setState(() {
+        _verificarFinClasificatoria(_sala);
+        _pendiente = _serializarEstadoPropio(
+          forzarFinalizado: _finalizadaPorPodio,
+        );
+      });
       unawaited(_sincronizar());
     } on StateError catch (error) {
       ScaffoldMessenger.of(
@@ -1354,17 +2328,32 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
   }
 
   String _estadoFinal() {
+    if (_esPartidaClasificatoria) {
+      final podio = _calcularPodioActual(_sala);
+      if (podio.propio.puesto == 1 && !podio.propio.eliminado) {
+        return '¡1.º puesto en Clasificatoria!';
+      }
+      if (podio.propio.puesto <= 3 && !podio.propio.eliminado) {
+        return '¡${podio.propio.puesto}.º puesto en el podio!';
+      }
+      return 'Finalizaste en ${podio.propio.puesto}.º puesto';
+    }
     if (_sala.ganador == null) return 'Empate';
     if (_sala.ganador == widget.usuario) return '¡Ganaste la partida!';
     return 'Ganó ${_sala.ganador}';
   }
 
-  String _motivoFinal() => switch (_sala.motivoFinalizacion) {
-    'concesion' => 'La partida terminó por concesión.',
-    'desconexion' => 'La partida terminó por desconexión.',
-    'puntuacion' => 'Todos los tableros activos terminaron.',
-    _ => 'Partida finalizada.',
-  };
+  String _motivoFinal() {
+    if (_esPartidaClasificatoria && _finalizadaPorPodio) {
+      return 'Se completaron los puestos del podio (1.º, 2.º y 3.º).';
+    }
+    return switch (_sala.motivoFinalizacion) {
+      'concesion' => 'La partida terminó por concesión.',
+      'desconexion' => 'La partida terminó por desconexión.',
+      'puntuacion' => 'Todos los tableros activos terminaron.',
+      _ => 'Partida finalizada.',
+    };
+  }
 
   String _tiempoParaReclamarDesde(DateTime? until) {
     if (until == null) return '';
@@ -1431,7 +2420,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
 
   @override
   Widget build(BuildContext context) {
-    final finalizada = _sala.estado == 'finalizada';
+    final finalizada = _sala.estado == 'finalizada' || _finalizadaPorPodio;
     final reclamoDesde = _proximoReclamoDisponible;
     final puedeReclamar =
         !finalizada &&
@@ -1459,7 +2448,11 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Partida · ${_sala.codigo}'),
+        title: Text(
+          _esPartidaClasificatoria
+              ? 'Clasificatoria · ${_sala.codigo}'
+              : 'Partida · ${_sala.codigo}',
+        ),
         actions: [
           IconButton(
             key: const ValueKey('copiar-codigo-partida'),
@@ -1502,6 +2495,10 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                             ),
                             const SizedBox(height: 4),
                             Text(_motivoFinal()),
+                            if (_esPartidaClasificatoria) ...[
+                              const SizedBox(height: 12),
+                              _tarjetaPodioClasificatoria(),
+                            ],
                           ],
                         ),
                       ),
@@ -1608,6 +2605,97 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _tarjetaPodioClasificatoria() {
+    final podio = _calcularPodioActual(_sala);
+    final propio = podio.propio;
+    final delta = propio.deltaElo;
+    final signo = delta >= 0 ? '+' : '';
+    final detalleBono = delta >= 0
+        ? '(+${propio.bonoPuesto} por ${propio.puesto}.º puesto + '
+              '${propio.puntosPartida} pts de partida)'
+        : '(${propio.puesto}.º puesto · ${propio.puntosPartida} pts de partida)';
+
+    return Container(
+      key: const ValueKey('resumen-elo-clasificatoria'),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFF193E37)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Cambio de Elo: $signo$delta Elo $detalleBono',
+            key: const ValueKey('cambio-elo-propio'),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 15,
+              color: delta >= 0
+                  ? const Color(0xFF193E37)
+                  : Theme.of(context).colorScheme.error,
+            ),
+          ),
+          if (_nuevoEloGuardado != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Tu nuevo Elo: $_nuevoEloGuardado',
+              key: const ValueKey('nuevo-elo-guardado'),
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ],
+          const Divider(height: 16),
+          const Text(
+            'Podio de la partida',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+          ),
+          const SizedBox(height: 6),
+          for (final entrada in podio.clasificacion)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 34,
+                    child: Text(
+                      '${entrada.puesto}.º',
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      '${entrada.usuario}'
+                      '${entrada.eliminado ? " (eliminado)" : ""}',
+                      style: TextStyle(
+                        fontWeight: entrada.usuario == widget.usuario
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  Text('${entrada.puntosPartida} pts'),
+                  const SizedBox(width: 10),
+                  Text(
+                    '${entrada.deltaElo >= 0 ? "+" : ""}${entrada.deltaElo} Elo',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: entrada.deltaElo >= 0
+                          ? const Color(0xFF193E37)
+                          : Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }
