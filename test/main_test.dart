@@ -5,6 +5,7 @@ import 'package:tipo/main.dart';
 import 'package:tipo/login.dart';
 import 'package:tipo/registro.dart';
 import 'package:tipo/sesion_usuario.dart';
+import 'package:tipo/tema_app.dart';
 
 void main() {
   group('MainApp y ValoresInicialesPage Tests', () {
@@ -204,6 +205,42 @@ void main() {
       expect(find.text('La cuenta se eliminó correctamente.'), findsOneWidget);
       expect(find.byType(LoginPage), findsOneWidget);
       expect(find.byKey(const ValueKey('jugar')), findsNothing);
+    });
+
+    testWidgets('permite cambiar entre el tema oscuro y el tema claro 60-30-10 desde el botón desplegable Temas', (
+      WidgetTester tester,
+    ) async {
+      ControladorTema.instance.seleccionar(IdTemaApp.aceroElectrico);
+      await tester.pumpWidget(
+        MainApp(sesionUsuario: SesionUsuario.activa()),
+      );
+
+      expect(ControladorTema.instance.actual.id, IdTemaApp.aceroElectrico);
+      expect(find.byKey(const ValueKey('selector-tema')), findsOneWidget);
+      expect(find.text('Temas'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('selector-tema')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Acero Eléctrico (Oscuro)'), findsOneWidget);
+      expect(find.text('Perla & Cobalto (Claro)'), findsOneWidget);
+      expect(find.text('Café & Crema (Ámbar)'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('tema-perlaCobalto')));
+      await tester.pumpAndSettle();
+
+      expect(ControladorTema.instance.actual.id, IdTemaApp.perlaCobalto);
+      expect(ControladorTema.instance.actual.esOscuro, isFalse);
+
+      await tester.tap(find.byKey(const ValueKey('selector-tema')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('tema-cafeCrema')));
+      await tester.pumpAndSettle();
+
+      expect(ControladorTema.instance.actual.id, IdTemaApp.cafeCrema);
+
+      // Volver al tema oscuro por defecto
+      ControladorTema.instance.seleccionar(IdTemaApp.aceroElectrico);
     });
   });
 }
