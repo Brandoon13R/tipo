@@ -70,6 +70,20 @@ class _MenuPageState extends State<MenuPage> {
   bool _cerrandoSesion = false;
   bool _eliminandoCuenta = false;
 
+  // Paleta 60-30-10 para el menú principal:
+  // 60% Negro metálico
+  static const Color _negroMetalico = Color(0xFF12161D);
+  static const Color _negroMetalicoSuperior = Color(0xFF1A202B);
+  static const Color _negroMetalicoInterior = Color(0xFF181D26);
+  // 30% Gris niebla
+  static const Color _grisNieblaPanel = Color(0xFF252D3A);
+  static const Color _grisNieblaBorde = Color(0xFF3E4A5E);
+  static const Color _grisNieblaClaro = Color(0xFFE2E8F0);
+  static const Color _grisNieblaMedio = Color(0xFF9FB0C4);
+  // 10% Azul eléctrico
+  static const Color _azulElectrico = Color(0xFF00C8FF);
+  static const Color _azulElectricoTextoBoton = Color(0xFF09131C);
+
   SesionUsuario get _sesionEfectiva =>
       widget.sesionUsuario ?? SesionUsuario.instance;
 
@@ -260,11 +274,11 @@ class _MenuPageState extends State<MenuPage> {
       return Tooltip(
         message: 'Iniciar sesión',
         child: Material(
-          color: Colors.white,
+          color: _grisNieblaPanel,
           shape: const CircleBorder(
-            side: BorderSide(color: Color(0xFF193E37), width: 1.5),
+            side: BorderSide(color: _azulElectrico, width: 1.5),
           ),
-          elevation: 1,
+          elevation: 2,
           child: InkWell(
             key: const ValueKey('iniciar-sesion'),
             customBorder: const CircleBorder(),
@@ -282,7 +296,7 @@ class _MenuPageState extends State<MenuPage> {
               padding: EdgeInsets.all(12),
               child: Icon(
                 Icons.person_outline_rounded,
-                color: Color(0xFF193E37),
+                color: _azulElectrico,
                 size: 24,
               ),
             ),
@@ -296,7 +310,11 @@ class _MenuPageState extends State<MenuPage> {
       tooltip: 'Menú de perfil',
       enabled: !ocupada,
       position: PopupMenuPosition.under,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: _grisNieblaPanel,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: const BorderSide(color: _grisNieblaBorde, width: 1.2),
+      ),
       onSelected: (opcion) {
         if (opcion == 'cerrar_sesion') {
           _cerrarSesion();
@@ -310,9 +328,16 @@ class _MenuPageState extends State<MenuPage> {
           value: 'cerrar_sesion',
           child: Row(
             children: [
-              const Icon(Icons.logout_rounded, size: 20, color: Color(0xFF193E37)),
+              const Icon(
+                Icons.logout_rounded,
+                size: 20,
+                color: _azulElectrico,
+              ),
               const SizedBox(width: 10),
-              Text(_cerrandoSesion ? 'Cerrando sesión...' : 'Cerrar sesión'),
+              Text(
+                _cerrandoSesion ? 'Cerrando sesión...' : 'Cerrar sesión',
+                style: const TextStyle(color: _grisNieblaClaro),
+              ),
             ],
           ),
         ),
@@ -321,26 +346,30 @@ class _MenuPageState extends State<MenuPage> {
           value: 'eliminar_cuenta',
           child: Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.delete_outline_rounded,
                 size: 20,
-                color: Theme.of(context).colorScheme.error,
+                color: Color(0xFFFF6B6B),
               ),
               const SizedBox(width: 10),
               Text(
                 _eliminandoCuenta ? 'Eliminando cuenta...' : 'Eliminar cuenta',
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+                style: const TextStyle(
+                  color: Color(0xFFFF8787),
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
         ),
       ],
       child: Material(
-        color: Colors.white,
+        color: _grisNieblaPanel,
         shape: const StadiumBorder(
-          side: BorderSide(color: Color(0xFF193E37), width: 1.5),
+          side: BorderSide(color: _grisNieblaBorde, width: 1.4),
         ),
-        elevation: 1,
+        elevation: 3,
+        shadowColor: Colors.black54,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(
@@ -348,13 +377,13 @@ class _MenuPageState extends State<MenuPage> {
             children: [
               CircleAvatar(
                 radius: 14,
-                backgroundColor: const Color(0xFF193E37),
+                backgroundColor: _azulElectrico,
                 child: Text(
                   username.isNotEmpty ? username[0].toUpperCase() : 'U',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: _azulElectricoTextoBoton,
                     fontSize: 13,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
@@ -367,14 +396,14 @@ class _MenuPageState extends State<MenuPage> {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF193E37),
+                    color: _grisNieblaClaro,
                   ),
                 ),
               ),
               const SizedBox(width: 4),
               const Icon(
                 Icons.arrow_drop_down_rounded,
-                color: Color(0xFF193E37),
+                color: _azulElectrico,
               ),
             ],
           ),
@@ -384,75 +413,179 @@ class _MenuPageState extends State<MenuPage> {
   }
 
   Widget _buildMenu(BuildContext context, bool sesionActiva) => Scaffold(
-    body: SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Align(
-              alignment: Alignment.topRight,
-              child: _botonAccesoEsquina(context, sesionActiva),
-            ),
-            Expanded(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 440),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (widget.sesionUsuario?.error case final error?) ...[
-                        Text(
-                          error,
-                          key: const ValueKey('error-restaurar-sesion'),
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
+    backgroundColor: _negroMetalico,
+    body: Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [_negroMetalicoSuperior, _negroMetalico, Color(0xFF0D1015)],
+        ),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Align(
+                alignment: Alignment.topRight,
+                child: _botonAccesoEsquina(context, sesionActiva),
+              ),
+              Expanded(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 440),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 28,
+                        vertical: 34,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _grisNieblaPanel,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: _grisNieblaBorde,
+                          width: 1.2,
+                        ),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x66000000),
+                            blurRadius: 28,
+                            offset: Offset(0, 14),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-                      const Icon(
-                        Icons.grid_view_rounded,
-                        size: 56,
-                        color: Color(0xFF193E37),
+                          BoxShadow(
+                            color: Color(0x1800C8FF),
+                            blurRadius: 24,
+                            spreadRadius: 1,
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'BRILLIANT',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          letterSpacing: 3,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 28,
-                        ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (widget.sesionUsuario?.error case final error?) ...[
+                            Text(
+                              error,
+                              key: const ValueKey('error-restaurar-sesion'),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Color(0xFFFF8787),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+                          Center(
+                            child: Container(
+                              width: 72,
+                              height: 72,
+                              decoration: BoxDecoration(
+                                color: _negroMetalicoInterior,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: _azulElectrico,
+                                  width: 1.8,
+                                ),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x3800C8FF),
+                                    blurRadius: 16,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.grid_view_rounded,
+                                size: 38,
+                                color: _azulElectrico,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'BRILLIANT',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              letterSpacing: 4,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 28,
+                              color: _grisNieblaClaro,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            'Estrategia numérica en solitario y multijugador',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: _grisNieblaMedio,
+                              fontSize: 13.5,
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                          FilledButton(
+                            key: const ValueKey('jugar'),
+                            onPressed: () => _jugar(context),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: _azulElectrico,
+                              foregroundColor: _azulElectricoTextoBoton,
+                              elevation: 3,
+                              shadowColor: const Color(0x6600C8FF),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            child: const Padding(
+                              padding: EdgeInsets.all(14),
+                              child: Text(
+                                'Jugar',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          OutlinedButton.icon(
+                            key: const ValueKey('multijugador'),
+                            onPressed: () => _abrirMultijugador(context),
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: _negroMetalicoInterior,
+                              foregroundColor: _grisNieblaClaro,
+                              side: const BorderSide(
+                                color: _azulElectrico,
+                                width: 1.4,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            icon: const Icon(
+                              Icons.people_alt_outlined,
+                              color: _azulElectrico,
+                            ),
+                            label: const Padding(
+                              padding: EdgeInsets.all(14),
+                              child: Text(
+                                'Multijugador',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                  color: _grisNieblaClaro,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 40),
-                      FilledButton(
-                        key: const ValueKey('jugar'),
-                        onPressed: () => _jugar(context),
-                        child: const Padding(
-                          padding: EdgeInsets.all(14),
-                          child: Text('Jugar'),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      OutlinedButton.icon(
-                        key: const ValueKey('multijugador'),
-                        onPressed: () => _abrirMultijugador(context),
-                        icon: const Icon(Icons.people_alt_outlined),
-                        label: const Padding(
-                          padding: EdgeInsets.all(14),
-                          child: Text('Multijugador'),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     ),

@@ -103,17 +103,99 @@ class _RegistroPageState extends State<RegistroPage> {
     super.dispose();
   }
 
+  // Paleta 60-30-10:
+  // 60% Negro metálico
+  static const Color _negroMetalico = Color(0xFF12161D);
+  static const Color _negroMetalicoSuperior = Color(0xFF1A202B);
+  static const Color _negroMetalicoCampo = Color(0xFF181D26);
+  // 30% Gris niebla
+  static const Color _grisNieblaPanel = Color(0xFF252D3A);
+  static const Color _grisNieblaBorde = Color(0xFF3E4A5E);
+  static const Color _grisNieblaClaro = Color(0xFFE2E8F0);
+  static const Color _grisNieblaMedio = Color(0xFF9FB0C4);
+  // 10% Azul eléctrico
+  static const Color _azulElectrico = Color(0xFF00C8FF);
+  static const Color _azulElectricoTextoBoton = Color(0xFF09131C);
+
+  InputDecoration _decoracionCampo({
+    required String labelText,
+    required IconData prefixIcon,
+    Widget? suffixIcon,
+  }) => InputDecoration(
+    labelText: labelText,
+    labelStyle: const TextStyle(color: _grisNieblaMedio),
+    floatingLabelStyle: const TextStyle(
+      color: _azulElectrico,
+      fontWeight: FontWeight.w600,
+    ),
+    counterStyle: const TextStyle(color: _grisNieblaMedio),
+    prefixIcon: Icon(prefixIcon, color: _grisNieblaMedio),
+    suffixIcon: suffixIcon,
+    filled: true,
+    fillColor: _negroMetalicoCampo,
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: const BorderSide(color: _grisNieblaBorde, width: 1.2),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: const BorderSide(color: _azulElectrico, width: 1.8),
+    ),
+    errorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: const BorderSide(color: Color(0xFFFF6B6B), width: 1.4),
+    ),
+    focusedErrorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: const BorderSide(color: Color(0xFFFF6B6B), width: 1.8),
+    ),
+    errorStyle: const TextStyle(color: Color(0xFFFF8787)),
+  );
+
   @override
   Widget build(BuildContext context) => Scaffold(
-    body: SafeArea(
-      child: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: _registroCompletado
-                ? _mensajeRegistroCompletado()
-                : _formularioRegistro(),
+    backgroundColor: _negroMetalico,
+    body: Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [_negroMetalicoSuperior, _negroMetalico, Color(0xFF0D1015)],
+        ),
+      ),
+      child: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 430),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                  vertical: 28,
+                ),
+                decoration: BoxDecoration(
+                  color: _grisNieblaPanel,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: _grisNieblaBorde, width: 1.2),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x66000000),
+                      blurRadius: 28,
+                      offset: Offset(0, 14),
+                    ),
+                    BoxShadow(
+                      color: Color(0x1800C8FF),
+                      blurRadius: 24,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                child: _registroCompletado
+                    ? _mensajeRegistroCompletado()
+                    : _formularioRegistro(),
+              ),
+            ),
           ),
         ),
       ),
@@ -128,21 +210,45 @@ class _RegistroPageState extends State<RegistroPage> {
             key: const ValueKey('registro-volver'),
             tooltip: 'Volver a iniciar sesión',
             onPressed: _cargando ? null : () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back, color: _grisNieblaClaro),
           ),
           const Spacer(),
           PerfilUsuario(sesion: widget.sesionUsuario),
         ],
       ),
-      const SizedBox(height: 12),
-      const Icon(Icons.person_add_alt_1, size: 60, color: Color(0xFF193E37)),
-      const SizedBox(height: 16),
+      const SizedBox(height: 8),
+      Container(
+        width: 64,
+        height: 64,
+        decoration: BoxDecoration(
+          color: _negroMetalicoCampo,
+          shape: BoxShape.circle,
+          border: Border.all(color: _azulElectrico, width: 1.8),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x3800C8FF),
+              blurRadius: 16,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: const Icon(
+          Icons.person_add_alt_1,
+          size: 32,
+          color: _azulElectrico,
+        ),
+      ),
+      const SizedBox(height: 14),
       const Text(
         'Crear cuenta',
         textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
+        style: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          color: _grisNieblaClaro,
+        ),
       ),
-      const SizedBox(height: 24),
+      const SizedBox(height: 20),
     ],
   );
 
@@ -159,10 +265,11 @@ class _RegistroPageState extends State<RegistroPage> {
           textCapitalization: TextCapitalization.none,
           textInputAction: TextInputAction.next,
           autofillHints: const [AutofillHints.newUsername],
-          decoration: const InputDecoration(
+          style: const TextStyle(color: _grisNieblaClaro),
+          cursorColor: _azulElectrico,
+          decoration: _decoracionCampo(
             labelText: 'Nombre de usuario',
-            prefixIcon: Icon(Icons.person_outline),
-            border: OutlineInputBorder(),
+            prefixIcon: Icons.person_outline,
           ),
           validator: (valor) {
             final usuario = valor?.trim() ?? '';
@@ -180,10 +287,11 @@ class _RegistroPageState extends State<RegistroPage> {
           obscureText: !_mostrarContrasena,
           textInputAction: TextInputAction.next,
           autofillHints: const [AutofillHints.newPassword],
-          decoration: InputDecoration(
+          style: const TextStyle(color: _grisNieblaClaro),
+          cursorColor: _azulElectrico,
+          decoration: _decoracionCampo(
             labelText: 'Contraseña',
-            prefixIcon: const Icon(Icons.lock_outline),
-            border: const OutlineInputBorder(),
+            prefixIcon: Icons.lock_outline,
             suffixIcon: IconButton(
               tooltip: _mostrarContrasena
                   ? 'Ocultar contraseña'
@@ -192,6 +300,7 @@ class _RegistroPageState extends State<RegistroPage> {
                   setState(() => _mostrarContrasena = !_mostrarContrasena),
               icon: Icon(
                 _mostrarContrasena ? Icons.visibility_off : Icons.visibility,
+                color: _grisNieblaMedio,
               ),
             ),
           ),
@@ -212,15 +321,16 @@ class _RegistroPageState extends State<RegistroPage> {
           controller: _confirmarContrasenaController,
           obscureText: !_mostrarContrasena,
           textInputAction: TextInputAction.done,
+          style: const TextStyle(color: _grisNieblaClaro),
+          cursorColor: _azulElectrico,
           onFieldSubmitted: (_) {
             if (!_cargando) {
               _crearCuenta();
             }
           },
-          decoration: const InputDecoration(
+          decoration: _decoracionCampo(
             labelText: 'Confirmar contraseña',
-            prefixIcon: Icon(Icons.lock_outline),
-            border: OutlineInputBorder(),
+            prefixIcon: Icons.lock_outline,
           ),
           validator: (valor) {
             if (valor == null || valor.isEmpty) {
@@ -237,7 +347,10 @@ class _RegistroPageState extends State<RegistroPage> {
           Text(
             _error!,
             key: const ValueKey('registro-error'),
-            style: TextStyle(color: Theme.of(context).colorScheme.error),
+            style: const TextStyle(
+              color: Color(0xFFFF8787),
+              fontWeight: FontWeight.w600,
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -245,15 +358,32 @@ class _RegistroPageState extends State<RegistroPage> {
         FilledButton(
           key: const ValueKey('registro-submit'),
           onPressed: _cargando ? null : _crearCuenta,
+          style: FilledButton.styleFrom(
+            backgroundColor: _azulElectrico,
+            foregroundColor: _azulElectricoTextoBoton,
+            disabledBackgroundColor: const Color(0xFF2B4B59),
+            disabledForegroundColor: _grisNieblaMedio,
+            elevation: 3,
+            shadowColor: const Color(0x6600C8FF),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(14),
             child: _cargando
                 ? const SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: _azulElectricoTextoBoton,
+                    ),
                   )
-                : const Text('Crear cuenta'),
+                : const Text(
+                    'Crear cuenta',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                  ),
           ),
         ),
       ],
@@ -271,25 +401,37 @@ class _RegistroPageState extends State<RegistroPage> {
       const Icon(
         Icons.verified_user_outlined,
         size: 64,
-        color: Color(0xFF193E37),
+        color: _azulElectrico,
       ),
       const SizedBox(height: 20),
       const Text(
         'Cuenta creada',
         textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
+        style: TextStyle(
+          fontSize: 26,
+          fontWeight: FontWeight.w700,
+          color: _grisNieblaClaro,
+        ),
       ),
       const SizedBox(height: 16),
       Text(
         'Tu cuenta está lista y ya iniciaste sesión como '
         '${widget.sesionUsuario?.usuarioName ?? ''}.',
         textAlign: TextAlign.center,
+        style: const TextStyle(color: _grisNieblaMedio),
       ),
       const SizedBox(height: 24),
       FilledButton(
         key: const ValueKey('registro-ir-login'),
         onPressed: () => Navigator.of(context).pop(),
-        child: const Text('Volver a iniciar sesión'),
+        style: FilledButton.styleFrom(
+          backgroundColor: _azulElectrico,
+          foregroundColor: _azulElectricoTextoBoton,
+        ),
+        child: const Text(
+          'Volver a iniciar sesión',
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
       ),
     ],
   );
