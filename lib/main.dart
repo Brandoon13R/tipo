@@ -14,6 +14,7 @@ import 'package:tipo/BDD.dart';
 import 'package:tipo/sesion_usuario.dart';
 import 'package:tipo/multijugador.dart';
 import 'package:tipo/tablero_visual.dart';
+import 'package:tipo/tema_app.dart';
 
 export 'package:tipo/tablero_visual.dart' show TableroVisual;
 
@@ -36,144 +37,20 @@ class MainApp extends StatelessWidget {
   final SesionUsuario? sesionUsuario;
 
   @override
-  Widget build(BuildContext context) {
-    const negroMetalico = Color(0xFF12161D);
-    const negroMetalicoCampo = Color(0xFF181D26);
-    const grisNieblaPanel = Color(0xFF252D3A);
-    const grisNieblaBorde = Color(0xFF3E4A5E);
-    const grisNieblaClaro = Color(0xFFE2E8F0);
-    const grisNieblaMedio = Color(0xFF9FB0C4);
-    const azulElectrico = Color(0xFF00C8FF);
-    const azulElectricoTexto = Color(0xFF09131C);
-
-    final colorScheme = const ColorScheme.dark(
-      primary: azulElectrico,
-      onPrimary: azulElectricoTexto,
-      secondary: grisNieblaClaro,
-      onSecondary: negroMetalico,
-      surface: grisNieblaPanel,
-      onSurface: grisNieblaClaro,
-      error: Color(0xFFFF6B6B),
-      onError: negroMetalico,
-    );
-
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        colorScheme: colorScheme,
-        scaffoldBackgroundColor: negroMetalico,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF161B24),
-          foregroundColor: grisNieblaClaro,
-          elevation: 0,
-          centerTitle: false,
-          iconTheme: IconThemeData(color: azulElectrico),
-          titleTextStyle: TextStyle(
-            color: grisNieblaClaro,
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-          ),
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: ControladorTema.instance,
+    builder: (context, _) {
+      final paleta = ControladorTema.instance.actual;
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: paleta.toThemeData(),
+        home: MenuPage(
+          supabaseClient: supabaseClient,
+          sesionUsuario: sesionUsuario,
         ),
-        cardTheme: CardThemeData(
-          color: grisNieblaPanel,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: grisNieblaBorde, width: 1.2),
-          ),
-        ),
-        dialogTheme: DialogThemeData(
-          backgroundColor: grisNieblaPanel,
-          titleTextStyle: const TextStyle(
-            color: grisNieblaClaro,
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-          ),
-          contentTextStyle: const TextStyle(
-            color: grisNieblaClaro,
-            fontSize: 14,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-            side: const BorderSide(color: grisNieblaBorde, width: 1.2),
-          ),
-        ),
-        dividerTheme: const DividerThemeData(
-          color: grisNieblaBorde,
-          thickness: 1,
-        ),
-        filledButtonTheme: FilledButtonThemeData(
-          style: FilledButton.styleFrom(
-            backgroundColor: azulElectrico,
-            foregroundColor: azulElectricoTexto,
-            disabledBackgroundColor: const Color(0xFF283546),
-            disabledForegroundColor: grisNieblaMedio,
-            textStyle: const TextStyle(fontWeight: FontWeight.w800),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-          ),
-        ),
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: OutlinedButton.styleFrom(
-            backgroundColor: negroMetalicoCampo,
-            foregroundColor: grisNieblaClaro,
-            side: const BorderSide(color: azulElectrico, width: 1.3),
-            textStyle: const TextStyle(fontWeight: FontWeight.w700),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-          ),
-        ),
-        textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(foregroundColor: azulElectrico),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: negroMetalicoCampo,
-          labelStyle: const TextStyle(color: grisNieblaMedio),
-          hintStyle: const TextStyle(color: grisNieblaMedio),
-          floatingLabelStyle: const TextStyle(
-            color: azulElectrico,
-            fontWeight: FontWeight.w600,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: grisNieblaBorde, width: 1.2),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: azulElectrico, width: 1.8),
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: grisNieblaBorde, width: 1.2),
-          ),
-        ),
-        chipTheme: ChipThemeData(
-          backgroundColor: negroMetalicoCampo,
-          selectedColor: const Color(0xFF13384C),
-          side: const BorderSide(color: grisNieblaBorde),
-          labelStyle: const TextStyle(color: grisNieblaClaro),
-          secondaryLabelStyle: const TextStyle(
-            color: azulElectrico,
-            fontWeight: FontWeight.w700,
-          ),
-          checkmarkColor: azulElectrico,
-        ),
-        snackBarTheme: const SnackBarThemeData(
-          backgroundColor: grisNieblaPanel,
-          contentTextStyle: TextStyle(color: grisNieblaClaro),
-        ),
-      ),
-      home: MenuPage(
-        supabaseClient: supabaseClient,
-        sesionUsuario: sesionUsuario,
-      ),
-    );
-  }
+      );
+    },
+  );
 }
 
 class MenuPage extends StatefulWidget {
@@ -195,20 +72,6 @@ class MenuPage extends StatefulWidget {
 class _MenuPageState extends State<MenuPage> {
   bool _cerrandoSesion = false;
   bool _eliminandoCuenta = false;
-
-  // Paleta 60-30-10 para el menú principal:
-  // 60% Negro metálico
-  static const Color _negroMetalico = Color(0xFF12161D);
-  static const Color _negroMetalicoSuperior = Color(0xFF1A202B);
-  static const Color _negroMetalicoInterior = Color(0xFF181D26);
-  // 30% Gris niebla
-  static const Color _grisNieblaPanel = Color(0xFF252D3A);
-  static const Color _grisNieblaBorde = Color(0xFF3E4A5E);
-  static const Color _grisNieblaClaro = Color(0xFFE2E8F0);
-  static const Color _grisNieblaMedio = Color(0xFF9FB0C4);
-  // 10% Azul eléctrico
-  static const Color _azulElectrico = Color(0xFF00C8FF);
-  static const Color _azulElectricoTextoBoton = Color(0xFF09131C);
 
   SesionUsuario get _sesionEfectiva =>
       widget.sesionUsuario ?? SesionUsuario.instance;
@@ -298,13 +161,19 @@ class _MenuPageState extends State<MenuPage> {
   }
 
   Future<void> _confirmarEliminarCuenta() async {
+    final paleta = ControladorTema.instance.actual;
     final confirmacion = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('¿Eliminar cuenta?'),
-        content: const Text(
+        backgroundColor: paleta.panelSecundario,
+        title: Text(
+          '¿Eliminar cuenta?',
+          style: TextStyle(color: paleta.textoPrincipal),
+        ),
+        content: Text(
           'Esta acción eliminará tu cuenta y cerrará todas tus sesiones. '
           'No se puede deshacer.',
+          style: TextStyle(color: paleta.textoPrincipal),
         ),
         actions: [
           TextButton(
@@ -317,6 +186,7 @@ class _MenuPageState extends State<MenuPage> {
             onPressed: () => Navigator.of(context).pop(true),
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Colors.white,
             ),
             child: const Text('Eliminar cuenta'),
           ),
@@ -376,7 +246,7 @@ class _MenuPageState extends State<MenuPage> {
   Widget build(BuildContext context) {
     final session = _sesionEfectiva;
     return AnimatedBuilder(
-      animation: session,
+      animation: Listenable.merge([session, ControladorTema.instance]),
       builder: (context, _) {
         if (!session.activa) {
           return LoginPage(
@@ -385,12 +255,16 @@ class _MenuPageState extends State<MenuPage> {
             sesionUsuario: session,
           );
         }
-        return _buildMenu(context, true);
+        return _buildMenu(context, true, ControladorTema.instance.actual);
       },
     );
   }
 
-  Widget _botonAccesoEsquina(BuildContext context, bool sesionActiva) {
+  Widget _botonAccesoEsquina(
+    BuildContext context,
+    bool sesionActiva,
+    PaletaTema paleta,
+  ) {
     final client = widget.supabaseClient;
     final ocupada = _cerrandoSesion || _eliminandoCuenta;
     final session = _sesionEfectiva;
@@ -400,9 +274,9 @@ class _MenuPageState extends State<MenuPage> {
       return Tooltip(
         message: 'Iniciar sesión',
         child: Material(
-          color: _grisNieblaPanel,
-          shape: const CircleBorder(
-            side: BorderSide(color: _azulElectrico, width: 1.5),
+          color: paleta.panelSecundario,
+          shape: CircleBorder(
+            side: BorderSide(color: paleta.acento, width: 1.5),
           ),
           elevation: 2,
           child: InkWell(
@@ -418,11 +292,11 @@ class _MenuPageState extends State<MenuPage> {
                       ),
                     ),
                   ),
-            child: const Padding(
-              padding: EdgeInsets.all(12),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
               child: Icon(
                 Icons.person_outline_rounded,
-                color: _azulElectrico,
+                color: paleta.acento,
                 size: 24,
               ),
             ),
@@ -436,10 +310,10 @@ class _MenuPageState extends State<MenuPage> {
       tooltip: 'Menú de perfil',
       enabled: !ocupada,
       position: PopupMenuPosition.under,
-      color: _grisNieblaPanel,
+      color: paleta.panelSecundario,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: const BorderSide(color: _grisNieblaBorde, width: 1.2),
+        side: BorderSide(color: paleta.bordeSecundario, width: 1.2),
       ),
       onSelected: (opcion) {
         if (opcion == 'cerrar_sesion') {
@@ -454,15 +328,11 @@ class _MenuPageState extends State<MenuPage> {
           value: 'cerrar_sesion',
           child: Row(
             children: [
-              const Icon(
-                Icons.logout_rounded,
-                size: 20,
-                color: _azulElectrico,
-              ),
+              Icon(Icons.logout_rounded, size: 20, color: paleta.acento),
               const SizedBox(width: 10),
               Text(
                 _cerrandoSesion ? 'Cerrando sesión...' : 'Cerrar sesión',
-                style: const TextStyle(color: _grisNieblaClaro),
+                style: TextStyle(color: paleta.textoPrincipal),
               ),
             ],
           ),
@@ -472,16 +342,16 @@ class _MenuPageState extends State<MenuPage> {
           value: 'eliminar_cuenta',
           child: Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.delete_outline_rounded,
                 size: 20,
-                color: Color(0xFFFF6B6B),
+                color: paleta.error,
               ),
               const SizedBox(width: 10),
               Text(
                 _eliminandoCuenta ? 'Eliminando cuenta...' : 'Eliminar cuenta',
-                style: const TextStyle(
-                  color: Color(0xFFFF8787),
+                style: TextStyle(
+                  color: paleta.errorTexto,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -490,12 +360,12 @@ class _MenuPageState extends State<MenuPage> {
         ),
       ],
       child: Material(
-        color: _grisNieblaPanel,
-        shape: const StadiumBorder(
-          side: BorderSide(color: _grisNieblaBorde, width: 1.4),
+        color: paleta.panelSecundario,
+        shape: StadiumBorder(
+          side: BorderSide(color: paleta.bordeSecundario, width: 1.4),
         ),
         elevation: 3,
-        shadowColor: Colors.black54,
+        shadowColor: paleta.sombraPanel,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(
@@ -503,11 +373,11 @@ class _MenuPageState extends State<MenuPage> {
             children: [
               CircleAvatar(
                 radius: 14,
-                backgroundColor: _azulElectrico,
+                backgroundColor: paleta.acento,
                 child: Text(
                   username.isNotEmpty ? username[0].toUpperCase() : 'U',
-                  style: const TextStyle(
-                    color: _azulElectricoTextoBoton,
+                  style: TextStyle(
+                    color: paleta.textoSobreAcento,
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
                   ),
@@ -520,17 +390,14 @@ class _MenuPageState extends State<MenuPage> {
                   username,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w700,
-                    color: _grisNieblaClaro,
+                    color: paleta.textoPrincipal,
                   ),
                 ),
               ),
               const SizedBox(width: 4),
-              const Icon(
-                Icons.arrow_drop_down_rounded,
-                color: _azulElectrico,
-              ),
+              Icon(Icons.arrow_drop_down_rounded, color: paleta.acento),
             ],
           ),
         ),
@@ -538,14 +405,22 @@ class _MenuPageState extends State<MenuPage> {
     );
   }
 
-  Widget _buildMenu(BuildContext context, bool sesionActiva) => Scaffold(
-    backgroundColor: _negroMetalico,
+  Widget _buildMenu(
+    BuildContext context,
+    bool sesionActiva,
+    PaletaTema paleta,
+  ) => Scaffold(
+    backgroundColor: paleta.fondoPrincipal,
     body: Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [_negroMetalicoSuperior, _negroMetalico, Color(0xFF0D1015)],
+          colors: [
+            paleta.fondoGradienteInicio,
+            paleta.fondoPrincipal,
+            paleta.fondoGradienteFin,
+          ],
         ),
       ),
       child: SafeArea(
@@ -554,9 +429,15 @@ class _MenuPageState extends State<MenuPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Align(
-                alignment: Alignment.topRight,
-                child: _botonAccesoEsquina(context, sesionActiva),
+              Wrap(
+                alignment: WrapAlignment.end,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 10,
+                runSpacing: 8,
+                children: [
+                  const SelectorTemaButton(),
+                  _botonAccesoEsquina(context, sesionActiva, paleta),
+                ],
               ),
               Expanded(
                 child: Center(
@@ -568,20 +449,20 @@ class _MenuPageState extends State<MenuPage> {
                         vertical: 34,
                       ),
                       decoration: BoxDecoration(
-                        color: _grisNieblaPanel,
+                        color: paleta.panelSecundario,
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: _grisNieblaBorde,
+                          color: paleta.bordeSecundario,
                           width: 1.2,
                         ),
-                        boxShadow: const [
+                        boxShadow: [
                           BoxShadow(
-                            color: Color(0x66000000),
+                            color: paleta.sombraPanel,
                             blurRadius: 28,
-                            offset: Offset(0, 14),
+                            offset: const Offset(0, 14),
                           ),
                           BoxShadow(
-                            color: Color(0x1800C8FF),
+                            color: paleta.sombraAcento,
                             blurRadius: 24,
                             spreadRadius: 1,
                           ),
@@ -596,8 +477,8 @@ class _MenuPageState extends State<MenuPage> {
                               error,
                               key: const ValueKey('error-restaurar-sesion'),
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                color: Color(0xFFFF8787),
+                              style: TextStyle(
+                                color: paleta.errorTexto,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -608,44 +489,44 @@ class _MenuPageState extends State<MenuPage> {
                               width: 72,
                               height: 72,
                               decoration: BoxDecoration(
-                                color: _negroMetalicoInterior,
+                                color: paleta.superficieInterior,
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: _azulElectrico,
+                                  color: paleta.acento,
                                   width: 1.8,
                                 ),
-                                boxShadow: const [
+                                boxShadow: [
                                   BoxShadow(
-                                    color: Color(0x3800C8FF),
+                                    color: paleta.sombraAcento,
                                     blurRadius: 16,
                                     spreadRadius: 1,
                                   ),
                                 ],
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.grid_view_rounded,
                                 size: 38,
-                                color: _azulElectrico,
+                                color: paleta.acento,
                               ),
                             ),
                           ),
                           const SizedBox(height: 16),
-                          const Text(
+                          Text(
                             'BRILLIANT',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               letterSpacing: 4,
                               fontWeight: FontWeight.w800,
                               fontSize: 28,
-                              color: _grisNieblaClaro,
+                              color: paleta.textoPrincipal,
                             ),
                           ),
                           const SizedBox(height: 6),
-                          const Text(
+                          Text(
                             'Estrategia numérica en solitario y multijugador',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: _grisNieblaMedio,
+                              color: paleta.textoSecundario,
                               fontSize: 13.5,
                             ),
                           ),
@@ -654,10 +535,10 @@ class _MenuPageState extends State<MenuPage> {
                             key: const ValueKey('jugar'),
                             onPressed: () => _jugar(context),
                             style: FilledButton.styleFrom(
-                              backgroundColor: _azulElectrico,
-                              foregroundColor: _azulElectricoTextoBoton,
+                              backgroundColor: paleta.acento,
+                              foregroundColor: paleta.textoSobreAcento,
                               elevation: 3,
-                              shadowColor: const Color(0x6600C8FF),
+                              shadowColor: paleta.sombraAcento,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
                               ),
@@ -678,28 +559,28 @@ class _MenuPageState extends State<MenuPage> {
                             key: const ValueKey('multijugador'),
                             onPressed: () => _abrirMultijugador(context),
                             style: OutlinedButton.styleFrom(
-                              backgroundColor: _negroMetalicoInterior,
-                              foregroundColor: _grisNieblaClaro,
-                              side: const BorderSide(
-                                color: _azulElectrico,
+                              backgroundColor: paleta.superficieInterior,
+                              foregroundColor: paleta.textoPrincipal,
+                              side: BorderSide(
+                                color: paleta.acento,
                                 width: 1.4,
                               ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
                               ),
                             ),
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.people_alt_outlined,
-                              color: _azulElectrico,
+                              color: paleta.acento,
                             ),
-                            label: const Padding(
-                              padding: EdgeInsets.all(14),
+                            label: Padding(
+                              padding: const EdgeInsets.all(14),
                               child: Text(
                                 'Multijugador',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 15,
-                                  color: _grisNieblaClaro,
+                                  color: paleta.textoPrincipal,
                                 ),
                               ),
                             ),
@@ -709,28 +590,28 @@ class _MenuPageState extends State<MenuPage> {
                             key: const ValueKey('cerrar-aplicacion'),
                             onPressed: () => exit(0),
                             style: OutlinedButton.styleFrom(
-                              backgroundColor: _negroMetalicoInterior,
-                              foregroundColor: _grisNieblaClaro,
-                              side: const BorderSide(
-                                color: _grisNieblaBorde,
+                              backgroundColor: paleta.superficieInterior,
+                              foregroundColor: paleta.textoPrincipal,
+                              side: BorderSide(
+                                color: paleta.bordeSecundario,
                                 width: 1.3,
                               ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
                               ),
                             ),
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.exit_to_app_rounded,
-                              color: _azulElectrico,
+                              color: paleta.acento,
                             ),
-                            label: const Padding(
-                              padding: EdgeInsets.all(14),
+                            label: Padding(
+                              padding: const EdgeInsets.all(14),
                               child: Text(
                                 'Salir del juego',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 15,
-                                  color: _grisNieblaClaro,
+                                  color: paleta.textoPrincipal,
                                 ),
                               ),
                             ),
@@ -759,16 +640,6 @@ class SeleccionNivelPage extends StatelessWidget {
   final SupabaseClient? supabaseClient;
   final SesionUsuario? sesionUsuario;
 
-  static const Color _negroMetalico = Color(0xFF12161D);
-  static const Color _negroMetalicoSuperior = Color(0xFF1A202B);
-  static const Color _negroMetalicoInterior = Color(0xFF181D26);
-  static const Color _grisNieblaPanel = Color(0xFF252D3A);
-  static const Color _grisNieblaBorde = Color(0xFF3E4A5E);
-  static const Color _grisNieblaClaro = Color(0xFFE2E8F0);
-  static const Color _grisNieblaMedio = Color(0xFF9FB0C4);
-  static const Color _azulElectrico = Color(0xFF00C8FF);
-  static const Color _azulElectricoTexto = Color(0xFF09131C);
-
   void _seleccionar(BuildContext context, NivelConfig config) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -782,164 +653,186 @@ class SeleccionNivelPage extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: _negroMetalico,
-    body: Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [_negroMetalicoSuperior, _negroMetalico, Color(0xFF0D1015)],
-        ),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: ControladorTema.instance,
+    builder: (context, _) {
+      final paleta = ControladorTema.instance.actual;
+      return Scaffold(
+        backgroundColor: paleta.fondoPrincipal,
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                paleta.fondoGradienteInicio,
+                paleta.fondoPrincipal,
+                paleta.fondoGradienteFin,
+              ],
+            ),
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  IconButton(
-                    key: const ValueKey('volver-inicio'),
-                    tooltip: 'Volver al inicio',
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(
-                      Icons.arrow_back,
-                      color: _grisNieblaClaro,
-                    ),
-                  ),
-                  const Spacer(),
-                  PerfilUsuario(
-                    sesion: sesionUsuario,
-                    supabaseClient: supabaseClient,
-                  ),
-                ],
-              ),
-              Expanded(
-                child: Center(
-                  child: SingleChildScrollView(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 460),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 28,
-                          vertical: 30,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        key: const ValueKey('volver-inicio'),
+                        tooltip: 'Volver al inicio',
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: Icon(
+                          Icons.arrow_back,
+                          color: paleta.textoPrincipal,
                         ),
-                        decoration: BoxDecoration(
-                          color: _grisNieblaPanel,
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color: _grisNieblaBorde,
-                            width: 1.2,
-                          ),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x66000000),
-                              blurRadius: 28,
-                              offset: Offset(0, 14),
-                            ),
-                            BoxShadow(
-                              color: Color(0x1800C8FF),
-                              blurRadius: 24,
-                              spreadRadius: 1,
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                      ),
+                      Expanded(
+                        child: Wrap(
+                          alignment: WrapAlignment.end,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 8,
+                          runSpacing: 6,
                           children: [
-                            Center(
-                              child: Container(
-                                width: 64,
-                                height: 64,
-                                decoration: BoxDecoration(
-                                  color: _negroMetalicoInterior,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: _azulElectrico,
-                                    width: 1.8,
-                                  ),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      color: Color(0x3800C8FF),
-                                      blurRadius: 16,
-                                      spreadRadius: 1,
-                                    ),
-                                  ],
-                                ),
-                                child: const Icon(
-                                  Icons.grid_view_rounded,
-                                  size: 34,
-                                  color: _azulElectrico,
-                                ),
-                              ),
+                            const SelectorTemaButton(),
+                            PerfilUsuario(
+                              sesion: sesionUsuario,
+                              supabaseClient: supabaseClient,
                             ),
-                            const SizedBox(height: 14),
-                            const Text(
-                              'BRILLIANT',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                letterSpacing: 4,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 24,
-                                color: _grisNieblaClaro,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            const Text(
-                              'Selecciona un nivel para comenzar tu partida',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: _grisNieblaMedio,
-                                fontSize: 13.5,
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            for (final config in [
-                              Nivel1Config(),
-                              Nivel2Config(),
-                              Nivel3Config(),
-                              Nivel4Config(),
-                            ]) ...[
-                              FilledButton(
-                                key: ValueKey('seleccionar-${config.id}'),
-                                onPressed: () => _seleccionar(context, config),
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: _azulElectrico,
-                                  foregroundColor: _azulElectricoTexto,
-                                  elevation: 2,
-                                  shadowColor: const Color(0x5500C8FF),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(14),
-                                  child: Text(
-                                    config.nombre,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                            ],
                           ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  Expanded(
+                    child: Center(
+                      child: SingleChildScrollView(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 460),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 28,
+                              vertical: 30,
+                            ),
+                            decoration: BoxDecoration(
+                              color: paleta.panelSecundario,
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: paleta.bordeSecundario,
+                                width: 1.2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: paleta.sombraPanel,
+                                  blurRadius: 28,
+                                  offset: const Offset(0, 14),
+                                ),
+                                BoxShadow(
+                                  color: paleta.sombraAcento,
+                                  blurRadius: 24,
+                                  spreadRadius: 1,
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Center(
+                                  child: Container(
+                                    width: 64,
+                                    height: 64,
+                                    decoration: BoxDecoration(
+                                      color: paleta.superficieInterior,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: paleta.acento,
+                                        width: 1.8,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: paleta.sombraAcento,
+                                          blurRadius: 16,
+                                          spreadRadius: 1,
+                                        ),
+                                      ],
+                                    ),
+                                    child: Icon(
+                                      Icons.grid_view_rounded,
+                                      size: 34,
+                                      color: paleta.acento,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                Text(
+                                  'BRILLIANT',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    letterSpacing: 4,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 24,
+                                    color: paleta.textoPrincipal,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Selecciona un nivel para comenzar tu partida',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: paleta.textoSecundario,
+                                    fontSize: 13.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                                for (final config in [
+                                  Nivel1Config(),
+                                  Nivel2Config(),
+                                  Nivel3Config(),
+                                  Nivel4Config(),
+                                ]) ...[
+                                  FilledButton(
+                                    key: ValueKey('seleccionar-${config.id}'),
+                                    onPressed: () =>
+                                        _seleccionar(context, config),
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: paleta.acento,
+                                      foregroundColor: paleta.textoSobreAcento,
+                                      elevation: 2,
+                                      shadowColor: paleta.sombraAcento,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(14),
+                                      child: Text(
+                                        config.nombre,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                ],
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
-      ),
-    ),
+      );
+    },
   );
 }
 
@@ -965,14 +858,6 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
   Tablero? _tableroIniciado;
   JuegoBloc? _juego;
 
-  static const Color _negroMetalico = Color(0xFF12161D);
-  static const Color _negroMetalicoInterior = Color(0xFF181D26);
-  static const Color _grisNieblaPanel = Color(0xFF252D3A);
-  static const Color _grisNieblaBorde = Color(0xFF3E4A5E);
-  static const Color _grisNieblaClaro = Color(0xFFE2E8F0);
-  static const Color _grisNieblaMedio = Color(0xFF9FB0C4);
-  static const Color _azulElectrico = Color(0xFF00C8FF);
-
   @override
   void initState() {
     super.initState();
@@ -982,6 +867,7 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
 
   Future<void> _elegir(String region) async {
     if (_tableroIniciado != null) return;
+    final paleta = ControladorTema.instance.actual;
 
     final valor = await showDialog<int>(
       context: context,
@@ -992,7 +878,7 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Text(
               'Actual: ${_bloc.valores[region] ?? "sin asignar"}',
-              style: const TextStyle(color: _grisNieblaMedio),
+              style: TextStyle(color: paleta.textoSecundario),
             ),
           ),
           for (var numero = 1; numero <= 6; numero++)
@@ -1035,6 +921,7 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
   }
 
   Widget _fichaEstadistica({
+    required PaletaTema paleta,
     required IconData icono,
     required String etiqueta,
     required String valor,
@@ -1042,14 +929,14 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
   }) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
     decoration: BoxDecoration(
-      color: _grisNieblaPanel,
+      color: paleta.panelSecundario,
       borderRadius: BorderRadius.circular(10),
-      border: Border.all(color: _grisNieblaBorde),
+      border: Border.all(color: paleta.bordeSecundario),
     ),
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icono, size: 18, color: _azulElectrico),
+        Icon(icono, size: 18, color: paleta.acento),
         const SizedBox(width: 8),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1057,19 +944,19 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
           children: [
             Text(
               etiqueta,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
-                color: _grisNieblaMedio,
+                color: paleta.textoSecundario,
                 fontWeight: FontWeight.w500,
               ),
             ),
             Text(
               valor,
               key: valorKey,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
-                color: _grisNieblaClaro,
+                color: paleta.textoPrincipal,
               ),
             ),
           ],
@@ -1078,7 +965,7 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
     ),
   );
 
-  Widget _resumenPartidaIndividual(JuegoBloc juego) {
+  Widget _resumenPartidaIndividual(JuegoBloc juego, PaletaTema paleta) {
     final totalCasillas = _config.matriz.length * _config.matriz.first.length;
     final ocupadas = juego.tablero.datos.length;
     final zonasCompletas = juego.puntosPorZona.length;
@@ -1089,16 +976,19 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
       runSpacing: 10,
       children: [
         _fichaEstadistica(
+          paleta: paleta,
           icono: Icons.stars_rounded,
           etiqueta: 'Puntuación',
           valor: '${juego.puntos} pts',
         ),
         _fichaEstadistica(
+          paleta: paleta,
           icono: Icons.grid_on_rounded,
           etiqueta: 'Casillas',
           valor: '$ocupadas / $totalCasillas',
         ),
         _fichaEstadistica(
+          paleta: paleta,
           icono: Icons.layers_outlined,
           etiqueta: 'Zonas completas',
           valor: '$zonasCompletas / $totalZonas',
@@ -1107,7 +997,7 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
     );
   }
 
-  Widget _controlesJuego(JuegoBloc juego) {
+  Widget _controlesJuego(JuegoBloc juego, PaletaTema paleta) {
     final pendientes = juego.tiradaPendiente;
     final pivote = juego.pivote;
     final posibles = juego.casillasIluminadas.length;
@@ -1116,9 +1006,9 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: _grisNieblaPanel,
+        color: paleta.panelSecundario,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _grisNieblaBorde),
+        border: Border.all(color: paleta.bordeSecundario),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1128,15 +1018,15 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
               key: const ValueKey('aviso-bloqueo'),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFF3B1A1F),
-                border: Border.all(color: const Color(0xFFFF6B6B)),
+                color: paleta.errorSuperficie,
+                border: Border.all(color: paleta.error),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Text(
+              child: Text(
                 'Partida bloqueada: no quedan jugadas válidas. '
                 'Reinicia para comenzar una partida nueva.',
                 style: TextStyle(
-                  color: Color(0xFFFFA8A8),
+                  color: paleta.errorTexto,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -1145,19 +1035,15 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
           ],
           Row(
             children: [
-              const Icon(
-                Icons.casino_outlined,
-                color: _azulElectrico,
-                size: 20,
-              ),
+              Icon(Icons.casino_outlined, color: paleta.acento, size: 20),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Turno de juego',
                   style: TextStyle(
                     fontSize: 19,
                     fontWeight: FontWeight.w700,
-                    color: _grisNieblaClaro,
+                    color: paleta.textoPrincipal,
                   ),
                 ),
               ),
@@ -1165,10 +1051,10 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
                 'Jugadas: ${juego.turnosJugados} · '
                 'Omitidas: ${juego.turnosOmitidos}',
                 key: const ValueKey('contador-turnos'),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
-                  color: _azulElectrico,
+                  color: paleta.acento,
                 ),
               ),
             ],
@@ -1187,7 +1073,7 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
                             '${juego.valorAColocar}.'
                 : 'Elige un dado como pivote.',
             key: const ValueKey('instruccion-turno'),
-            style: const TextStyle(color: _grisNieblaMedio),
+            style: TextStyle(color: paleta.textoSecundario),
           ),
           const SizedBox(height: 10),
           Row(
@@ -1202,13 +1088,15 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
                         : null,
                     style: OutlinedButton.styleFrom(
                       backgroundColor: pivote == i
-                          ? const Color(0xFF113548)
-                          : _negroMetalicoInterior,
+                          ? paleta.superficieAcentoSuave
+                          : paleta.superficieInterior,
                       foregroundColor: pivote == i
-                          ? _azulElectrico
-                          : _grisNieblaClaro,
+                          ? paleta.acento
+                          : paleta.textoPrincipal,
                       side: BorderSide(
-                        color: pivote == i ? _azulElectrico : _grisNieblaBorde,
+                        color: pivote == i
+                            ? paleta.acento
+                            : paleta.bordeSecundario,
                         width: pivote == i ? 2 : 1.2,
                       ),
                     ),
@@ -1217,7 +1105,9 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
                       style: TextStyle(
                         fontSize: 25,
                         fontWeight: FontWeight.bold,
-                        color: pivote == i ? _azulElectrico : _grisNieblaClaro,
+                        color: pivote == i
+                            ? paleta.acento
+                            : paleta.textoPrincipal,
                       ),
                     ),
                   ),
@@ -1273,7 +1163,6 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
       onJugar: juego?.colocar,
     );
 
-    // Antes de Inicio: solo se muestra el tablero para elegir los seis números.
     if (!iniciado) {
       return Center(
         child: ConstrainedBox(
@@ -1283,7 +1172,6 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
       );
     }
 
-    // Después de Inicio: tablero y tabla compacta a la derecha.
     return LayoutBuilder(
       builder: (context, constraints) {
         if (constraints.maxWidth >= 720) {
@@ -1334,217 +1222,235 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: _negroMetalico,
-    body: SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1000),
-            child: StreamBuilder<bool>(
-              stream: _bloc.cambios,
-              initialData: _bloc.puedeContinuar,
-              builder: (context, snapshot) {
-                final valores = _bloc.valores;
-                final cantidad = valores.values.whereType<int>().length;
-                final iniciado = _tableroIniciado != null;
-                final completos = snapshot.data ?? false;
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: ControladorTema.instance,
+    builder: (context, _) {
+      final paleta = ControladorTema.instance.actual;
+      return Scaffold(
+        backgroundColor: paleta.fondoPrincipal,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1000),
+                child: StreamBuilder<bool>(
+                  stream: _bloc.cambios,
+                  initialData: _bloc.puedeContinuar,
+                  builder: (context, snapshot) {
+                    final valores = _bloc.valores;
+                    final cantidad = valores.values.whereType<int>().length;
+                    final iniciado = _tableroIniciado != null;
+                    final completos = snapshot.data ?? false;
 
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        IconButton(
-                          key: const ValueKey('volver-menu'),
-                          tooltip: 'Volver al menú',
-                          onPressed: () => Navigator.of(context).pop(),
-                          icon: const Icon(
-                            Icons.arrow_back,
-                            color: _grisNieblaClaro,
-                          ),
-                        ),
-                        const Icon(
-                          Icons.grid_view_rounded,
-                          color: _azulElectrico,
-                        ),
-                        const SizedBox(width: 10),
-                        const Text(
-                          'BRILLIANT',
-                          style: TextStyle(
-                            letterSpacing: 2,
-                            fontWeight: FontWeight.w800,
-                            color: _grisNieblaClaro,
-                          ),
-                        ),
-                        const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _grisNieblaPanel,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: _grisNieblaBorde),
-                          ),
-                          child: Text(
-                            '${_config.matriz.first.length} × ${_config.matriz.length}',
-                            style: const TextStyle(
-                              color: _azulElectrico,
-                              fontWeight: FontWeight.w700,
+                        Row(
+                          children: [
+                            IconButton(
+                              key: const ValueKey('volver-menu'),
+                              tooltip: 'Volver al menú',
+                              onPressed: () => Navigator.of(context).pop(),
+                              icon: Icon(
+                                Icons.arrow_back,
+                                color: paleta.textoPrincipal,
+                              ),
                             ),
+                            Icon(
+                              Icons.grid_view_rounded,
+                              color: paleta.acento,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              'BRILLIANT',
+                              style: TextStyle(
+                                letterSpacing: 2,
+                                fontWeight: FontWeight.w800,
+                                color: paleta.textoPrincipal,
+                              ),
+                            ),
+                            const Spacer(),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: paleta.panelSecundario,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: paleta.bordeSecundario,
+                                ),
+                              ),
+                              child: Text(
+                                '${_config.matriz.first.length} × ${_config.matriz.length}',
+                                style: TextStyle(
+                                  color: paleta.acento,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Wrap(
+                          alignment: WrapAlignment.end,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 8,
+                          runSpacing: 6,
+                          children: [
+                            const SelectorTemaButton(),
+                            PerfilUsuario(
+                              sesion: widget.sesionUsuario,
+                              supabaseClient: widget.supabaseClient,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Mapa de colores',
+                          style: TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                            color: paleta.textoPrincipal,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Toca las seis casillas con + y distribuye '
+                          'los números del 1 al 6 sin repetir.',
+                          style: TextStyle(color: paleta.textoSecundario),
+                        ),
+                        const SizedBox(height: 14),
+                        StreamBuilder<int>(
+                          stream: _juego?.cambios,
+                          initialData: 0,
+                          builder: (context, _) {
+                            final juego = _juego;
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _tableroConPuntos(
+                                  valores: valores,
+                                  iniciado: iniciado,
+                                  juego: juego,
+                                ),
+                                if (juego != null) ...[
+                                  const SizedBox(height: 12),
+                                  _controlesJuego(juego, paleta),
+                                  const SizedBox(height: 12),
+                                  _resumenPartidaIndividual(juego, paleta),
+                                ],
+                              ],
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: paleta.panelSecundario,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: paleta.bordeSecundario),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                '$cantidad DE 6 NÚMEROS COLOCADOS',
+                                key: const ValueKey('progreso'),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  color: paleta.acento,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                iniciado
+                                    ? 'Datos iniciales guardados en el tablero.'
+                                    : completos
+                                    ? 'Todo listo. Puedes pulsar Inicio.'
+                                    : cantidad == 6
+                                    ? 'Hay números repetidos. '
+                                          'Usa cada número una sola vez.'
+                                    : 'Completa las seis casillas '
+                                          'para habilitar Inicio.',
+                                key: const ValueKey('estado'),
+                                style: TextStyle(color: paleta.textoPrincipal),
+                              ),
+                              const SizedBox(height: 12),
+                              Wrap(
+                                spacing: 12,
+                                runSpacing: 6,
+                                children: [
+                                  for (final color in ColorCasilla.values)
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          width: 9,
+                                          height: 9,
+                                          decoration: BoxDecoration(
+                                            color: color.color,
+                                            borderRadius: BorderRadius.circular(
+                                              2,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 5),
+                                        Text(
+                                          color.nombre,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: paleta.textoSecundario,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 14),
+                              FilledButton(
+                                key: const ValueKey('inicio'),
+                                onPressed: completos && !iniciado
+                                    ? _iniciar
+                                    : null,
+                                child: const Text('Inicio'),
+                              ),
+                              if (iniciado) ...[
+                                const Divider(height: 20),
+                                Text(
+                                  'Selección inicial confirmada',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: paleta.textoPrincipal,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                for (final entrada in _config.iniciales.entries)
+                                  Text(
+                                    '${entrada.key} · '
+                                    'fila ${entrada.value.y + 1}, '
+                                    'columna ${entrada.value.x + 1}: '
+                                    '${_tableroIniciado!.valorEn(entrada.value)}',
+                                    style: TextStyle(
+                                      color: paleta.textoSecundario,
+                                    ),
+                                  ),
+                              ],
+                            ],
                           ),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 6),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: PerfilUsuario(
-                        sesion: widget.sesionUsuario,
-                        supabaseClient: widget.supabaseClient,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Mapa de colores',
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w800,
-                        color: _grisNieblaClaro,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Toca las seis casillas con + y distribuye '
-                      'los números del 1 al 6 sin repetir.',
-                      style: TextStyle(color: _grisNieblaMedio),
-                    ),
-                    const SizedBox(height: 14),
-                    StreamBuilder<int>(
-                      stream: _juego?.cambios,
-                      initialData: 0,
-                      builder: (context, _) {
-                        final juego = _juego;
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _tableroConPuntos(
-                              valores: valores,
-                              iniciado: iniciado,
-                              juego: juego,
-                            ),
-                            if (juego != null) ...[
-                              const SizedBox(height: 12),
-                              _controlesJuego(juego),
-                              const SizedBox(height: 12),
-                              _resumenPartidaIndividual(juego),
-                            ],
-                          ],
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: _grisNieblaPanel,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: _grisNieblaBorde),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            '$cantidad DE 6 NÚMEROS COLOCADOS',
-                            key: const ValueKey('progreso'),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w800,
-                              color: _azulElectrico,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            iniciado
-                                ? 'Datos iniciales guardados en el tablero.'
-                                : completos
-                                ? 'Todo listo. Puedes pulsar Inicio.'
-                                : cantidad == 6
-                                ? 'Hay números repetidos. '
-                                      'Usa cada número una sola vez.'
-                                : 'Completa las seis casillas '
-                                      'para habilitar Inicio.',
-                            key: const ValueKey('estado'),
-                            style: const TextStyle(color: _grisNieblaClaro),
-                          ),
-                          const SizedBox(height: 12),
-                          Wrap(
-                            spacing: 12,
-                            runSpacing: 6,
-                            children: [
-                              for (final color in ColorCasilla.values)
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Container(
-                                      width: 9,
-                                      height: 9,
-                                      decoration: BoxDecoration(
-                                        color: color.color,
-                                        borderRadius: BorderRadius.circular(2),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 5),
-                                    Text(
-                                      color.nombre,
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: _grisNieblaMedio,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: 14),
-                          FilledButton(
-                            key: const ValueKey('inicio'),
-                            onPressed: completos && !iniciado ? _iniciar : null,
-                            child: const Text('Inicio'),
-                          ),
-                          if (iniciado) ...[
-                            const Divider(height: 20),
-                            const Text(
-                              'Selección inicial confirmada',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: _grisNieblaClaro,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            for (final entrada in _config.iniciales.entries)
-                              Text(
-                                '${entrada.key} · '
-                                'fila ${entrada.value.y + 1}, '
-                                'columna ${entrada.value.x + 1}: '
-                                '${_tableroIniciado!.valorEn(entrada.value)}',
-                                style: const TextStyle(color: _grisNieblaMedio),
-                              ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              },
+                    );
+                  },
+                ),
+              ),
             ),
           ),
         ),
-      ),
-    ),
+      );
+    },
   );
 }
-
-/// Componente reutilizable: 49 cuadrados y un espacio uniforme de 6 px.

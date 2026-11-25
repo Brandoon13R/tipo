@@ -13,6 +13,9 @@ import 'package:tipo/tabla_puntos.dart';
 import 'package:tipo/tablero.dart';
 import 'package:tipo/tablero_config.dart';
 import 'package:tipo/tablero_visual.dart';
+import 'package:tipo/tema_app.dart';
+
+PaletaTema get _paleta => ControladorTema.instance.actual;
 
 bool _partidaSinJugadas(Map<String, dynamic>? state) =>
     state == null ||
@@ -36,181 +39,190 @@ class SeleccionModoMultijugadorPage extends StatelessWidget {
   final RankingService? rankingService;
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: const Text('Multijugador'),
-      leading: IconButton(
-        key: const ValueKey('volver-menu-multijugador'),
-        onPressed: () => Navigator.of(context).pop(),
-        icon: const Icon(Icons.arrow_back),
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: ControladorTema.instance,
+    builder: (context, _) => Scaffold(
+      appBar: AppBar(
+        title: const Text('Multijugador'),
+        leading: IconButton(
+          key: const ValueKey('volver-menu-multijugador'),
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back),
+        ),
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 12),
+            child: SelectorTemaButton(),
+          ),
+        ],
       ),
-    ),
-    body: SafeArea(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 520),
-          child: ListView(
-            padding: const EdgeInsets.all(24),
-            children: [
-              const Icon(
-                Icons.people_alt_rounded,
-                size: 52,
-                color: Color(0xFF00C8FF),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Elige el modo de juego',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFFE2E8F0),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: ListView(
+              padding: const EdgeInsets.all(24),
+              children: [
+                Icon(
+                  Icons.people_alt_rounded,
+                  size: 52,
+                  color: _paleta.acento,
                 ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Compite por puntos de Elo en Clasificatorias o juega '
-                'partidas personalizadas en Salas Amistosas.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Color(0xFF9FB0C4)),
-              ),
-              const SizedBox(height: 28),
-              Card(
-                elevation: 0,
-                color: const Color(0xFF252D3A),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: const BorderSide(color: Color(0xFF00C8FF), width: 1.5),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(18),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const Row(
-                        children: [
-                          Icon(
-                            Icons.emoji_events_rounded,
-                            color: Color(0xFF00C8FF),
-                            size: 28,
-                          ),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              'Clasificatorias (Elo)',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFFE2E8F0),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Gana Elo según tu puesto (1.º +12, 2.º +8, 3.º +5 '
-                        '+ los puntos de tu tablero). Cuando se ocupan los '
-                        '3 primeros puestos, la partida finaliza '
-                        'automáticamente para todos.',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF9FB0C4),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      FilledButton.icon(
-                        key: const ValueKey('opcion-clasificatorias'),
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => ClasificatoriasPage(
-                                supabaseClient: supabaseClient,
-                                token: token,
-                                usuario: usuario,
-                                rankingService: rankingService,
-                              ),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.leaderboard_rounded),
-                        label: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          child: Text('Entrar a Clasificatorias'),
-                        ),
-                      ),
-                    ],
+                const SizedBox(height: 12),
+                Text(
+                  'Elige el modo de juego',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    color: _paleta.textoPrincipal,
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Card(
-                elevation: 0,
-                color: const Color(0xFF252D3A),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: const BorderSide(color: Color(0xFF3E4A5E)),
+                const SizedBox(height: 8),
+                Text(
+                  'Compite por puntos de Elo en Clasificatorias o juega '
+                  'partidas personalizadas en Salas Amistosas.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: _paleta.textoSecundario),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(18),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const Row(
-                        children: [
-                          Icon(
-                            Icons.sports_esports_outlined,
-                            color: Color(0xFF00C8FF),
-                            size: 28,
-                          ),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              'Salas Amistosas',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFFE2E8F0),
+                const SizedBox(height: 28),
+                Card(
+                  elevation: 0,
+                  color: _paleta.panelSecundario,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(color: _paleta.acento, width: 1.5),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.emoji_events_rounded,
+                              color: _paleta.acento,
+                              size: 28,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Clasificatorias (Elo)',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                  color: _paleta.textoPrincipal,
+                                ),
                               ),
                             ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Gana Elo según tu puesto (1.º +12, 2.º +8, 3.º +5 '
+                          '+ los puntos de tu tablero). Cuando se ocupan los '
+                          '3 primeros puestos, la partida finaliza '
+                          'automáticamente para todos.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: _paleta.textoSecundario,
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Crea o únete a una sala privada con código para '
-                        'jugar con amigos (hasta 6 jugadores) sin alterar tu '
-                        'puntuación de Elo.',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF9FB0C4),
                         ),
-                      ),
-                      const SizedBox(height: 14),
-                      OutlinedButton.icon(
-                        key: const ValueKey('opcion-salas-amistosas'),
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => LobbyMultijugadorPage(
-                                supabaseClient: supabaseClient,
-                                token: token,
-                                usuario: usuario,
+                        const SizedBox(height: 14),
+                        FilledButton.icon(
+                          key: const ValueKey('opcion-clasificatorias'),
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => ClasificatoriasPage(
+                                  supabaseClient: supabaseClient,
+                                  token: token,
+                                  usuario: usuario,
+                                  rankingService: rankingService,
+                                ),
                               ),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.meeting_room_outlined),
-                        label: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          child: Text('Entrar a Salas Amistosas'),
+                            );
+                          },
+                          icon: const Icon(Icons.leaderboard_rounded),
+                          label: const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            child: Text('Entrar a Clasificatorias'),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 16),
+                Card(
+                  elevation: 0,
+                  color: _paleta.panelSecundario,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(color: _paleta.bordeSecundario),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.sports_esports_outlined,
+                              color: _paleta.acento,
+                              size: 28,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Salas Amistosas',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                  color: _paleta.textoPrincipal,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Crea o únete a una sala privada con código para '
+                          'jugar con amigos (hasta 6 jugadores) sin alterar tu '
+                          'puntuación de Elo.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: _paleta.textoSecundario,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        OutlinedButton.icon(
+                          key: const ValueKey('opcion-salas-amistosas'),
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => LobbyMultijugadorPage(
+                                  supabaseClient: supabaseClient,
+                                  token: token,
+                                  usuario: usuario,
+                                ),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.meeting_room_outlined),
+                          label: const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            child: Text('Entrar a Salas Amistosas'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -465,381 +477,402 @@ class _ClasificatoriasPageState extends State<ClasificatoriasPage> {
         resumen?.perfilActual ??
         EntradaRankingElo(posicion: 1, usuario: widget.usuario, elo: 0);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Clasificatorias · Ranking Elo'),
-        leading: IconButton(
-          key: const ValueKey('salir-clasificatorias'),
-          onPressed: _ocupado ? null : () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.arrow_back),
-        ),
-        actions: [
-          IconButton(
-            key: const ValueKey('recargar-ranking'),
-            tooltip: 'Actualizar tabla de clasificación',
-            onPressed: _cargandoRanking ? null : _cargarRanking,
-            icon: const Icon(Icons.refresh_rounded),
+    return AnimatedBuilder(
+      animation: ControladorTema.instance,
+      builder: (context, _) => Scaffold(
+        appBar: AppBar(
+          title: const Text('Clasificatorias · Ranking Elo'),
+          leading: IconButton(
+            key: const ValueKey('salir-clasificatorias'),
+            onPressed: _ocupado ? null : () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.arrow_back),
           ),
-        ],
-      ),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 620),
-            child: ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
-                Card(
-                  elevation: 0,
-                  color: const Color(0xFF252D3A),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    side: const BorderSide(color: Color(0xFF3E4A5E)),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Row(
-                          children: [
-                            Icon(
-                              Icons.add_circle_outline_rounded,
-                              color: Color(0xFF00C8FF),
-                            ),
-                            SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                'Crear Partida Clasificatoria',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFFE2E8F0),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        const Text(
-                          '1.º puesto: +12 Elo + puntos · '
-                          '2.º puesto: +8 Elo + puntos · '
-                          '3.º puesto: +5 Elo + puntos. '
-                          'La partida termina al ocuparse los 3 primeros puestos.',
-                          style: TextStyle(
-                            fontSize: 12.5,
-                            color: Color(0xFF9FB0C4),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        DropdownButtonFormField<String>(
-                          key: ValueKey('nivel-clasificatoria-${_config.id}'),
-                          initialValue: _config.id,
-                          dropdownColor: const Color(0xFF252D3A),
-                          decoration: const InputDecoration(labelText: 'Nivel'),
-                          items: [
-                            for (final config in _niveles)
-                              DropdownMenuItem(
-                                value: config.id,
-                                child: Text(config.nombre),
-                              ),
-                          ],
-                          onChanged: _ocupado
-                              ? null
-                              : (id) {
-                                  if (id == null) return;
-                                  setState(() {
-                                    _config = _configuracion(id);
-                                    _valoresIniciales.clear();
-                                    _error = null;
-                                  });
-                                },
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          '${_valoresIniciales.values.whereType<int>().length} '
-                          'de 6 números asignados',
-                          key: const ValueKey('progreso-inicial-clasificatoria'),
-                          style: const TextStyle(
-                            color: Color(0xFF00C8FF),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        TableroVisual(
-                          key: ValueKey('tablero-clasificatoria-${_config.id}'),
-                          valores: _valoresIniciales,
-                          habilitado: !_ocupado,
-                          onSeleccionar: _elegirNumero,
-                          config: _config,
-                        ),
-                        const SizedBox(height: 12),
-                        FilledButton.icon(
-                          key: const ValueKey('crear-partida-clasificatoria'),
-                          onPressed: _ocupado ? null : _crearPartidaClasificatoria,
-                          icon: const Icon(Icons.emoji_events_outlined),
-                          label: Text(
-                            _ocupado ? 'Creando partida...' : 'Crear Partida',
-                          ),
-                        ),
-                        const Divider(height: 28),
-                        const Text(
-                          'Unirse a una partida clasificatoria',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFFE2E8F0),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                key: const ValueKey(
-                                  'codigo-invitacion-clasificatoria',
-                                ),
-                                controller: _codigoController,
-                                keyboardType: TextInputType.number,
-                                maxLength: 6,
-                                decoration: const InputDecoration(
-                                  labelText: 'Código de sala',
-                                  hintText: '123456',
-                                  border: OutlineInputBorder(),
-                                  counterText: '',
-                                  isDense: true,
-                                ),
-                                onChanged: (_) {
-                                  if (_error != null) {
-                                    setState(() => _error = null);
-                                  }
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            OutlinedButton.icon(
-                              key: const ValueKey('unirse-sala-clasificatoria'),
-                              onPressed: _ocupado ? null : _unirseClasificatoria,
-                              icon: const Icon(Icons.login),
-                              label: const Text('Unirse'),
-                            ),
-                          ],
-                        ),
-                        if (_error != null) ...[
-                          const SizedBox(height: 10),
-                          Text(
-                            _error!,
-                            key: const ValueKey('error-clasificatoria'),
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                          ),
-                        ],
-                      ],
+          actions: [
+            const SelectorTemaButton(),
+            IconButton(
+              key: const ValueKey('recargar-ranking'),
+              tooltip: 'Actualizar tabla de clasificación',
+              onPressed: _cargandoRanking ? null : _cargarRanking,
+              icon: const Icon(Icons.refresh_rounded),
+            ),
+          ],
+        ),
+        body: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 620),
+              child: ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
+                  Card(
+                    elevation: 0,
+                    color: _paleta.panelSecundario,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: _paleta.bordeSecundario),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Card(
-                  key: const ValueKey('tabla-clasificacion-top10'),
-                  elevation: 0,
-                  color: const Color(0xFF252D3A),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    side: const BorderSide(color: Color(0xFF3E4A5E)),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.leaderboard_rounded,
-                              color: Color(0xFF00C8FF),
-                            ),
-                            const SizedBox(width: 8),
-                            const Expanded(
-                              child: Text(
-                                'Tabla de Clasificaciones · Top 10',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFFE2E8F0),
-                                ),
-                              ),
-                            ),
-                            if (_cargandoRanking)
-                              const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              ),
-                          ],
-                        ),
-                        const Divider(height: 20),
-                        if (top10.isEmpty && !_cargandoRanking)
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 12),
-                            child: Text(
-                              'Aún no hay jugadores registrados en el ranking.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: Color(0xFF9FB0C4)),
-                            ),
-                          )
-                        else
-                          for (final entrada in top10)
-                            Container(
-                              key: ValueKey('fila-top10-${entrada.posicion}'),
-                              margin: const EdgeInsets.symmetric(vertical: 3),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color:
-                                    entrada.usuario.toLowerCase() ==
-                                        widget.usuario.toLowerCase()
-                                    ? const Color(0xFF113548)
-                                    : const Color(0xFF181D26),
-                                borderRadius: BorderRadius.circular(8),
-                                border:
-                                    entrada.usuario.toLowerCase() ==
-                                        widget.usuario.toLowerCase()
-                                    ? Border.all(color: const Color(0xFF00C8FF))
-                                    : Border.all(
-                                        color: const Color(0xFF3E4A5E),
-                                        width: 0.6,
-                                      ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 32,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 3,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: entrada.posicion == 1
-                                          ? const Color(0xFFF1C40F)
-                                          : entrada.posicion == 2
-                                          ? const Color(0xFFBDC3C7)
-                                          : entrada.posicion == 3
-                                          ? const Color(0xFFE67E22)
-                                          : const Color(0xFF252D3A),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      '${entrada.posicion}.º',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w800,
-                                        color: entrada.posicion <= 3
-                                            ? Colors.black87
-                                            : const Color(0xFF00C8FF),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Text(
-                                      entrada.usuario,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFFE2E8F0),
-                                      ),
-                                    ),
-                                  ),
-                                  Text(
-                                    '${entrada.elo} Elo',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w800,
-                                      color: Color(0xFF00C8FF),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                        const Divider(height: 24),
-                        Container(
-                          key: const ValueKey('tarjeta-mi-ranking'),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF181D26),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: const Color(0xFF00C8FF)),
-                          ),
-                          child: Row(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
                             children: [
-                              CircleAvatar(
-                                radius: 18,
-                                backgroundColor: const Color(0xFF00C8FF),
-                                child: Text(
-                                  widget.usuario.isNotEmpty
-                                      ? widget.usuario[0].toUpperCase()
-                                      : 'U',
-                                  style: const TextStyle(
-                                    color: Color(0xFF09131C),
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
+                              Icon(
+                                Icons.add_circle_outline_rounded,
+                                color: _paleta.acento,
                               ),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: 8),
                               Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Tu perfil · ${miPerfil.usuario}',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        color: Color(0xFFE2E8F0),
-                                      ),
-                                    ),
-                                    Text(
-                                      resumen?.estaEnTop10 == true
-                                          ? 'Puesto #${miPerfil.posicion} (En el Top 10)'
-                                          : 'Puesto #${miPerfil.posicion} en la clasificación general',
-                                      key: const ValueKey('mi-puesto-ranking'),
-                                      style: const TextStyle(
-                                        fontSize: 12.5,
-                                        color: Color(0xFF9FB0C4),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF113548),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: const Color(0xFF00C8FF),
-                                  ),
-                                ),
                                 child: Text(
-                                  '${miPerfil.elo} Elo',
-                                  key: const ValueKey('mi-elo-ranking'),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                    color: Color(0xFF00C8FF),
+                                  'Crear Partida Clasificatoria',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w700,
+                                    color: _paleta.textoPrincipal,
                                   ),
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 6),
+                          Text(
+                            '1.º puesto: +12 Elo + puntos · '
+                            '2.º puesto: +8 Elo + puntos · '
+                            '3.º puesto: +5 Elo + puntos. '
+                            'La partida termina al ocuparse los 3 primeros puestos.',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: _paleta.textoSecundario,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            key: ValueKey('nivel-clasificatoria-${_config.id}'),
+                            initialValue: _config.id,
+                            dropdownColor: _paleta.panelSecundario,
+                            decoration: const InputDecoration(
+                              labelText: 'Nivel',
+                            ),
+                            items: [
+                              for (final config in _niveles)
+                                DropdownMenuItem(
+                                  value: config.id,
+                                  child: Text(config.nombre),
+                                ),
+                            ],
+                            onChanged: _ocupado
+                                ? null
+                                : (id) {
+                                    if (id == null) return;
+                                    setState(() {
+                                      _config = _configuracion(id);
+                                      _valoresIniciales.clear();
+                                      _error = null;
+                                    });
+                                  },
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            '${_valoresIniciales.values.whereType<int>().length} '
+                            'de 6 números asignados',
+                            key: const ValueKey(
+                              'progreso-inicial-clasificatoria',
+                            ),
+                            style: TextStyle(
+                              color: _paleta.acento,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          TableroVisual(
+                            key: ValueKey(
+                              'tablero-clasificatoria-${_config.id}',
+                            ),
+                            valores: _valoresIniciales,
+                            habilitado: !_ocupado,
+                            onSeleccionar: _elegirNumero,
+                            config: _config,
+                          ),
+                          const SizedBox(height: 12),
+                          FilledButton.icon(
+                            key: const ValueKey('crear-partida-clasificatoria'),
+                            onPressed: _ocupado
+                                ? null
+                                : _crearPartidaClasificatoria,
+                            icon: const Icon(Icons.emoji_events_outlined),
+                            label: Text(
+                              _ocupado ? 'Creando partida...' : 'Crear Partida',
+                            ),
+                          ),
+                          const Divider(height: 28),
+                          Text(
+                            'Unirse a una partida clasificatoria',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: _paleta.textoPrincipal,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  key: const ValueKey(
+                                    'codigo-invitacion-clasificatoria',
+                                  ),
+                                  controller: _codigoController,
+                                  keyboardType: TextInputType.number,
+                                  maxLength: 6,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Código de sala',
+                                    hintText: '123456',
+                                    border: OutlineInputBorder(),
+                                    counterText: '',
+                                    isDense: true,
+                                  ),
+                                  onChanged: (_) {
+                                    if (_error != null) {
+                                      setState(() => _error = null);
+                                    }
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              OutlinedButton.icon(
+                                key: const ValueKey(
+                                  'unirse-sala-clasificatoria',
+                                ),
+                                onPressed: _ocupado
+                                    ? null
+                                    : _unirseClasificatoria,
+                                icon: const Icon(Icons.login),
+                                label: const Text('Unirse'),
+                              ),
+                            ],
+                          ),
+                          if (_error != null) ...[
+                            const SizedBox(height: 10),
+                            Text(
+                              _error!,
+                              key: const ValueKey('error-clasificatoria'),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  Card(
+                    key: const ValueKey('tabla-clasificacion-top10'),
+                    elevation: 0,
+                    color: _paleta.panelSecundario,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: _paleta.bordeSecundario),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.leaderboard_rounded,
+                                color: _paleta.acento,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Tabla de Clasificaciones · Top 10',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                    color: _paleta.textoPrincipal,
+                                  ),
+                                ),
+                              ),
+                              if (_cargandoRanking)
+                                const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const Divider(height: 20),
+                          if (top10.isEmpty && !_cargandoRanking)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              child: Text(
+                                'Aún no hay jugadores registrados en el ranking.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: _paleta.textoSecundario,
+                                ),
+                              ),
+                            )
+                          else
+                            for (final entrada in top10)
+                              Container(
+                                key: ValueKey('fila-top10-${entrada.posicion}'),
+                                margin: const EdgeInsets.symmetric(vertical: 3),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color:
+                                      entrada.usuario.toLowerCase() ==
+                                          widget.usuario.toLowerCase()
+                                      ? _paleta.superficieAcentoSuave
+                                      : _paleta.superficieInterior,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border:
+                                      entrada.usuario.toLowerCase() ==
+                                          widget.usuario.toLowerCase()
+                                      ? Border.all(color: _paleta.acento)
+                                      : Border.all(
+                                          color: _paleta.bordeSecundario,
+                                          width: 0.6,
+                                        ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 32,
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 3,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: entrada.posicion == 1
+                                            ? const Color(0xFFF1C40F)
+                                            : entrada.posicion == 2
+                                            ? const Color(0xFFBDC3C7)
+                                            : entrada.posicion == 3
+                                            ? const Color(0xFFE67E22)
+                                            : _paleta.panelSecundario,
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        '${entrada.posicion}.º',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w800,
+                                          color: entrada.posicion <= 3
+                                              ? Colors.black87
+                                              : _paleta.acento,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(
+                                        entrada.usuario,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: _paleta.textoPrincipal,
+                                        ),
+                                      ),
+                                    ),
+                                    Text(
+                                      '${entrada.elo} Elo',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                        color: _paleta.acento,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          const Divider(height: 24),
+                          Container(
+                            key: const ValueKey('tarjeta-mi-ranking'),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: _paleta.superficieInterior,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: _paleta.acento),
+                            ),
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 18,
+                                  backgroundColor: _paleta.acento,
+                                  child: Text(
+                                    widget.usuario.isNotEmpty
+                                        ? widget.usuario[0].toUpperCase()
+                                        : 'U',
+                                    style: TextStyle(
+                                      color: _paleta.textoSobreAcento,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Tu perfil · ${miPerfil.usuario}',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          color: _paleta.textoPrincipal,
+                                        ),
+                                      ),
+                                      Text(
+                                        resumen?.estaEnTop10 == true
+                                            ? 'Puesto #${miPerfil.posicion} (En el Top 10)'
+                                            : 'Puesto #${miPerfil.posicion} en la clasificación general',
+                                        key: const ValueKey(
+                                          'mi-puesto-ranking',
+                                        ),
+                                        style: TextStyle(
+                                          fontSize: 12.5,
+                                          color: _paleta.textoSecundario,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: _paleta.superficieAcentoSuave,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: _paleta.acento),
+                                  ),
+                                  child: Text(
+                                    '${miPerfil.elo} Elo',
+                                    key: const ValueKey('mi-elo-ranking'),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      color: _paleta.acento,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -1603,184 +1636,197 @@ class _SalaMultijugadorPageState extends State<SalaMultijugadorPage> {
         (!_sala.todosListos &&
             (_sala.estado == 'configurando' ||
                 (_sala.estado == 'activa' && _sala.estadoOponente == null)));
-    return Scaffold(
-      appBar: AppBar(title: const Text('Lobby')),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Icon(
-                    esperando ? Icons.hourglass_top : Icons.sports_esports,
-                    size: 52,
-                    color: const Color(0xFF00C8FF),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    esperando
-                        ? 'Esperando jugadores'
-                        : rivalConfigurando
-                        ? 'Configurando tableros'
-                        : 'Partida lista para iniciar',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFFE2E8F0),
+    return AnimatedBuilder(
+      animation: ControladorTema.instance,
+      builder: (context, _) => Scaffold(
+        appBar: AppBar(
+          title: const Text('Lobby'),
+          actions: const [
+            Padding(
+              padding: EdgeInsets.only(right: 12),
+              child: SelectorTemaButton(),
+            ),
+          ],
+        ),
+        body: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Icon(
+                      esperando ? Icons.hourglass_top : Icons.sports_esports,
+                      size: 52,
+                      color: _paleta.acento,
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Comparte este código (máximo ${_sala.maxJugadores} jugadores):',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Color(0xFF9FB0C4)),
-                  ),
-                  const SizedBox(height: 10),
-                  SelectableText(
-                    _sala.codigo,
-                    key: const ValueKey('codigo-sala'),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 36,
-                      letterSpacing: 8,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF00C8FF),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    key: const ValueKey('copiar-codigo'),
-                    onPressed: _copiarCodigo,
-                    icon: const Icon(Icons.copy),
-                    label: const Text('Copiar código'),
-                  ),
-                  const SizedBox(height: 16),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            'Jugadores en la sala (${jugadores.length}/${_sala.maxJugadores})',
-                            key: const ValueKey('contador-jugadores-sala'),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFFE2E8F0),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          for (final jugador in jugadores)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 4),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    jugador.listo
-                                        ? Icons.check_circle
-                                        : Icons.hourglass_bottom,
-                                    size: 18,
-                                    color: jugador.listo
-                                        ? const Color(0xFF00C8FF)
-                                        : Colors.orange,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      '${jugador.usuario}'
-                                      '${jugador.esAnfitrion ? " (Anfitrión)" : ""}',
-                                      style: const TextStyle(
-                                        color: Color(0xFFE2E8F0),
-                                      ),
-                                    ),
-                                  ),
-                                  Text(
-                                    jugador.listo
-                                        ? 'Listo'
-                                        : 'Configurando tablero...',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: jugador.listo
-                                          ? const Color(0xFF00C8FF)
-                                          : const Color(0xFF9FB0C4),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  if (esperando)
-                    const Text(
-                      'La sala admite de 2 a 6 jugadores. '
-                      'Si cierras la app, podrás volver a entrar usando el '
-                      'mismo código.',
-                      textAlign: TextAlign.center,
-                    )
-                  else if (rivalConfigurando)
-                    const Text(
-                      'Esperando a que todos los jugadores unidos elijan sus '
-                      'números iniciales.',
-                      textAlign: TextAlign.center,
-                    )
-                  else if (_sala.esAnfitrion)
-                    const Text(
-                      'Todos los jugadores unidos están listos. Puedes '
-                      'iniciar la partida o esperar a más jugadores (hasta 6).',
-                      textAlign: TextAlign.center,
-                    )
-                  else
-                    const Text(
-                      'Tu tablero está listo. Esperando a que el anfitrión '
-                      'inicie la partida.',
-                      textAlign: TextAlign.center,
-                    ),
-                  if (_error != null) ...[
                     const SizedBox(height: 16),
                     Text(
-                      'Sincronización interrumpida: $_error. '
-                      'Reintentando automáticamente...',
-                      key: const ValueKey('error-conexion-sala'),
+                      esperando
+                          ? 'Esperando jugadores'
+                          : rivalConfigurando
+                          ? 'Configurando tableros'
+                          : 'Partida lista para iniciar',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: _paleta.textoPrincipal,
                       ),
                     ),
-                  ],
-                  if (_sala.esAnfitrion && !esperando) ...[
-                    const SizedBox(height: 16),
-                    FilledButton.icon(
-                      key: const ValueKey('anfitrion-iniciar-partida'),
-                      onPressed: _sala.todosListos && !_iniciando
-                          ? _iniciarComoAnfitrion
-                          : null,
-                      icon: const Icon(Icons.play_arrow),
-                      label: Text(
-                        _iniciando ? 'Iniciando...' : 'Iniciar partida',
-                      ),
-                    ),
-                  ],
-                  if (_sala.esAnfitrion &&
-                      (esperando ||
-                          rivalConfigurando ||
-                          _sala.estado != 'activa')) ...[
                     const SizedBox(height: 12),
-                    OutlinedButton(
-                      key: const ValueKey('cancelar-sala'),
-                      onPressed: _cancelarSala,
-                      child: const Text('Cancelar sala'),
+                    Text(
+                      'Comparte este código (máximo ${_sala.maxJugadores} jugadores):',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: _paleta.textoSecundario),
                     ),
+                    const SizedBox(height: 10),
+                    SelectableText(
+                      _sala.codigo,
+                      key: const ValueKey('codigo-sala'),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 36,
+                        letterSpacing: 8,
+                        fontWeight: FontWeight.w800,
+                        color: _paleta.acento,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      key: const ValueKey('copiar-codigo'),
+                      onPressed: _copiarCodigo,
+                      icon: const Icon(Icons.copy),
+                      label: const Text('Copiar código'),
+                    ),
+                    const SizedBox(height: 16),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              'Jugadores en la sala (${jugadores.length}/${_sala.maxJugadores})',
+                              key: const ValueKey('contador-jugadores-sala'),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: _paleta.textoPrincipal,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            for (final jugador in jugadores)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 4,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      jugador.listo
+                                          ? Icons.check_circle
+                                          : Icons.hourglass_bottom,
+                                      size: 18,
+                                      color: jugador.listo
+                                          ? _paleta.acento
+                                          : Colors.orange,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        '${jugador.usuario}'
+                                        '${jugador.esAnfitrion ? " (Anfitrión)" : ""}',
+                                        style: TextStyle(
+                                          color: _paleta.textoPrincipal,
+                                        ),
+                                      ),
+                                    ),
+                                    Text(
+                                      jugador.listo
+                                          ? 'Listo'
+                                          : 'Configurando tablero...',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: jugador.listo
+                                            ? _paleta.acento
+                                            : _paleta.textoSecundario,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    if (esperando)
+                      const Text(
+                        'La sala admite de 2 a 6 jugadores. '
+                        'Si cierras la app, podrás volver a entrar usando el '
+                        'mismo código.',
+                        textAlign: TextAlign.center,
+                      )
+                    else if (rivalConfigurando)
+                      const Text(
+                        'Esperando a que todos los jugadores unidos elijan sus '
+                        'números iniciales.',
+                        textAlign: TextAlign.center,
+                      )
+                    else if (_sala.esAnfitrion)
+                      const Text(
+                        'Todos los jugadores unidos están listos. Puedes '
+                        'iniciar la partida o esperar a más jugadores (hasta 6).',
+                        textAlign: TextAlign.center,
+                      )
+                    else
+                      const Text(
+                        'Tu tablero está listo. Esperando a que el anfitrión '
+                        'inicie la partida.',
+                        textAlign: TextAlign.center,
+                      ),
+                    if (_error != null) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        'Sincronización interrumpida: $_error. '
+                        'Reintentando automáticamente...',
+                        key: const ValueKey('error-conexion-sala'),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ],
+                    if (_sala.esAnfitrion && !esperando) ...[
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        key: const ValueKey('anfitrion-iniciar-partida'),
+                        onPressed: _sala.todosListos && !_iniciando
+                            ? _iniciarComoAnfitrion
+                            : null,
+                        icon: const Icon(Icons.play_arrow),
+                        label: Text(
+                          _iniciando ? 'Iniciando...' : 'Iniciar partida',
+                        ),
+                      ),
+                    ],
+                    if (_sala.esAnfitrion &&
+                        (esperando ||
+                            rivalConfigurando ||
+                            _sala.estado != 'activa')) ...[
+                      const SizedBox(height: 12),
+                      OutlinedButton(
+                        key: const ValueKey('cancelar-sala'),
+                        onPressed: _cancelarSala,
+                        child: const Text('Cancelar sala'),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ),
@@ -2489,179 +2535,180 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
       }
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          _esPartidaClasificatoria
-              ? 'Clasificatoria · ${_sala.codigo}'
-              : 'Partida · ${_sala.codigo}',
-        ),
-        actions: [
-          IconButton(
-            key: const ValueKey('copiar-codigo-partida'),
-            tooltip: 'Copiar código de invitación',
-            onPressed: () async {
-              await Clipboard.setData(ClipboardData(text: _sala.codigo));
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Código copiado.')),
-                );
-              }
-            },
-            icon: const Icon(Icons.copy),
+    return AnimatedBuilder(
+      animation: ControladorTema.instance,
+      builder: (context, _) => Scaffold(
+        appBar: AppBar(
+          title: Text(
+            _esPartidaClasificatoria
+                ? 'Clasificatoria · ${_sala.codigo}'
+                : 'Partida · ${_sala.codigo}',
           ),
-        ],
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1000),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (finalizada)
-                    Card(
-                      color: const Color(0xFF132D3E),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        side: const BorderSide(
-                          color: Color(0xFF00C8FF),
-                          width: 1.4,
+          actions: [
+            const SelectorTemaButton(),
+            IconButton(
+              key: const ValueKey('copiar-codigo-partida'),
+              tooltip: 'Copiar código de invitación',
+              onPressed: () async {
+                await Clipboard.setData(ClipboardData(text: _sala.codigo));
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Código copiado.')),
+                  );
+                }
+              },
+              icon: const Icon(Icons.copy),
+            ),
+          ],
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1000),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (finalizada)
+                      Card(
+                        color: _paleta.superficieAcentoSuave,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: BorderSide(color: _paleta.acento, width: 1.4),
                         ),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          children: [
-                            Text(
-                              _estadoFinal(),
-                              key: const ValueKey('resultado-multijugador'),
-                              style: const TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF00C8FF),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            children: [
+                              Text(
+                                _estadoFinal(),
+                                key: const ValueKey('resultado-multijugador'),
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: _paleta.acento,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _motivoFinal(),
-                              style: const TextStyle(color: Color(0xFFE2E8F0)),
-                            ),
-                            if (_esPartidaClasificatoria) ...[
-                              const SizedBox(height: 12),
-                              _tarjetaPodioClasificatoria(),
+                              const SizedBox(height: 4),
+                              Text(
+                                _motivoFinal(),
+                                style: TextStyle(color: _paleta.textoPrincipal),
+                              ),
+                              if (_esPartidaClasificatoria) ...[
+                                const SizedBox(height: 12),
+                                _tarjetaPodioClasificatoria(),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
+                      )
+                    else
+                      _tarjetaEstadoRivales(
+                        rivales: rivales,
+                        vistasRivales: vistasRivales,
+                        puedeReclamar: puedeReclamar,
+                        reclamoDesde: reclamoDesde,
                       ),
-                    )
-                  else
-                    _tarjetaEstadoRivales(
-                      rivales: rivales,
-                      vistasRivales: vistasRivales,
-                      puedeReclamar: puedeReclamar,
-                      reclamoDesde: reclamoDesde,
-                    ),
-                  if (_sala.eliminadoPropio && !finalizada) ...[
-                    const SizedBox(height: 8),
-                    Card(
-                      key: const ValueKey('jugador-eliminado-aviso'),
-                      color: const Color(0xFF3B1A1F),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        side: const BorderSide(color: Color(0xFFFF6B6B)),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          children: [
-                            const Text(
-                              'Quedaste eliminado de la partida. Puedes seguir '
-                              'viendo los tableros de los demás jugadores.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFFFFA8A8),
+                    if (_sala.eliminadoPropio && !finalizada) ...[
+                      const SizedBox(height: 8),
+                      Card(
+                        key: const ValueKey('jugador-eliminado-aviso'),
+                        color: _paleta.errorSuperficie,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          side: BorderSide(color: _paleta.error),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            children: [
+                              Text(
+                                'Quedaste eliminado de la partida. Puedes seguir '
+                                'viendo los tableros de los demás jugadores.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: _paleta.errorTexto,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            OutlinedButton(
-                              key: const ValueKey('salir-partida-eliminado'),
-                              onPressed: () => Navigator.of(context).pop(),
-                              child: const Text('Volver al menú'),
-                            ),
-                          ],
+                              const SizedBox(height: 8),
+                              OutlinedButton(
+                                key: const ValueKey('salir-partida-eliminado'),
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: const Text('Volver al menú'),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                  if (_errorConexion != null) ...[
-                    const SizedBox(height: 8),
-                    MaterialBanner(
-                      key: const ValueKey('banner-sin-conexion'),
-                      content: Text(
-                        'Sin conexión con la partida: $_errorConexion. '
-                        'Se reintentará automáticamente; no se aceptan '
-                        'jugadas nuevas hasta sincronizar.',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: _sincronizar,
-                          child: const Text('Reintentar'),
+                    ],
+                    if (_errorConexion != null) ...[
+                      const SizedBox(height: 8),
+                      MaterialBanner(
+                        key: const ValueKey('banner-sin-conexion'),
+                        content: Text(
+                          'Sin conexión con la partida: $_errorConexion. '
+                          'Se reintentará automáticamente; no se aceptan '
+                          'jugadas nuevas hasta sincronizar.',
                         ),
-                      ],
-                    ),
-                  ],
-                  if (rivales.isNotEmpty) ...[
+                        actions: [
+                          TextButton(
+                            onPressed: _sincronizar,
+                            child: const Text('Reintentar'),
+                          ),
+                        ],
+                      ),
+                    ],
+                    if (rivales.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      _selectorTableros(
+                        rivales: rivales,
+                        vistasRivales: vistasRivales,
+                        rivalSeleccionado: rivalSeleccionado,
+                      ),
+                    ],
                     const SizedBox(height: 12),
-                    _selectorTableros(
-                      rivales: rivales,
-                      vistasRivales: vistasRivales,
-                      rivalSeleccionado: rivalSeleccionado,
+                    if (rivalSeleccionado != null)
+                      _seccionTableroRival(
+                        rival: rivalSeleccionado,
+                        vista: vistasRivales[rivalSeleccionado.usuario]!,
+                        mostrarBotonVolver: true,
+                      )
+                    else
+                      _seccionTableroPropio(
+                        puedeJugar: puedeJugar,
+                        finalizada: finalizada,
+                      ),
+                    const SizedBox(height: 12),
+                    FilledButton.tonal(
+                      key: const ValueKey('conceder-partida'),
+                      onPressed:
+                          finalizada ||
+                              _sala.eliminadoPropio ||
+                              _concediendo ||
+                              _sincronizando ||
+                              _pendiente != null ||
+                              _errorConexion != null
+                          ? null
+                          : _conceder,
+                      style: FilledButton.styleFrom(
+                        foregroundColor: Theme.of(context).colorScheme.error,
+                      ),
+                      child: Text(
+                        _concediendo ? 'Concediendo...' : 'Conceder partida',
+                      ),
                     ),
+                    if (finalizada) ...[
+                      const SizedBox(height: 8),
+                      OutlinedButton(
+                        key: const ValueKey('salir-partida-finalizada'),
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Volver al menú'),
+                      ),
+                    ],
                   ],
-                  const SizedBox(height: 12),
-                  if (rivalSeleccionado != null)
-                    _seccionTableroRival(
-                      rival: rivalSeleccionado,
-                      vista: vistasRivales[rivalSeleccionado.usuario]!,
-                      mostrarBotonVolver: true,
-                    )
-                  else
-                    _seccionTableroPropio(
-                      puedeJugar: puedeJugar,
-                      finalizada: finalizada,
-                    ),
-                  const SizedBox(height: 12),
-                  FilledButton.tonal(
-                    key: const ValueKey('conceder-partida'),
-                    onPressed:
-                        finalizada ||
-                            _sala.eliminadoPropio ||
-                            _concediendo ||
-                            _sincronizando ||
-                            _pendiente != null ||
-                            _errorConexion != null
-                        ? null
-                        : _conceder,
-                    style: FilledButton.styleFrom(
-                      foregroundColor: Theme.of(context).colorScheme.error,
-                    ),
-                    child: Text(
-                      _concediendo ? 'Concediendo...' : 'Conceder partida',
-                    ),
-                  ),
-                  if (finalizada) ...[
-                    const SizedBox(height: 8),
-                    OutlinedButton(
-                      key: const ValueKey('salir-partida-finalizada'),
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Volver al menú'),
-                    ),
-                  ],
-                ],
+                ),
               ),
             ),
           ),
@@ -2684,9 +2731,9 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
       key: const ValueKey('resumen-elo-clasificatoria'),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF181D26),
+        color: _paleta.superficieInterior,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFF00C8FF)),
+        border: Border.all(color: _paleta.acento),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2699,7 +2746,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
               fontWeight: FontWeight.w800,
               fontSize: 15,
               color: delta >= 0
-                  ? const Color(0xFF00C8FF)
+                  ? _paleta.acento
                   : Theme.of(context).colorScheme.error,
             ),
           ),
@@ -2709,9 +2756,9 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
               'Tu nuevo Elo: $_nuevoEloGuardado',
               key: const ValueKey('nuevo-elo-guardado'),
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: Color(0xFFE2E8F0),
+                color: _paleta.textoPrincipal,
               ),
             ),
           ] else if (_errorGuardandoElo) ...[
@@ -2727,13 +2774,13 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
             ),
           ],
           const Divider(height: 16),
-          const Text(
+          Text(
             'Podio de la partida',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontWeight: FontWeight.w700,
               fontSize: 13,
-              color: Color(0xFFE2E8F0),
+              color: _paleta.textoPrincipal,
             ),
           ),
           const SizedBox(height: 6),
@@ -2746,9 +2793,9 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                     width: 34,
                     child: Text(
                       '${entrada.puesto}.º',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF00C8FF),
+                        color: _paleta.acento,
                       ),
                     ),
                   ),
@@ -2757,7 +2804,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                       '${entrada.usuario}'
                       '${entrada.eliminado ? " (eliminado)" : ""}',
                       style: TextStyle(
-                        color: const Color(0xFFE2E8F0),
+                        color: _paleta.textoPrincipal,
                         fontWeight: entrada.usuario == widget.usuario
                             ? FontWeight.w700
                             : FontWeight.w500,
@@ -2766,7 +2813,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                   ),
                   Text(
                     '${entrada.puntosPartida} pts',
-                    style: const TextStyle(color: Color(0xFF9FB0C4)),
+                    style: TextStyle(color: _paleta.textoSecundario),
                   ),
                   const SizedBox(width: 10),
                   Text(
@@ -2774,7 +2821,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       color: entrada.deltaElo >= 0
-                          ? const Color(0xFF00C8FF)
+                          ? _paleta.acento
                           : Theme.of(context).colorScheme.error,
                     ),
                   ),
@@ -2790,26 +2837,26 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
     required IconData icono,
     required String texto,
     Key? textoKey,
-    Color fondo = const Color(0xFF181D26),
+    Color? fondo,
   }) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
     decoration: BoxDecoration(
-      color: fondo,
+      color: fondo ?? _paleta.superficieInterior,
       borderRadius: BorderRadius.circular(8),
-      border: Border.all(color: const Color(0xFF3E4A5E)),
+      border: Border.all(color: _paleta.bordeSecundario),
     ),
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icono, size: 15, color: const Color(0xFF00C8FF)),
+        Icon(icono, size: 15, color: _paleta.acento),
         const SizedBox(width: 6),
         Text(
           texto,
           key: textoKey,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12.5,
             fontWeight: FontWeight.w600,
-            color: Color(0xFFE2E8F0),
+            color: _paleta.textoPrincipal,
           ),
         ),
       ],
@@ -2843,10 +2890,10 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
       return Card(
         key: const ValueKey('marcador-1v1'),
         elevation: 0,
-        color: const Color(0xFF252D3A),
+        color: _paleta.panelSecundario,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
-          side: const BorderSide(color: Color(0xFF3E4A5E)),
+          side: BorderSide(color: _paleta.bordeSecundario),
         ),
         child: Padding(
           padding: const EdgeInsets.all(14),
@@ -2858,10 +2905,10 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF181D26),
+                        color: _paleta.superficieInterior,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: const Color(0xFF3E4A5E),
+                          color: _paleta.bordeSecundario,
                           width: 0.8,
                         ),
                       ),
@@ -2870,20 +2917,20 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                         children: [
                           Row(
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.person,
                                 size: 16,
-                                color: Color(0xFF00C8FF),
+                                color: _paleta.acento,
                               ),
                               const SizedBox(width: 4),
                               Expanded(
                                 child: Text(
                                   '${widget.usuario} (Tú)',
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 13,
-                                    color: Color(0xFFE2E8F0),
+                                    color: _paleta.textoPrincipal,
                                   ),
                                 ),
                               ),
@@ -2892,18 +2939,18 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                           const SizedBox(height: 4),
                           Text(
                             '${_juego.puntos} pts',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
-                              color: Color(0xFF00C8FF),
+                              color: _paleta.acento,
                             ),
                           ),
                           Text(
                             'Casillas: ${_juego.tablero.datos.length}/$totalCasillas · '
                             'Turnos: ${_juego.turnosJugados}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11.5,
-                              color: Color(0xFF9FB0C4),
+                              color: _paleta.textoSecundario,
                             ),
                           ),
                         ],
@@ -2918,13 +2965,13 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF00C8FF),
+                        color: _paleta.acento,
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Text(
+                      child: Text(
                         'VS',
                         style: TextStyle(
-                          color: Color(0xFF09131C),
+                          color: _paleta.textoSobreAcento,
                           fontWeight: FontWeight.w800,
                           fontSize: 12,
                         ),
@@ -2935,10 +2982,10 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF181D26),
+                        color: _paleta.superficieInterior,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: const Color(0xFF3E4A5E),
+                          color: _paleta.bordeSecundario,
                           width: 0.8,
                         ),
                       ),
@@ -2965,10 +3012,10 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                                 child: Text(
                                   rival.usuario,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 13,
-                                    color: Color(0xFFE2E8F0),
+                                    color: _paleta.textoPrincipal,
                                   ),
                                 ),
                               ),
@@ -2980,19 +3027,19 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                               'Puntuación rival: $puntos'
                               '${terminado ? " · tablero terminado" : ""}',
                               textAlign: TextAlign.right,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF00C8FF),
+                                color: _paleta.acento,
                               ),
                             ),
                           Text(
                             'Casillas: $casillasRival/$totalCasillas · '
                             'Turnos: ${vista?.turnosJugados ?? 0}',
                             textAlign: TextAlign.right,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11.5,
-                              color: Color(0xFF9FB0C4),
+                              color: _paleta.textoSecundario,
                             ),
                           ),
                         ],
@@ -3011,10 +3058,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                           '${_tiempoParaReclamarDesde(reclamoDesde)}',
                 key: const ValueKey('estado-oponente'),
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  color: Color(0xFF9FB0C4),
-                ),
+                style: TextStyle(fontSize: 12.5, color: _paleta.textoSecundario),
               ),
               if (puedeReclamar) ...[
                 const SizedBox(height: 8),
@@ -3033,10 +3077,10 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
     final activos = rivales.where((r) => !r.eliminado).length;
     return Card(
       elevation: 0,
-      color: const Color(0xFF252D3A),
+      color: _paleta.panelSecundario,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: const BorderSide(color: Color(0xFF3E4A5E)),
+        side: BorderSide(color: _paleta.bordeSecundario),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -3047,9 +3091,9 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
               'Rivales en la partida ($activos activos de ${rivales.length})',
               key: const ValueKey('estado-oponente'),
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w700,
-                color: Color(0xFFE2E8F0),
+                color: _paleta.textoPrincipal,
               ),
             ),
             const SizedBox(height: 8),
@@ -3065,16 +3109,16 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF181D26),
+                      color: _paleta.superficieInterior,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFF3E4A5E)),
+                      border: Border.all(color: _paleta.bordeSecundario),
                     ),
                     child: Text(
                       '${rival.usuario} · ${vistasRivales[rival.usuario]?.puntos ?? 0} pts · '
                       '${_descripcionEstadoRival(rival, vistasRivales[rival.usuario]!)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12.5,
-                        color: Color(0xFFE2E8F0),
+                        color: _paleta.textoPrincipal,
                       ),
                     ),
                   ),
@@ -3086,10 +3130,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                 child: Text(
                   'Rival sin conexión; ${_tiempoParaReclamarDesde(reclamoDesde)}',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF9FB0C4),
-                  ),
+                  style: TextStyle(fontSize: 12, color: _paleta.textoSecundario),
                 ),
               ),
             if (puedeReclamar) ...[
@@ -3119,10 +3160,10 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
   }) => Card(
     key: const ValueKey('selector-tableros'),
     elevation: 0,
-    color: const Color(0xFF252D3A),
+    color: _paleta.panelSecundario,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(14),
-      side: const BorderSide(color: Color(0xFF3E4A5E)),
+      side: BorderSide(color: _paleta.bordeSecundario),
     ),
     child: Padding(
       padding: const EdgeInsets.all(12),
@@ -3131,25 +3172,25 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.dashboard_customize_outlined,
                 size: 18,
-                color: Color(0xFF00C8FF),
+                color: _paleta.acento,
               ),
               const SizedBox(width: 6),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Ver tableros de la partida',
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
-                    color: Color(0xFFE2E8F0),
+                    color: _paleta.textoPrincipal,
                   ),
                 ),
               ),
               Text(
                 '${rivales.length + 1} jugadores',
-                style: const TextStyle(fontSize: 12, color: Color(0xFF9FB0C4)),
+                style: TextStyle(fontSize: 12, color: _paleta.textoSecundario),
               ),
             ],
           ),
@@ -3203,10 +3244,10 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
     final totalCasillas = _config.matriz.length * _config.matriz.first.length;
     return Card(
       elevation: 0,
-      color: const Color(0xFF252D3A),
+      color: _paleta.panelSecundario,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: const BorderSide(color: Color(0xFF3E4A5E)),
+        side: BorderSide(color: _paleta.bordeSecundario),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -3215,15 +3256,15 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
           children: [
             Row(
               children: [
-                const Icon(Icons.grid_view_rounded, color: Color(0xFF00C8FF)),
+                Icon(Icons.grid_view_rounded, color: _paleta.acento),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     '${_config.nombre} · Tu tablero',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFFE2E8F0),
+                      color: _paleta.textoPrincipal,
                     ),
                   ),
                 ),
@@ -3233,15 +3274,15 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF113548),
+                    color: _paleta.superficieAcentoSuave,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFF00C8FF)),
+                    border: Border.all(color: _paleta.acento),
                   ),
                   child: Text(
                     'Tú: ${_juego.puntos} pts',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF00C8FF),
+                      color: _paleta.acento,
                     ),
                   ),
                 ),
@@ -3333,10 +3374,10 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
     return Card(
       key: ValueKey('panel-tablero-rival-${rival.usuario}'),
       elevation: 0,
-      color: const Color(0xFF252D3A),
+      color: _paleta.panelSecundario,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: const BorderSide(color: Color(0xFF3E4A5E)),
+        side: BorderSide(color: _paleta.bordeSecundario),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -3345,19 +3386,16 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
           children: [
             Row(
               children: [
-                const Icon(
-                  Icons.visibility_outlined,
-                  color: Color(0xFF00C8FF),
-                ),
+                Icon(Icons.visibility_outlined, color: _paleta.acento),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     '${_config.nombre} · Tablero de ${rival.usuario}',
                     key: const ValueKey('titulo-tablero-rival'),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFFE2E8F0),
+                      color: _paleta.textoPrincipal,
                     ),
                   ),
                 ),
@@ -3367,16 +3405,16 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF113548),
+                    color: _paleta.superficieAcentoSuave,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFF00C8FF)),
+                    border: Border.all(color: _paleta.acento),
                   ),
                   child: Text(
                     '${rival.usuario}: ${vista.puntos} pts',
                     key: const ValueKey('puntaje-tablero-rival'),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF00C8FF),
+                      color: _paleta.acento,
                     ),
                   ),
                 ),
@@ -3389,7 +3427,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                   child: Text(
                     'Estado: ${_descripcionEstadoRival(rival, vista)}',
                     key: const ValueKey('estado-detalle-rival'),
-                    style: const TextStyle(color: Color(0xFF9FB0C4)),
+                    style: TextStyle(color: _paleta.textoSecundario),
                   ),
                 ),
                 if (mostrarBotonVolver)
@@ -3475,40 +3513,36 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
   Widget _controles(bool puedeJugar, bool finalizada) => Container(
     padding: const EdgeInsets.all(14),
     decoration: BoxDecoration(
-      color: const Color(0xFF181D26),
+      color: _paleta.superficieInterior,
       borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: const Color(0xFF3E4A5E)),
+      border: Border.all(color: _paleta.bordeSecundario),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (_juego.finalizada && !finalizada) ...[
-          const Text(
+          Text(
             'Tu tablero terminó. Se guardará tu puntuación y se espera a los demás jugadores.',
-            key: ValueKey('tablero-propio-finalizado'),
+            key: const ValueKey('tablero-propio-finalizado'),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              color: Color(0xFF00C8FF),
+              color: _paleta.acento,
             ),
           ),
           const SizedBox(height: 8),
         ],
         Row(
           children: [
-            const Icon(
-              Icons.casino_outlined,
-              size: 20,
-              color: Color(0xFF00C8FF),
-            ),
+            Icon(Icons.casino_outlined, size: 20, color: _paleta.acento),
             const SizedBox(width: 8),
-            const Expanded(
+            Expanded(
               child: Text(
                 'Turno de juego',
                 style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFFE2E8F0),
+                  color: _paleta.textoPrincipal,
                 ),
               ),
             ),
@@ -3519,17 +3553,17 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                   vertical: 3,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF113548),
+                  color: _paleta.superficieAcentoSuave,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFF00C8FF)),
+                  border: Border.all(color: _paleta.acento),
                 ),
                 child: Text(
                   'Colocar: ${_juego.valorAColocar} '
                   '(${_juego.casillasIluminadas.length} opciones)',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF00C8FF),
+                    color: _paleta.acento,
                   ),
                 ),
               ),
@@ -3547,7 +3581,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
               : 'Toca una casilla iluminada para colocar '
                     '${_juego.valorAColocar}.',
           key: const ValueKey('instruccion-multijugador'),
-          style: const TextStyle(color: Color(0xFF9FB0C4)),
+          style: TextStyle(color: _paleta.textoSecundario),
         ),
         const SizedBox(height: 10),
         Row(
@@ -3573,8 +3607,8 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                               ? FontWeight.w700
                               : FontWeight.w500,
                           color: _juego.pivote == index
-                              ? const Color(0xFF00C8FF)
-                              : const Color(0xFF9FB0C4),
+                              ? _paleta.acento
+                              : _paleta.textoSecundario,
                         ),
                       ),
                     ),
@@ -3585,15 +3619,15 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                           : null,
                       style: OutlinedButton.styleFrom(
                         backgroundColor: _juego.pivote == index
-                            ? const Color(0xFF113548)
-                            : const Color(0xFF252D3A),
+                            ? _paleta.superficieAcentoSuave
+                            : _paleta.panelSecundario,
                         foregroundColor: _juego.pivote == index
-                            ? const Color(0xFF00C8FF)
-                            : const Color(0xFFE2E8F0),
+                            ? _paleta.acento
+                            : _paleta.textoPrincipal,
                         side: BorderSide(
                           color: _juego.pivote == index
-                              ? const Color(0xFF00C8FF)
-                              : const Color(0xFF3E4A5E),
+                              ? _paleta.acento
+                              : _paleta.bordeSecundario,
                           width: _juego.pivote == index ? 2 : 1.2,
                         ),
                       ),
@@ -3603,8 +3637,8 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: _juego.pivote == index
-                              ? const Color(0xFF00C8FF)
-                              : const Color(0xFFE2E8F0),
+                              ? _paleta.acento
+                              : _paleta.textoPrincipal,
                         ),
                       ),
                     ),
@@ -3626,10 +3660,10 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
         Text(
           'Jugadas: ${_juego.turnosJugados} · Omitidas: ${_juego.turnosOmitidos}',
           textAlign: TextAlign.center,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12.5,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF9FB0C4),
+            color: _paleta.textoSecundario,
           ),
         ),
       ],
