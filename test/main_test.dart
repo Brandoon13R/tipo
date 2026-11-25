@@ -121,23 +121,31 @@ void main() {
       },
     );
 
-    testWidgets('niveles permite regresar al inicio y cerrar la aplicación', (
+    testWidgets('niveles permite regresar al inicio y el botón Salir del juego está en la pantalla inicial', (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(
         MainApp(sesionUsuario: SesionUsuario.activa()),
       );
+
+      // En la pantalla de inicio aparecen Jugar, Multijugador y Salir del juego
+      expect(find.byKey(const ValueKey('jugar')), findsOneWidget);
+      expect(find.byKey(const ValueKey('multijugador')), findsOneWidget);
+      expect(find.byKey(const ValueKey('cerrar-aplicacion')), findsOneWidget);
+      expect(find.text('Salir del juego'), findsOneWidget);
+
       await tester.tap(find.byKey(const ValueKey('jugar')));
       await tester.pumpAndSettle();
 
       expect(find.byKey(const ValueKey('volver-inicio')), findsOneWidget);
-      expect(find.byKey(const ValueKey('cerrar-aplicacion')), findsOneWidget);
+      expect(find.byKey(const ValueKey('cerrar-aplicacion')), findsNothing);
 
       await tester.tap(find.byKey(const ValueKey('volver-inicio')));
       await tester.pumpAndSettle();
 
       expect(find.byType(MenuPage), findsOneWidget);
       expect(find.text('Jugar'), findsOneWidget);
+      expect(find.byKey(const ValueKey('cerrar-aplicacion')), findsOneWidget);
       expect(find.byKey(const ValueKey('perfil-usuario')), findsOneWidget);
     });
 

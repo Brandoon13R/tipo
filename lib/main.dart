@@ -704,6 +704,37 @@ class _MenuPageState extends State<MenuPage> {
                               ),
                             ),
                           ),
+                          const SizedBox(height: 14),
+                          OutlinedButton.icon(
+                            key: const ValueKey('cerrar-aplicacion'),
+                            onPressed: () => exit(0),
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: _negroMetalicoInterior,
+                              foregroundColor: _grisNieblaClaro,
+                              side: const BorderSide(
+                                color: _grisNieblaBorde,
+                                width: 1.3,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            icon: const Icon(
+                              Icons.exit_to_app_rounded,
+                              color: _azulElectrico,
+                            ),
+                            label: const Padding(
+                              padding: EdgeInsets.all(14),
+                              child: Text(
+                                'Salir del juego',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                  color: _grisNieblaClaro,
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -897,36 +928,6 @@ class SeleccionNivelPage extends StatelessWidget {
                               ),
                               const SizedBox(height: 12),
                             ],
-                            const SizedBox(height: 4),
-                            OutlinedButton.icon(
-                              key: const ValueKey('cerrar-aplicacion'),
-                              onPressed: () => exit(0),
-                              style: OutlinedButton.styleFrom(
-                                backgroundColor: _negroMetalicoInterior,
-                                foregroundColor: _grisNieblaClaro,
-                                side: const BorderSide(
-                                  color: _grisNieblaBorde,
-                                  width: 1.3,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                              ),
-                              icon: const Icon(
-                                Icons.exit_to_app,
-                                color: _azulElectrico,
-                              ),
-                              label: const Padding(
-                                padding: EdgeInsets.all(14),
-                                child: Text(
-                                  'Cerrar aplicación',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    color: _grisNieblaClaro,
-                                  ),
-                                ),
-                              ),
-                            ),
                           ],
                         ),
                       ),
