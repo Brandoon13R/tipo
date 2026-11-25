@@ -18,16 +18,24 @@ class TablaPuntos extends StatelessWidget {
   final String prefijoKey;
   final Map<String, int> posiciones;
 
+  static const Color _negroMetalicoInterior = Color(0xFF181D26);
+  static const Color _grisNieblaPanel = Color(0xFF252D3A);
+  static const Color _grisNieblaBorde = Color(0xFF3E4A5E);
+  static const Color _grisNieblaClaro = Color(0xFFE2E8F0);
+  static const Color _grisNieblaMedio = Color(0xFF9FB0C4);
+  static const Color _azulElectrico = Color(0xFF00C8FF);
+  static const Color _azulElectricoFondo = Color(0xFF133547);
+
   @override
   Widget build(BuildContext context) {
     final regiones = config?.regiones ?? Nivel1Config().regiones;
     return Card(
       key: ValueKey('${prefijoKey}tabla-puntos'),
       elevation: 0,
-      color: Colors.white,
+      color: _grisNieblaPanel,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: const BorderSide(color: Color(0xFFDCE5DF)),
+        side: const BorderSide(color: _grisNieblaBorde),
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -37,15 +45,16 @@ class TablaPuntos extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
-                color: const Color(0xFFEAF2EE),
+                color: _negroMetalicoInterior,
                 borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: _grisNieblaBorde, width: 0.8),
               ),
               child: Row(
                 children: [
                   const Icon(
                     Icons.emoji_events_outlined,
                     size: 18,
-                    color: Color(0xFF193E37),
+                    color: _azulElectrico,
                   ),
                   const SizedBox(width: 6),
                   Expanded(
@@ -55,7 +64,7 @@ class TablaPuntos extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF193E37),
+                        color: _grisNieblaClaro,
                       ),
                     ),
                   ),
@@ -70,11 +79,11 @@ class TablaPuntos extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: Colors.black54,
+                  color: _grisNieblaMedio,
                 ),
               ),
             ),
-            const Divider(height: 12),
+            const Divider(height: 12, color: _grisNieblaBorde),
             for (final zona in regiones)
               Container(
                 key: ValueKey('${prefijoKey}premio-${zona.id}'),
@@ -82,9 +91,12 @@ class TablaPuntos extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
                 decoration: BoxDecoration(
                   color: obtenidos[zona.id] != null
-                      ? const Color(0xFFE6F7E9)
-                      : const Color(0xFFF8FAF8),
+                      ? _azulElectricoFondo
+                      : _negroMetalicoInterior,
                   borderRadius: BorderRadius.circular(6),
+                  border: obtenidos[zona.id] != null
+                      ? Border.all(color: _azulElectrico, width: 0.8)
+                      : null,
                 ),
                 child: Row(
                   children: [
@@ -94,7 +106,7 @@ class TablaPuntos extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: zona.color,
                         borderRadius: BorderRadius.circular(3),
-                        border: Border.all(color: Colors.black12, width: 0.5),
+                        border: Border.all(color: Colors.white24, width: 0.5),
                       ),
                     ),
                     const SizedBox(width: 6),
@@ -106,6 +118,7 @@ class TablaPuntos extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 11,
+                          color: _grisNieblaClaro,
                           fontWeight: obtenidos[zona.id] != null
                               ? FontWeight.w700
                               : FontWeight.w500,
@@ -116,7 +129,7 @@ class TablaPuntos extends StatelessWidget {
                       zona.puntos.join(' · '),
                       style: const TextStyle(
                         fontSize: 11,
-                        color: Colors.black54,
+                        color: _grisNieblaMedio,
                       ),
                     ),
                     const SizedBox(width: 6),
@@ -131,21 +144,21 @@ class TablaPuntos extends StatelessWidget {
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
                           color: obtenidos[zona.id] != null
-                              ? const Color(0xFF193E37)
-                              : Colors.black45,
+                              ? _azulElectrico
+                              : _grisNieblaMedio,
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-            const Divider(height: 12),
+            const Divider(height: 12, color: _grisNieblaBorde),
             Text(
               'Puntos obtenidos: $puntos',
               style: const TextStyle(
                 fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF193E37),
+                fontWeight: FontWeight.w700,
+                color: _azulElectrico,
               ),
             ),
           ],
