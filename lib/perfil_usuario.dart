@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tipo/BDD.dart';
 import 'package:tipo/sesion_usuario.dart';
+import 'package:tipo/tema_app.dart';
 
 class PerfilUsuario extends StatefulWidget {
   const PerfilUsuario({
@@ -22,12 +23,6 @@ class PerfilUsuario extends StatefulWidget {
 class _PerfilUsuarioState extends State<PerfilUsuario> {
   bool _cerrandoSesion = false;
   bool _eliminandoCuenta = false;
-
-  static const Color _grisNieblaPanel = Color(0xFF252D3A);
-  static const Color _grisNieblaBorde = Color(0xFF3E4A5E);
-  static const Color _grisNieblaClaro = Color(0xFFE2E8F0);
-  static const Color _azulElectrico = Color(0xFF00C8FF);
-  static const Color _azulElectricoTexto = Color(0xFF09131C);
 
   AuthService? _resolverAuthService() {
     if (widget.authService != null) return widget.authService;
@@ -79,18 +74,19 @@ class _PerfilUsuarioState extends State<PerfilUsuario> {
   }
 
   Future<void> _confirmarEliminarCuenta() async {
+    final paleta = ControladorTema.instance.actual;
     final confirmacion = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: _grisNieblaPanel,
-        title: const Text(
+        backgroundColor: paleta.panelSecundario,
+        title: Text(
           '¿Eliminar cuenta?',
-          style: TextStyle(color: _grisNieblaClaro),
+          style: TextStyle(color: paleta.textoPrincipal),
         ),
-        content: const Text(
+        content: Text(
           'Esta acción eliminará tu cuenta y cerrará todas tus sesiones. '
           'No se puede deshacer.',
-          style: TextStyle(color: _grisNieblaClaro),
+          style: TextStyle(color: paleta.textoPrincipal),
         ),
         actions: [
           TextButton(
@@ -103,6 +99,7 @@ class _PerfilUsuarioState extends State<PerfilUsuario> {
             onPressed: () => Navigator.of(context).pop(true),
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Colors.white,
             ),
             child: const Text('Eliminar cuenta'),
           ),
@@ -161,21 +158,22 @@ class _PerfilUsuarioState extends State<PerfilUsuario> {
     if (userSession == null) return const SizedBox.shrink();
 
     return AnimatedBuilder(
-      animation: userSession,
+      animation: Listenable.merge([userSession, ControladorTema.instance]),
       builder: (context, _) {
         final username = userSession.usuarioName;
         if (username == null) return const SizedBox.shrink();
         final ocupada = _cerrandoSesion || _eliminandoCuenta;
+        final paleta = ControladorTema.instance.actual;
 
         return PopupMenuButton<String>(
           key: const ValueKey('perfil-usuario'),
           tooltip: 'Menú de perfil',
           enabled: !ocupada,
           position: PopupMenuPosition.under,
-          color: _grisNieblaPanel,
+          color: paleta.panelSecundario,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
-            side: const BorderSide(color: _grisNieblaBorde, width: 1.2),
+            side: BorderSide(color: paleta.bordeSecundario, width: 1.2),
           ),
           onSelected: (opcion) {
             if (opcion == 'cerrar_sesion') {
@@ -190,15 +188,15 @@ class _PerfilUsuarioState extends State<PerfilUsuario> {
               value: 'cerrar_sesion',
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.logout_rounded,
                     size: 20,
-                    color: _azulElectrico,
+                    color: paleta.acento,
                   ),
                   const SizedBox(width: 10),
                   Text(
                     _cerrandoSesion ? 'Cerrando sesión...' : 'Cerrar sesión',
-                    style: const TextStyle(color: _grisNieblaClaro),
+                    style: TextStyle(color: paleta.textoPrincipal),
                   ),
                 ],
               ),
@@ -208,18 +206,18 @@ class _PerfilUsuarioState extends State<PerfilUsuario> {
               value: 'eliminar_cuenta',
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.delete_outline_rounded,
                     size: 20,
-                    color: Color(0xFFFF6B6B),
+                    color: paleta.error,
                   ),
                   const SizedBox(width: 10),
                   Text(
                     _eliminandoCuenta
                         ? 'Eliminando cuenta...'
                         : 'Eliminar cuenta',
-                    style: const TextStyle(
-                      color: Color(0xFFFF8787),
+                    style: TextStyle(
+                      color: paleta.errorTexto,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -228,12 +226,12 @@ class _PerfilUsuarioState extends State<PerfilUsuario> {
             ),
           ],
           child: Material(
-            color: _grisNieblaPanel,
-            shape: const StadiumBorder(
-              side: BorderSide(color: _grisNieblaBorde, width: 1.4),
+            color: paleta.panelSecundario,
+            shape: StadiumBorder(
+              side: BorderSide(color: paleta.bordeSecundario, width: 1.4),
             ),
             elevation: 3,
-            shadowColor: Colors.black54,
+            shadowColor: paleta.sombraPanel,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               child: Row(
@@ -241,11 +239,11 @@ class _PerfilUsuarioState extends State<PerfilUsuario> {
                 children: [
                   CircleAvatar(
                     radius: 14,
-                    backgroundColor: _azulElectrico,
+                    backgroundColor: paleta.acento,
                     child: Text(
                       username.isNotEmpty ? username[0].toUpperCase() : 'U',
-                      style: const TextStyle(
-                        color: _azulElectricoTexto,
+                      style: TextStyle(
+                        color: paleta.textoSobreAcento,
                         fontSize: 13,
                         fontWeight: FontWeight.w800,
                       ),
@@ -258,16 +256,16 @@ class _PerfilUsuarioState extends State<PerfilUsuario> {
                       username,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w700,
-                        color: _grisNieblaClaro,
+                        color: paleta.textoPrincipal,
                       ),
                     ),
                   ),
                   const SizedBox(width: 4),
-                  const Icon(
+                  Icon(
                     Icons.arrow_drop_down_rounded,
-                    color: _azulElectrico,
+                    color: paleta.acento,
                   ),
                 ],
               ),
