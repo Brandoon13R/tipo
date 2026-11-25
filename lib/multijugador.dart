@@ -55,7 +55,7 @@ class SeleccionModoMultijugadorPage extends StatelessWidget {
               const Icon(
                 Icons.people_alt_rounded,
                 size: 52,
-                color: Color(0xFF193E37),
+                color: Color(0xFF00C8FF),
               ),
               const SizedBox(height: 12),
               const Text(
@@ -64,7 +64,7 @@ class SeleccionModoMultijugadorPage extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF193E37),
+                  color: Color(0xFFE2E8F0),
                 ),
               ),
               const SizedBox(height: 8),
@@ -72,15 +72,15 @@ class SeleccionModoMultijugadorPage extends StatelessWidget {
                 'Compite por puntos de Elo en Clasificatorias o juega '
                 'partidas personalizadas en Salas Amistosas.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.black54),
+                style: TextStyle(color: Color(0xFF9FB0C4)),
               ),
               const SizedBox(height: 28),
               Card(
                 elevation: 0,
-                color: Colors.white,
+                color: const Color(0xFF252D3A),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  side: const BorderSide(color: Color(0xFF193E37), width: 1.5),
+                  borderRadius: BorderRadius.circular(16),
+                  side: const BorderSide(color: Color(0xFF00C8FF), width: 1.5),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(18),
@@ -91,7 +91,7 @@ class SeleccionModoMultijugadorPage extends StatelessWidget {
                         children: [
                           Icon(
                             Icons.emoji_events_rounded,
-                            color: Color(0xFF193E37),
+                            color: Color(0xFF00C8FF),
                             size: 28,
                           ),
                           SizedBox(width: 10),
@@ -101,6 +101,7 @@ class SeleccionModoMultijugadorPage extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
+                                color: Color(0xFFE2E8F0),
                               ),
                             ),
                           ),
@@ -112,7 +113,10 @@ class SeleccionModoMultijugadorPage extends StatelessWidget {
                         '+ los puntos de tu tablero). Cuando se ocupan los '
                         '3 primeros puestos, la partida finaliza '
                         'automáticamente para todos.',
-                        style: TextStyle(fontSize: 13, color: Colors.black87),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF9FB0C4),
+                        ),
                       ),
                       const SizedBox(height: 14),
                       FilledButton.icon(
@@ -142,10 +146,10 @@ class SeleccionModoMultijugadorPage extends StatelessWidget {
               const SizedBox(height: 16),
               Card(
                 elevation: 0,
-                color: Colors.white,
+                color: const Color(0xFF252D3A),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  side: const BorderSide(color: Color(0xFFDCE5DF)),
+                  borderRadius: BorderRadius.circular(16),
+                  side: const BorderSide(color: Color(0xFF3E4A5E)),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(18),
@@ -156,7 +160,7 @@ class SeleccionModoMultijugadorPage extends StatelessWidget {
                         children: [
                           Icon(
                             Icons.sports_esports_outlined,
-                            color: Color(0xFF193E37),
+                            color: Color(0xFF00C8FF),
                             size: 28,
                           ),
                           SizedBox(width: 10),
@@ -166,6 +170,7 @@ class SeleccionModoMultijugadorPage extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
+                                color: Color(0xFFE2E8F0),
                               ),
                             ),
                           ),
@@ -176,7 +181,10 @@ class SeleccionModoMultijugadorPage extends StatelessWidget {
                         'Crea o únete a una sala privada con código para '
                         'jugar con amigos (hasta 6 jugadores) sin alterar tu '
                         'puntuación de Elo.',
-                        style: TextStyle(fontSize: 13, color: Colors.black87),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF9FB0C4),
+                        ),
                       ),
                       const SizedBox(height: 14),
                       OutlinedButton.icon(
@@ -483,10 +491,10 @@ class _ClasificatoriasPageState extends State<ClasificatoriasPage> {
               children: [
                 Card(
                   elevation: 0,
-                  color: Colors.white,
+                  color: const Color(0xFF252D3A),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    side: const BorderSide(color: Color(0xFFDCE5DF)),
+                    borderRadius: BorderRadius.circular(16),
+                    side: const BorderSide(color: Color(0xFF3E4A5E)),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -497,7 +505,7 @@ class _ClasificatoriasPageState extends State<ClasificatoriasPage> {
                           children: [
                             Icon(
                               Icons.add_circle_outline_rounded,
-                              color: Color(0xFF193E37),
+                              color: Color(0xFF00C8FF),
                             ),
                             SizedBox(width: 8),
                             Expanded(
@@ -506,6 +514,7 @@ class _ClasificatoriasPageState extends State<ClasificatoriasPage> {
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w700,
+                                  color: Color(0xFFE2E8F0),
                                 ),
                               ),
                             ),
@@ -517,12 +526,16 @@ class _ClasificatoriasPageState extends State<ClasificatoriasPage> {
                           '2.º puesto: +8 Elo + puntos · '
                           '3.º puesto: +5 Elo + puntos. '
                           'La partida termina al ocuparse los 3 primeros puestos.',
-                          style: TextStyle(fontSize: 12.5, color: Colors.black54),
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            color: Color(0xFF9FB0C4),
+                          ),
                         ),
                         const SizedBox(height: 12),
                         DropdownButtonFormField<String>(
                           key: ValueKey('nivel-clasificatoria-${_config.id}'),
                           initialValue: _config.id,
+                          dropdownColor: const Color(0xFF252D3A),
                           decoration: const InputDecoration(labelText: 'Nivel'),
                           items: [
                             for (final config in _niveles)
@@ -547,6 +560,10 @@ class _ClasificatoriasPageState extends State<ClasificatoriasPage> {
                           '${_valoresIniciales.values.whereType<int>().length} '
                           'de 6 números asignados',
                           key: const ValueKey('progreso-inicial-clasificatoria'),
+                          style: const TextStyle(
+                            color: Color(0xFF00C8FF),
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         const SizedBox(height: 10),
                         TableroVisual(
@@ -571,6 +588,7 @@ class _ClasificatoriasPageState extends State<ClasificatoriasPage> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
+                            color: Color(0xFFE2E8F0),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -625,10 +643,10 @@ class _ClasificatoriasPageState extends State<ClasificatoriasPage> {
                 Card(
                   key: const ValueKey('tabla-clasificacion-top10'),
                   elevation: 0,
-                  color: Colors.white,
+                  color: const Color(0xFF252D3A),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    side: const BorderSide(color: Color(0xFFDCE5DF)),
+                    borderRadius: BorderRadius.circular(16),
+                    side: const BorderSide(color: Color(0xFF3E4A5E)),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -639,7 +657,7 @@ class _ClasificatoriasPageState extends State<ClasificatoriasPage> {
                           children: [
                             const Icon(
                               Icons.leaderboard_rounded,
-                              color: Color(0xFF193E37),
+                              color: Color(0xFF00C8FF),
                             ),
                             const SizedBox(width: 8),
                             const Expanded(
@@ -648,6 +666,7 @@ class _ClasificatoriasPageState extends State<ClasificatoriasPage> {
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w700,
+                                  color: Color(0xFFE2E8F0),
                                 ),
                               ),
                             ),
@@ -666,6 +685,7 @@ class _ClasificatoriasPageState extends State<ClasificatoriasPage> {
                             child: Text(
                               'Aún no hay jugadores registrados en el ranking.',
                               textAlign: TextAlign.center,
+                              style: TextStyle(color: Color(0xFF9FB0C4)),
                             ),
                           )
                         else
@@ -681,14 +701,17 @@ class _ClasificatoriasPageState extends State<ClasificatoriasPage> {
                                 color:
                                     entrada.usuario.toLowerCase() ==
                                         widget.usuario.toLowerCase()
-                                    ? const Color(0xFFD4F4D8)
-                                    : const Color(0xFFF8FAF8),
+                                    ? const Color(0xFF113548)
+                                    : const Color(0xFF181D26),
                                 borderRadius: BorderRadius.circular(8),
                                 border:
                                     entrada.usuario.toLowerCase() ==
                                         widget.usuario.toLowerCase()
-                                    ? Border.all(color: const Color(0xFF193E37))
-                                    : null,
+                                    ? Border.all(color: const Color(0xFF00C8FF))
+                                    : Border.all(
+                                        color: const Color(0xFF3E4A5E),
+                                        width: 0.6,
+                                      ),
                               ),
                               child: Row(
                                 children: [
@@ -704,7 +727,7 @@ class _ClasificatoriasPageState extends State<ClasificatoriasPage> {
                                           ? const Color(0xFFBDC3C7)
                                           : entrada.posicion == 3
                                           ? const Color(0xFFE67E22)
-                                          : const Color(0xFFEAF2EE),
+                                          : const Color(0xFF252D3A),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
@@ -715,7 +738,7 @@ class _ClasificatoriasPageState extends State<ClasificatoriasPage> {
                                         fontWeight: FontWeight.w800,
                                         color: entrada.posicion <= 3
                                             ? Colors.black87
-                                            : const Color(0xFF193E37),
+                                            : const Color(0xFF00C8FF),
                                       ),
                                     ),
                                   ),
@@ -725,6 +748,7 @@ class _ClasificatoriasPageState extends State<ClasificatoriasPage> {
                                       entrada.usuario,
                                       style: const TextStyle(
                                         fontWeight: FontWeight.w600,
+                                        color: Color(0xFFE2E8F0),
                                       ),
                                     ),
                                   ),
@@ -732,7 +756,7 @@ class _ClasificatoriasPageState extends State<ClasificatoriasPage> {
                                     '${entrada.elo} Elo',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w800,
-                                      color: Color(0xFF193E37),
+                                      color: Color(0xFF00C8FF),
                                     ),
                                   ),
                                 ],
@@ -743,22 +767,22 @@ class _ClasificatoriasPageState extends State<ClasificatoriasPage> {
                           key: const ValueKey('tarjeta-mi-ranking'),
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEAF2EE),
+                            color: const Color(0xFF181D26),
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: const Color(0xFF193E37)),
+                            border: Border.all(color: const Color(0xFF00C8FF)),
                           ),
                           child: Row(
                             children: [
                               CircleAvatar(
                                 radius: 18,
-                                backgroundColor: const Color(0xFF193E37),
+                                backgroundColor: const Color(0xFF00C8FF),
                                 child: Text(
                                   widget.usuario.isNotEmpty
                                       ? widget.usuario[0].toUpperCase()
                                       : 'U',
                                   style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF09131C),
+                                    fontWeight: FontWeight.w800,
                                   ),
                                 ),
                               ),
@@ -771,6 +795,7 @@ class _ClasificatoriasPageState extends State<ClasificatoriasPage> {
                                       'Tu perfil · ${miPerfil.usuario}',
                                       style: const TextStyle(
                                         fontWeight: FontWeight.w700,
+                                        color: Color(0xFFE2E8F0),
                                       ),
                                     ),
                                     Text(
@@ -780,7 +805,7 @@ class _ClasificatoriasPageState extends State<ClasificatoriasPage> {
                                       key: const ValueKey('mi-puesto-ranking'),
                                       style: const TextStyle(
                                         fontSize: 12.5,
-                                        color: Colors.black87,
+                                        color: Color(0xFF9FB0C4),
                                       ),
                                     ),
                                   ],
@@ -792,15 +817,18 @@ class _ClasificatoriasPageState extends State<ClasificatoriasPage> {
                                   vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
+                                  color: const Color(0xFF113548),
                                   borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: const Color(0xFF00C8FF),
+                                  ),
                                 ),
                                 child: Text(
                                   '${miPerfil.elo} Elo',
                                   key: const ValueKey('mi-elo-ranking'),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w800,
-                                    color: Color(0xFF193E37),
+                                    color: Color(0xFF00C8FF),
                                   ),
                                 ),
                               ),
@@ -1590,7 +1618,7 @@ class _SalaMultijugadorPageState extends State<SalaMultijugadorPage> {
                   Icon(
                     esperando ? Icons.hourglass_top : Icons.sports_esports,
                     size: 52,
-                    color: const Color(0xFF193E37),
+                    color: const Color(0xFF00C8FF),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -1603,13 +1631,14 @@ class _SalaMultijugadorPageState extends State<SalaMultijugadorPage> {
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w700,
+                      color: Color(0xFFE2E8F0),
                     ),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     'Comparte este código (máximo ${_sala.maxJugadores} jugadores):',
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyLarge,
+                    style: const TextStyle(color: Color(0xFF9FB0C4)),
                   ),
                   const SizedBox(height: 10),
                   SelectableText(
@@ -1620,6 +1649,7 @@ class _SalaMultijugadorPageState extends State<SalaMultijugadorPage> {
                       fontSize: 36,
                       letterSpacing: 8,
                       fontWeight: FontWeight.w800,
+                      color: Color(0xFF00C8FF),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -1639,7 +1669,10 @@ class _SalaMultijugadorPageState extends State<SalaMultijugadorPage> {
                           Text(
                             'Jugadores en la sala (${jugadores.length}/${_sala.maxJugadores})',
                             key: const ValueKey('contador-jugadores-sala'),
-                            style: const TextStyle(fontWeight: FontWeight.w700),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFFE2E8F0),
+                            ),
                           ),
                           const SizedBox(height: 8),
                           for (final jugador in jugadores)
@@ -1653,7 +1686,7 @@ class _SalaMultijugadorPageState extends State<SalaMultijugadorPage> {
                                         : Icons.hourglass_bottom,
                                     size: 18,
                                     color: jugador.listo
-                                        ? const Color(0xFF193E37)
+                                        ? const Color(0xFF00C8FF)
                                         : Colors.orange,
                                   ),
                                   const SizedBox(width: 8),
@@ -1661,6 +1694,9 @@ class _SalaMultijugadorPageState extends State<SalaMultijugadorPage> {
                                     child: Text(
                                       '${jugador.usuario}'
                                       '${jugador.esAnfitrion ? " (Anfitrión)" : ""}',
+                                      style: const TextStyle(
+                                        color: Color(0xFFE2E8F0),
+                                      ),
                                     ),
                                   ),
                                   Text(
@@ -1669,9 +1705,10 @@ class _SalaMultijugadorPageState extends State<SalaMultijugadorPage> {
                                         : 'Configurando tablero...',
                                     style: TextStyle(
                                       fontSize: 12,
+                                      fontWeight: FontWeight.w600,
                                       color: jugador.listo
-                                          ? const Color(0xFF193E37)
-                                          : Colors.black54,
+                                          ? const Color(0xFF00C8FF)
+                                          : const Color(0xFF9FB0C4),
                                     ),
                                   ),
                                 ],
@@ -2486,7 +2523,14 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                 children: [
                   if (finalizada)
                     Card(
-                      color: const Color(0xFFD4F4D8),
+                      color: const Color(0xFF132D3E),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: const BorderSide(
+                          color: Color(0xFF00C8FF),
+                          width: 1.4,
+                        ),
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Column(
@@ -2497,10 +2541,14 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                               style: const TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
+                                color: Color(0xFF00C8FF),
                               ),
                             ),
                             const SizedBox(height: 4),
-                            Text(_motivoFinal()),
+                            Text(
+                              _motivoFinal(),
+                              style: const TextStyle(color: Color(0xFFE2E8F0)),
+                            ),
                             if (_esPartidaClasificatoria) ...[
                               const SizedBox(height: 12),
                               _tarjetaPodioClasificatoria(),
@@ -2520,7 +2568,11 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                     const SizedBox(height: 8),
                     Card(
                       key: const ValueKey('jugador-eliminado-aviso'),
-                      color: const Color(0xFFFFE2E0),
+                      color: const Color(0xFF3B1A1F),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        side: const BorderSide(color: Color(0xFFFF6B6B)),
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.all(12),
                         child: Column(
@@ -2529,7 +2581,10 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                               'Quedaste eliminado de la partida. Puedes seguir '
                               'viendo los tableros de los demás jugadores.',
                               textAlign: TextAlign.center,
-                              style: TextStyle(fontWeight: FontWeight.w600),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFFFFA8A8),
+                              ),
                             ),
                             const SizedBox(height: 8),
                             OutlinedButton(
@@ -2629,9 +2684,9 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
       key: const ValueKey('resumen-elo-clasificatoria'),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFF181D26),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFF193E37)),
+        border: Border.all(color: const Color(0xFF00C8FF)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2644,7 +2699,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
               fontWeight: FontWeight.w800,
               fontSize: 15,
               color: delta >= 0
-                  ? const Color(0xFF193E37)
+                  ? const Color(0xFF00C8FF)
                   : Theme.of(context).colorScheme.error,
             ),
           ),
@@ -2654,7 +2709,10 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
               'Tu nuevo Elo: $_nuevoEloGuardado',
               key: const ValueKey('nuevo-elo-guardado'),
               textAlign: TextAlign.center,
-              style: const TextStyle(fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Color(0xFFE2E8F0),
+              ),
             ),
           ] else if (_errorGuardandoElo) ...[
             const SizedBox(height: 4),
@@ -2672,7 +2730,11 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
           const Text(
             'Podio de la partida',
             textAlign: TextAlign.center,
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+              color: Color(0xFFE2E8F0),
+            ),
           ),
           const SizedBox(height: 6),
           for (final entrada in podio.clasificacion)
@@ -2684,7 +2746,10 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                     width: 34,
                     child: Text(
                       '${entrada.puesto}.º',
-                      style: const TextStyle(fontWeight: FontWeight.w800),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF00C8FF),
+                      ),
                     ),
                   ),
                   Expanded(
@@ -2692,20 +2757,24 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                       '${entrada.usuario}'
                       '${entrada.eliminado ? " (eliminado)" : ""}',
                       style: TextStyle(
+                        color: const Color(0xFFE2E8F0),
                         fontWeight: entrada.usuario == widget.usuario
                             ? FontWeight.w700
                             : FontWeight.w500,
                       ),
                     ),
                   ),
-                  Text('${entrada.puntosPartida} pts'),
+                  Text(
+                    '${entrada.puntosPartida} pts',
+                    style: const TextStyle(color: Color(0xFF9FB0C4)),
+                  ),
                   const SizedBox(width: 10),
                   Text(
                     '${entrada.deltaElo >= 0 ? "+" : ""}${entrada.deltaElo} Elo',
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       color: entrada.deltaElo >= 0
-                          ? const Color(0xFF193E37)
+                          ? const Color(0xFF00C8FF)
                           : Theme.of(context).colorScheme.error,
                     ),
                   ),
@@ -2721,18 +2790,18 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
     required IconData icono,
     required String texto,
     Key? textoKey,
-    Color fondo = const Color(0xFFF4F7F4),
+    Color fondo = const Color(0xFF181D26),
   }) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
     decoration: BoxDecoration(
       color: fondo,
       borderRadius: BorderRadius.circular(8),
-      border: Border.all(color: const Color(0xFFDCE5DF)),
+      border: Border.all(color: const Color(0xFF3E4A5E)),
     ),
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icono, size: 15, color: const Color(0xFF193E37)),
+        Icon(icono, size: 15, color: const Color(0xFF00C8FF)),
         const SizedBox(width: 6),
         Text(
           texto,
@@ -2740,7 +2809,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
           style: const TextStyle(
             fontSize: 12.5,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF102A25),
+            color: Color(0xFFE2E8F0),
           ),
         ),
       ],
@@ -2774,10 +2843,10 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
       return Card(
         key: const ValueKey('marcador-1v1'),
         elevation: 0,
-        color: Colors.white,
+        color: const Color(0xFF252D3A),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
-          side: const BorderSide(color: Color(0xFFDCE5DF)),
+          side: const BorderSide(color: Color(0xFF3E4A5E)),
         ),
         child: Padding(
           padding: const EdgeInsets.all(14),
@@ -2789,8 +2858,12 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF4F7F4),
+                        color: const Color(0xFF181D26),
                         borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: const Color(0xFF3E4A5E),
+                          width: 0.8,
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2800,7 +2873,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                               const Icon(
                                 Icons.person,
                                 size: 16,
-                                color: Color(0xFF193E37),
+                                color: Color(0xFF00C8FF),
                               ),
                               const SizedBox(width: 4),
                               Expanded(
@@ -2810,6 +2883,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 13,
+                                    color: Color(0xFFE2E8F0),
                                   ),
                                 ),
                               ),
@@ -2821,7 +2895,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
-                              color: Color(0xFF193E37),
+                              color: Color(0xFF00C8FF),
                             ),
                           ),
                           Text(
@@ -2829,7 +2903,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                             'Turnos: ${_juego.turnosJugados}',
                             style: const TextStyle(
                               fontSize: 11.5,
-                              color: Colors.black54,
+                              color: Color(0xFF9FB0C4),
                             ),
                           ),
                         ],
@@ -2844,13 +2918,13 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF193E37),
+                        color: const Color(0xFF00C8FF),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Text(
                         'VS',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: Color(0xFF09131C),
                           fontWeight: FontWeight.w800,
                           fontSize: 12,
                         ),
@@ -2861,8 +2935,12 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF4F7F4),
+                        color: const Color(0xFF181D26),
                         borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: const Color(0xFF3E4A5E),
+                          width: 0.8,
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
@@ -2890,6 +2968,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 13,
+                                    color: Color(0xFFE2E8F0),
                                   ),
                                 ),
                               ),
@@ -2904,7 +2983,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                               style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF193E37),
+                                color: Color(0xFF00C8FF),
                               ),
                             ),
                           Text(
@@ -2913,7 +2992,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                             textAlign: TextAlign.right,
                             style: const TextStyle(
                               fontSize: 11.5,
-                              color: Colors.black54,
+                              color: Color(0xFF9FB0C4),
                             ),
                           ),
                         ],
@@ -2932,7 +3011,10 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                           '${_tiempoParaReclamarDesde(reclamoDesde)}',
                 key: const ValueKey('estado-oponente'),
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 12.5, color: Colors.black54),
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  color: Color(0xFF9FB0C4),
+                ),
               ),
               if (puedeReclamar) ...[
                 const SizedBox(height: 8),
@@ -2951,10 +3033,10 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
     final activos = rivales.where((r) => !r.eliminado).length;
     return Card(
       elevation: 0,
-      color: Colors.white,
+      color: const Color(0xFF252D3A),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: const BorderSide(color: Color(0xFFDCE5DF)),
+        side: const BorderSide(color: Color(0xFF3E4A5E)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -2965,7 +3047,10 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
               'Rivales en la partida ($activos activos de ${rivales.length})',
               key: const ValueKey('estado-oponente'),
               textAlign: TextAlign.center,
-              style: const TextStyle(fontWeight: FontWeight.w700),
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                color: Color(0xFFE2E8F0),
+              ),
             ),
             const SizedBox(height: 8),
             Wrap(
@@ -2980,13 +3065,17 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF4F7F4),
+                      color: const Color(0xFF181D26),
                       borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFF3E4A5E)),
                     ),
                     child: Text(
                       '${rival.usuario} · ${vistasRivales[rival.usuario]?.puntos ?? 0} pts · '
                       '${_descripcionEstadoRival(rival, vistasRivales[rival.usuario]!)}',
-                      style: const TextStyle(fontSize: 12.5),
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        color: Color(0xFFE2E8F0),
+                      ),
                     ),
                   ),
               ],
@@ -2997,7 +3086,10 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                 child: Text(
                   'Rival sin conexión; ${_tiempoParaReclamarDesde(reclamoDesde)}',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF9FB0C4),
+                  ),
                 ),
               ),
             if (puedeReclamar) ...[
@@ -3027,10 +3119,10 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
   }) => Card(
     key: const ValueKey('selector-tableros'),
     elevation: 0,
-    color: Colors.white,
+    color: const Color(0xFF252D3A),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(14),
-      side: const BorderSide(color: Color(0xFFDCE5DF)),
+      side: const BorderSide(color: Color(0xFF3E4A5E)),
     ),
     child: Padding(
       padding: const EdgeInsets.all(12),
@@ -3042,18 +3134,22 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
               const Icon(
                 Icons.dashboard_customize_outlined,
                 size: 18,
-                color: Color(0xFF193E37),
+                color: Color(0xFF00C8FF),
               ),
               const SizedBox(width: 6),
               const Expanded(
                 child: Text(
                   'Ver tableros de la partida',
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: Color(0xFFE2E8F0),
+                  ),
                 ),
               ),
               Text(
                 '${rivales.length + 1} jugadores',
-                style: const TextStyle(fontSize: 12, color: Colors.black54),
+                style: const TextStyle(fontSize: 12, color: Color(0xFF9FB0C4)),
               ),
             ],
           ),
@@ -3107,10 +3203,10 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
     final totalCasillas = _config.matriz.length * _config.matriz.first.length;
     return Card(
       elevation: 0,
-      color: Colors.white,
+      color: const Color(0xFF252D3A),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: const BorderSide(color: Color(0xFFDCE5DF)),
+        side: const BorderSide(color: Color(0xFF3E4A5E)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -3119,7 +3215,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
           children: [
             Row(
               children: [
-                const Icon(Icons.grid_view_rounded, color: Color(0xFF193E37)),
+                const Icon(Icons.grid_view_rounded, color: Color(0xFF00C8FF)),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -3127,6 +3223,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
+                      color: Color(0xFFE2E8F0),
                     ),
                   ),
                 ),
@@ -3136,14 +3233,15 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEAF2EE),
+                    color: const Color(0xFF113548),
                     borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFF00C8FF)),
                   ),
                   child: Text(
                     'Tú: ${_juego.puntos} pts',
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF193E37),
+                      color: Color(0xFF00C8FF),
                     ),
                   ),
                 ),
@@ -3235,10 +3333,10 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
     return Card(
       key: ValueKey('panel-tablero-rival-${rival.usuario}'),
       elevation: 0,
-      color: Colors.white,
+      color: const Color(0xFF252D3A),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: const BorderSide(color: Color(0xFFDCE5DF)),
+        side: const BorderSide(color: Color(0xFF3E4A5E)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -3249,7 +3347,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
               children: [
                 const Icon(
                   Icons.visibility_outlined,
-                  color: Color(0xFF193E37),
+                  color: Color(0xFF00C8FF),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -3259,6 +3357,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
+                      color: Color(0xFFE2E8F0),
                     ),
                   ),
                 ),
@@ -3268,15 +3367,16 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEAF2EE),
+                    color: const Color(0xFF113548),
                     borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFF00C8FF)),
                   ),
                   child: Text(
                     '${rival.usuario}: ${vista.puntos} pts',
                     key: const ValueKey('puntaje-tablero-rival'),
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF193E37),
+                      color: Color(0xFF00C8FF),
                     ),
                   ),
                 ),
@@ -3289,7 +3389,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                   child: Text(
                     'Estado: ${_descripcionEstadoRival(rival, vista)}',
                     key: const ValueKey('estado-detalle-rival'),
-                    style: const TextStyle(color: Colors.black54),
+                    style: const TextStyle(color: Color(0xFF9FB0C4)),
                   ),
                 ),
                 if (mostrarBotonVolver)
@@ -3375,9 +3475,9 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
   Widget _controles(bool puedeJugar, bool finalizada) => Container(
     padding: const EdgeInsets.all(14),
     decoration: BoxDecoration(
-      color: const Color(0xFFF4F7F4),
+      color: const Color(0xFF181D26),
       borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: const Color(0xFFDCE5DF)),
+      border: Border.all(color: const Color(0xFF3E4A5E)),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -3387,7 +3487,10 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
             'Tu tablero terminó. Se guardará tu puntuación y se espera a los demás jugadores.',
             key: ValueKey('tablero-propio-finalizado'),
             textAlign: TextAlign.center,
-            style: TextStyle(fontWeight: FontWeight.w600),
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF00C8FF),
+            ),
           ),
           const SizedBox(height: 8),
         ],
@@ -3396,13 +3499,17 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
             const Icon(
               Icons.casino_outlined,
               size: 20,
-              color: Color(0xFF193E37),
+              color: Color(0xFF00C8FF),
             ),
             const SizedBox(width: 8),
             const Expanded(
               child: Text(
                 'Turno de juego',
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFFE2E8F0),
+                ),
               ),
             ),
             if (_juego.pivote != null && !_juego.finalizada)
@@ -3412,8 +3519,9 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                   vertical: 3,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFD4F4D8),
+                  color: const Color(0xFF113548),
                   borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFF00C8FF)),
                 ),
                 child: Text(
                   'Colocar: ${_juego.valorAColocar} '
@@ -3421,7 +3529,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                   style: const TextStyle(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF193E37),
+                    color: Color(0xFF00C8FF),
                   ),
                 ),
               ),
@@ -3439,6 +3547,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
               : 'Toca una casilla iluminada para colocar '
                     '${_juego.valorAColocar}.',
           key: const ValueKey('instruccion-multijugador'),
+          style: const TextStyle(color: Color(0xFF9FB0C4)),
         ),
         const SizedBox(height: 10),
         Row(
@@ -3464,8 +3573,8 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                               ? FontWeight.w700
                               : FontWeight.w500,
                           color: _juego.pivote == index
-                              ? const Color(0xFF193E37)
-                              : Colors.black54,
+                              ? const Color(0xFF00C8FF)
+                              : const Color(0xFF9FB0C4),
                         ),
                       ),
                     ),
@@ -3476,20 +3585,26 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                           : null,
                       style: OutlinedButton.styleFrom(
                         backgroundColor: _juego.pivote == index
-                            ? const Color(0xFFD4F4D8)
-                            : Colors.white,
+                            ? const Color(0xFF113548)
+                            : const Color(0xFF252D3A),
+                        foregroundColor: _juego.pivote == index
+                            ? const Color(0xFF00C8FF)
+                            : const Color(0xFFE2E8F0),
                         side: BorderSide(
                           color: _juego.pivote == index
-                              ? const Color(0xFF193E37)
-                              : const Color(0xFFCBD5D0),
-                          width: _juego.pivote == index ? 2 : 1,
+                              ? const Color(0xFF00C8FF)
+                              : const Color(0xFF3E4A5E),
+                          width: _juego.pivote == index ? 2 : 1.2,
                         ),
                       ),
                       child: Text(
                         '${index == 0 ? _juego.dadoA ?? "–" : _juego.dadoB ?? "–"}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
+                          color: _juego.pivote == index
+                              ? const Color(0xFF00C8FF)
+                              : const Color(0xFFE2E8F0),
                         ),
                       ),
                     ),
@@ -3511,7 +3626,11 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
         Text(
           'Jugadas: ${_juego.turnosJugados} · Omitidas: ${_juego.turnosOmitidos}',
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+          style: const TextStyle(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF9FB0C4),
+          ),
         ),
       ],
     ),
