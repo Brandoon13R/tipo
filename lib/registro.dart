@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tipo/BDD.dart';
 import 'package:tipo/perfil_usuario.dart';
 import 'package:tipo/sesion_usuario.dart';
+import 'package:tipo/tema_app.dart';
 
 class RegistroPage extends StatefulWidget {
   const RegistroPage({
@@ -103,106 +104,106 @@ class _RegistroPageState extends State<RegistroPage> {
     super.dispose();
   }
 
-  // Paleta 60-30-10:
-  // 60% Negro metálico
-  static const Color _negroMetalico = Color(0xFF12161D);
-  static const Color _negroMetalicoSuperior = Color(0xFF1A202B);
-  static const Color _negroMetalicoCampo = Color(0xFF181D26);
-  // 30% Gris niebla
-  static const Color _grisNieblaPanel = Color(0xFF252D3A);
-  static const Color _grisNieblaBorde = Color(0xFF3E4A5E);
-  static const Color _grisNieblaClaro = Color(0xFFE2E8F0);
-  static const Color _grisNieblaMedio = Color(0xFF9FB0C4);
-  // 10% Azul eléctrico
-  static const Color _azulElectrico = Color(0xFF00C8FF);
-  static const Color _azulElectricoTextoBoton = Color(0xFF09131C);
-
   InputDecoration _decoracionCampo({
+    required PaletaTema paleta,
     required String labelText,
     required IconData prefixIcon,
     Widget? suffixIcon,
   }) => InputDecoration(
     labelText: labelText,
-    labelStyle: const TextStyle(color: _grisNieblaMedio),
-    floatingLabelStyle: const TextStyle(
-      color: _azulElectrico,
+    labelStyle: TextStyle(color: paleta.textoSecundario),
+    floatingLabelStyle: TextStyle(
+      color: paleta.acento,
       fontWeight: FontWeight.w600,
     ),
-    counterStyle: const TextStyle(color: _grisNieblaMedio),
-    prefixIcon: Icon(prefixIcon, color: _grisNieblaMedio),
+    counterStyle: TextStyle(color: paleta.textoSecundario),
+    prefixIcon: Icon(prefixIcon, color: paleta.textoSecundario),
     suffixIcon: suffixIcon,
     filled: true,
-    fillColor: _negroMetalicoCampo,
+    fillColor: paleta.superficieInterior,
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: _grisNieblaBorde, width: 1.2),
+      borderSide: BorderSide(color: paleta.bordeSecundario, width: 1.2),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: _azulElectrico, width: 1.8),
+      borderSide: BorderSide(color: paleta.acento, width: 1.8),
     ),
     errorBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: Color(0xFFFF6B6B), width: 1.4),
+      borderSide: BorderSide(color: paleta.error, width: 1.4),
     ),
     focusedErrorBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: Color(0xFFFF6B6B), width: 1.8),
+      borderSide: BorderSide(color: paleta.error, width: 1.8),
     ),
-    errorStyle: const TextStyle(color: Color(0xFFFF8787)),
+    errorStyle: TextStyle(color: paleta.errorTexto),
   );
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: _negroMetalico,
-    body: Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [_negroMetalicoSuperior, _negroMetalico, Color(0xFF0D1015)],
-        ),
-      ),
-      child: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 430),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 28,
-                  vertical: 28,
-                ),
-                decoration: BoxDecoration(
-                  color: _grisNieblaPanel,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: _grisNieblaBorde, width: 1.2),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x66000000),
-                      blurRadius: 28,
-                      offset: Offset(0, 14),
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: ControladorTema.instance,
+    builder: (context, _) {
+      final paleta = ControladorTema.instance.actual;
+      return Scaffold(
+        backgroundColor: paleta.fondoPrincipal,
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                paleta.fondoGradienteInicio,
+                paleta.fondoPrincipal,
+                paleta.fondoGradienteFin,
+              ],
+            ),
+          ),
+          child: SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 430),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 28,
+                      vertical: 28,
                     ),
-                    BoxShadow(
-                      color: Color(0x1800C8FF),
-                      blurRadius: 24,
-                      spreadRadius: 1,
+                    decoration: BoxDecoration(
+                      color: paleta.panelSecundario,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: paleta.bordeSecundario,
+                        width: 1.2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: paleta.sombraPanel,
+                          blurRadius: 28,
+                          offset: const Offset(0, 14),
+                        ),
+                        BoxShadow(
+                          color: paleta.sombraAcento,
+                          blurRadius: 24,
+                          spreadRadius: 1,
+                        ),
+                      ],
                     ),
-                  ],
+                    child: _registroCompletado
+                        ? _mensajeRegistroCompletado(paleta)
+                        : _formularioRegistro(paleta),
+                  ),
                 ),
-                child: _registroCompletado
-                    ? _mensajeRegistroCompletado()
-                    : _formularioRegistro(),
               ),
             ),
           ),
         ),
-      ),
-    ),
+      );
+    },
   );
 
-  Widget _encabezado() => Column(
+  Widget _encabezado(PaletaTema paleta) => Column(
     children: [
       Row(
         children: [
@@ -210,10 +211,14 @@ class _RegistroPageState extends State<RegistroPage> {
             key: const ValueKey('registro-volver'),
             tooltip: 'Volver a iniciar sesión',
             onPressed: _cargando ? null : () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.arrow_back, color: _grisNieblaClaro),
+            icon: Icon(Icons.arrow_back, color: paleta.textoPrincipal),
           ),
           const Spacer(),
-          PerfilUsuario(sesion: widget.sesionUsuario),
+          const SelectorTemaButton(),
+          if (widget.sesionUsuario?.activa == true) ...[
+            const SizedBox(width: 8),
+            PerfilUsuario(sesion: widget.sesionUsuario),
+          ],
         ],
       ),
       const SizedBox(height: 8),
@@ -221,43 +226,39 @@ class _RegistroPageState extends State<RegistroPage> {
         width: 64,
         height: 64,
         decoration: BoxDecoration(
-          color: _negroMetalicoCampo,
+          color: paleta.superficieInterior,
           shape: BoxShape.circle,
-          border: Border.all(color: _azulElectrico, width: 1.8),
-          boxShadow: const [
+          border: Border.all(color: paleta.acento, width: 1.8),
+          boxShadow: [
             BoxShadow(
-              color: Color(0x3800C8FF),
+              color: paleta.sombraAcento,
               blurRadius: 16,
               spreadRadius: 1,
             ),
           ],
         ),
-        child: const Icon(
-          Icons.person_add_alt_1,
-          size: 32,
-          color: _azulElectrico,
-        ),
+        child: Icon(Icons.person_add_alt_1, size: 32, color: paleta.acento),
       ),
       const SizedBox(height: 14),
-      const Text(
+      Text(
         'Crear cuenta',
         textAlign: TextAlign.center,
         style: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.w700,
-          color: _grisNieblaClaro,
+          color: paleta.textoPrincipal,
         ),
       ),
       const SizedBox(height: 20),
     ],
   );
 
-  Widget _formularioRegistro() => Form(
+  Widget _formularioRegistro(PaletaTema paleta) => Form(
     key: _formKey,
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _encabezado(),
+        _encabezado(paleta),
         TextFormField(
           key: const ValueKey('registro-usuario'),
           controller: _usuarioController,
@@ -265,9 +266,10 @@ class _RegistroPageState extends State<RegistroPage> {
           textCapitalization: TextCapitalization.none,
           textInputAction: TextInputAction.next,
           autofillHints: const [AutofillHints.newUsername],
-          style: const TextStyle(color: _grisNieblaClaro),
-          cursorColor: _azulElectrico,
+          style: TextStyle(color: paleta.textoPrincipal),
+          cursorColor: paleta.acento,
           decoration: _decoracionCampo(
+            paleta: paleta,
             labelText: 'Nombre de usuario',
             prefixIcon: Icons.person_outline,
           ),
@@ -287,9 +289,10 @@ class _RegistroPageState extends State<RegistroPage> {
           obscureText: !_mostrarContrasena,
           textInputAction: TextInputAction.next,
           autofillHints: const [AutofillHints.newPassword],
-          style: const TextStyle(color: _grisNieblaClaro),
-          cursorColor: _azulElectrico,
+          style: TextStyle(color: paleta.textoPrincipal),
+          cursorColor: paleta.acento,
           decoration: _decoracionCampo(
+            paleta: paleta,
             labelText: 'Contraseña',
             prefixIcon: Icons.lock_outline,
             suffixIcon: IconButton(
@@ -300,7 +303,7 @@ class _RegistroPageState extends State<RegistroPage> {
                   setState(() => _mostrarContrasena = !_mostrarContrasena),
               icon: Icon(
                 _mostrarContrasena ? Icons.visibility_off : Icons.visibility,
-                color: _grisNieblaMedio,
+                color: paleta.textoSecundario,
               ),
             ),
           ),
@@ -321,14 +324,15 @@ class _RegistroPageState extends State<RegistroPage> {
           controller: _confirmarContrasenaController,
           obscureText: !_mostrarContrasena,
           textInputAction: TextInputAction.done,
-          style: const TextStyle(color: _grisNieblaClaro),
-          cursorColor: _azulElectrico,
+          style: TextStyle(color: paleta.textoPrincipal),
+          cursorColor: paleta.acento,
           onFieldSubmitted: (_) {
             if (!_cargando) {
               _crearCuenta();
             }
           },
           decoration: _decoracionCampo(
+            paleta: paleta,
             labelText: 'Confirmar contraseña',
             prefixIcon: Icons.lock_outline,
           ),
@@ -347,8 +351,8 @@ class _RegistroPageState extends State<RegistroPage> {
           Text(
             _error!,
             key: const ValueKey('registro-error'),
-            style: const TextStyle(
-              color: Color(0xFFFF8787),
+            style: TextStyle(
+              color: paleta.errorTexto,
               fontWeight: FontWeight.w600,
             ),
             textAlign: TextAlign.center,
@@ -359,12 +363,12 @@ class _RegistroPageState extends State<RegistroPage> {
           key: const ValueKey('registro-submit'),
           onPressed: _cargando ? null : _crearCuenta,
           style: FilledButton.styleFrom(
-            backgroundColor: _azulElectrico,
-            foregroundColor: _azulElectricoTextoBoton,
-            disabledBackgroundColor: const Color(0xFF2B4B59),
-            disabledForegroundColor: _grisNieblaMedio,
+            backgroundColor: paleta.acento,
+            foregroundColor: paleta.textoSobreAcento,
+            disabledBackgroundColor: paleta.botonDeshabilitadoFondo,
+            disabledForegroundColor: paleta.textoSecundario,
             elevation: 3,
-            shadowColor: const Color(0x6600C8FF),
+            shadowColor: paleta.sombraAcento,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
             ),
@@ -372,12 +376,12 @@ class _RegistroPageState extends State<RegistroPage> {
           child: Padding(
             padding: const EdgeInsets.all(14),
             child: _cargando
-                ? const SizedBox(
+                ? SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: _azulElectricoTextoBoton,
+                      color: paleta.textoSobreAcento,
                     ),
                   )
                 : const Text(
@@ -390,7 +394,7 @@ class _RegistroPageState extends State<RegistroPage> {
     ),
   );
 
-  Widget _mensajeRegistroCompletado() => Column(
+  Widget _mensajeRegistroCompletado(PaletaTema paleta) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       Align(
@@ -398,19 +402,15 @@ class _RegistroPageState extends State<RegistroPage> {
         child: PerfilUsuario(sesion: widget.sesionUsuario),
       ),
       const SizedBox(height: 12),
-      const Icon(
-        Icons.verified_user_outlined,
-        size: 64,
-        color: _azulElectrico,
-      ),
+      Icon(Icons.verified_user_outlined, size: 64, color: paleta.acento),
       const SizedBox(height: 20),
-      const Text(
+      Text(
         'Cuenta creada',
         textAlign: TextAlign.center,
         style: TextStyle(
           fontSize: 26,
           fontWeight: FontWeight.w700,
-          color: _grisNieblaClaro,
+          color: paleta.textoPrincipal,
         ),
       ),
       const SizedBox(height: 16),
@@ -418,15 +418,15 @@ class _RegistroPageState extends State<RegistroPage> {
         'Tu cuenta está lista y ya iniciaste sesión como '
         '${widget.sesionUsuario?.usuarioName ?? ''}.',
         textAlign: TextAlign.center,
-        style: const TextStyle(color: _grisNieblaMedio),
+        style: TextStyle(color: paleta.textoSecundario),
       ),
       const SizedBox(height: 24),
       FilledButton(
         key: const ValueKey('registro-ir-login'),
         onPressed: () => Navigator.of(context).pop(),
         style: FilledButton.styleFrom(
-          backgroundColor: _azulElectrico,
-          foregroundColor: _azulElectricoTextoBoton,
+          backgroundColor: paleta.acento,
+          foregroundColor: paleta.textoSobreAcento,
         ),
         child: const Text(
           'Volver a iniciar sesión',

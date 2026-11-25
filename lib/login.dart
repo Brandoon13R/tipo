@@ -4,6 +4,7 @@ import 'package:tipo/BDD.dart';
 import 'package:tipo/perfil_usuario.dart';
 import 'package:tipo/registro.dart';
 import 'package:tipo/sesion_usuario.dart';
+import 'package:tipo/tema_app.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({
@@ -101,309 +102,324 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  // Paleta 60-30-10:
-  // 60% Negro metálico (fondo principal y campos internos)
-  static const Color _negroMetalico = Color(0xFF12161D);
-  static const Color _negroMetalicoSuperior = Color(0xFF1A202B);
-  static const Color _negroMetalicoCampo = Color(0xFF181D26);
-  // 30% Gris niebla (panel secundario, bordes suaves y tipografía)
-  static const Color _grisNieblaPanel = Color(0xFF252D3A);
-  static const Color _grisNieblaBorde = Color(0xFF3E4A5E);
-  static const Color _grisNieblaClaro = Color(0xFFE2E8F0);
-  static const Color _grisNieblaMedio = Color(0xFF9FB0C4);
-  // 10% Azul eléctrico (acentos principales, botón CTA e icono)
-  static const Color _azulElectrico = Color(0xFF00C8FF);
-  static const Color _azulElectricoTextoBoton = Color(0xFF09131C);
-
   InputDecoration _decoracionCampo({
+    required PaletaTema paleta,
     required String labelText,
     required IconData prefixIcon,
     Widget? suffixIcon,
   }) => InputDecoration(
     labelText: labelText,
-    labelStyle: const TextStyle(color: _grisNieblaMedio),
-    floatingLabelStyle: const TextStyle(
-      color: _azulElectrico,
+    labelStyle: TextStyle(color: paleta.textoSecundario),
+    floatingLabelStyle: TextStyle(
+      color: paleta.acento,
       fontWeight: FontWeight.w600,
     ),
-    prefixIcon: Icon(prefixIcon, color: _grisNieblaMedio),
+    prefixIcon: Icon(prefixIcon, color: paleta.textoSecundario),
     suffixIcon: suffixIcon,
     filled: true,
-    fillColor: _negroMetalicoCampo,
+    fillColor: paleta.superficieInterior,
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: _grisNieblaBorde, width: 1.2),
+      borderSide: BorderSide(color: paleta.bordeSecundario, width: 1.2),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: _azulElectrico, width: 1.8),
+      borderSide: BorderSide(color: paleta.acento, width: 1.8),
     ),
     errorBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: Color(0xFFFF6B6B), width: 1.4),
+      borderSide: BorderSide(color: paleta.error, width: 1.4),
     ),
     focusedErrorBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: Color(0xFFFF6B6B), width: 1.8),
+      borderSide: BorderSide(color: paleta.error, width: 1.8),
     ),
-    errorStyle: const TextStyle(color: Color(0xFFFF8787)),
+    errorStyle: TextStyle(color: paleta.errorTexto),
   );
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: _negroMetalico,
-    body: Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [_negroMetalicoSuperior, _negroMetalico, Color(0xFF0D1015)],
-        ),
-      ),
-      child: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 430),
-              child: Container(
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: ControladorTema.instance,
+    builder: (context, _) {
+      final paleta = ControladorTema.instance.actual;
+      return Scaffold(
+        backgroundColor: paleta.fondoPrincipal,
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                paleta.fondoGradienteInicio,
+                paleta.fondoPrincipal,
+                paleta.fondoGradienteFin,
+              ],
+            ),
+          ),
+          child: SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 28,
-                  vertical: 30,
+                  horizontal: 24,
+                  vertical: 16,
                 ),
-                decoration: BoxDecoration(
-                  color: _grisNieblaPanel,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: _grisNieblaBorde, width: 1.2),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x66000000),
-                      blurRadius: 28,
-                      offset: Offset(0, 14),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 430),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 26,
+                      vertical: 22,
                     ),
-                    BoxShadow(
-                      color: Color(0x1800C8FF),
-                      blurRadius: 24,
-                      spreadRadius: 1,
-                    ),
-                  ],
-                ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (Navigator.of(context).canPop())
-                        Row(
-                          children: [
-                            IconButton(
-                              key: const ValueKey('login-volver'),
-                              tooltip: 'Volver al inicio',
-                              onPressed: _cargando
-                                  ? null
-                                  : () => Navigator.of(context).pop(),
-                              icon: const Icon(
-                                Icons.arrow_back,
-                                color: _grisNieblaClaro,
-                              ),
-                            ),
-                            const Spacer(),
-                            PerfilUsuario(sesion: widget.sesionUsuario),
-                          ],
-                        ),
-                      const SizedBox(height: 4),
-                      Center(
-                        child: Container(
-                          width: 68,
-                          height: 68,
-                          decoration: BoxDecoration(
-                            color: _negroMetalicoCampo,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: _azulElectrico,
-                              width: 1.8,
-                            ),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x3800C8FF),
-                                blurRadius: 16,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.grid_view_rounded,
-                            size: 34,
-                            color: _azulElectrico,
-                          ),
-                        ),
+                    decoration: BoxDecoration(
+                      color: paleta.panelSecundario,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: paleta.bordeSecundario,
+                        width: 1.2,
                       ),
-                      const SizedBox(height: 14),
-                      const Text(
-                        'BRILLIANT',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          letterSpacing: 4,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 24,
-                          color: _grisNieblaClaro,
+                      boxShadow: [
+                        BoxShadow(
+                          color: paleta.sombraPanel,
+                          blurRadius: 28,
+                          offset: const Offset(0, 14),
                         ),
-                      ),
-                      const SizedBox(height: 14),
-                      const Text(
-                        'Iniciar sesión',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          color: _grisNieblaClaro,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Inicia sesión o crea una cuenta para jugar en solitario '
-                        'y multijugador.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: _grisNieblaMedio, height: 1.35),
-                      ),
-                      const SizedBox(height: 24),
-                      TextFormField(
-                        key: const ValueKey('login-usuario'),
-                        controller: _usuarioController,
-                        textInputAction: TextInputAction.next,
-                        autofillHints: const [AutofillHints.username],
-                        style: const TextStyle(color: _grisNieblaClaro),
-                        cursorColor: _azulElectrico,
-                        decoration: _decoracionCampo(
-                          labelText: 'Nombre de usuario',
-                          prefixIcon: Icons.person_outline,
-                        ),
-                        validator: (valor) {
-                          final usuario = valor?.trim() ?? '';
-                          if (usuario.isEmpty) {
-                            return 'Escribe tu nombre de usuario.';
-                          }
-                          if (!RegExp(
-                            r'^[a-zA-Z0-9_]{3,15}$',
-                          ).hasMatch(usuario)) {
-                            return 'Usa de 3 a 15 letras, números o guiones bajos.';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        key: const ValueKey('login-password'),
-                        controller: _contrasenaController,
-                        obscureText: !_mostrarContrasena,
-                        textInputAction: TextInputAction.done,
-                        autofillHints: const [AutofillHints.password],
-                        style: const TextStyle(color: _grisNieblaClaro),
-                        cursorColor: _azulElectrico,
-                        onFieldSubmitted: (_) {
-                          if (!_cargando) {
-                            _iniciarSesion();
-                          }
-                        },
-                        decoration: _decoracionCampo(
-                          labelText: 'Contraseña',
-                          prefixIcon: Icons.lock_outline,
-                          suffixIcon: IconButton(
-                            tooltip: _mostrarContrasena
-                                ? 'Ocultar contraseña'
-                                : 'Mostrar contraseña',
-                            onPressed: () => setState(
-                              () => _mostrarContrasena = !_mostrarContrasena,
-                            ),
-                            icon: Icon(
-                              _mostrarContrasena
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
-                              color: _grisNieblaMedio,
-                            ),
-                          ),
-                        ),
-                        validator: (valor) => (valor == null || valor.isEmpty)
-                            ? 'Escribe tu contraseña.'
-                            : null,
-                      ),
-                      if (_error != null) ...[
-                        const SizedBox(height: 16),
-                        Text(
-                          _error!,
-                          key: const ValueKey('login-error'),
-                          style: const TextStyle(
-                            color: Color(0xFFFF8787),
-                            fontWeight: FontWeight.w600,
-                          ),
-                          textAlign: TextAlign.center,
+                        BoxShadow(
+                          color: paleta.sombraAcento,
+                          blurRadius: 24,
+                          spreadRadius: 1,
                         ),
                       ],
-                      const SizedBox(height: 24),
-                      FilledButton(
-                        key: const ValueKey('login-submit'),
-                        onPressed: _cargando ? null : _iniciarSesion,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: _azulElectrico,
-                          foregroundColor: _azulElectricoTextoBoton,
-                          disabledBackgroundColor: const Color(0xFF2B4B59),
-                          disabledForegroundColor: _grisNieblaMedio,
-                          elevation: 3,
-                          shadowColor: const Color(0x6600C8FF),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(14),
-                          child: _cargando
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: _azulElectricoTextoBoton,
-                                  ),
-                                )
-                              : const Text(
-                                  'Iniciar sesión',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 15,
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            children: [
+                              if (Navigator.of(context).canPop())
+                                IconButton(
+                                  key: const ValueKey('login-volver'),
+                                  tooltip: 'Volver al inicio',
+                                  onPressed: _cargando
+                                      ? null
+                                      : () => Navigator.of(context).pop(),
+                                  icon: Icon(
+                                    Icons.arrow_back,
+                                    color: paleta.textoPrincipal,
                                   ),
                                 ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      TextButton(
-                        key: const ValueKey('login-crear-cuenta'),
-                        onPressed: _cargando
-                            ? null
-                            : () => Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) => RegistroPage(
-                                    authService: widget.authService,
-                                    supabaseClient: widget.supabaseClient,
-                                    sesionUsuario: widget.sesionUsuario,
+                              const Spacer(),
+                              const SelectorTemaButton(),
+                              if (widget.sesionUsuario?.activa == true) ...[
+                                const SizedBox(width: 8),
+                                PerfilUsuario(sesion: widget.sesionUsuario),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Center(
+                            child: Container(
+                              width: 58,
+                              height: 58,
+                              decoration: BoxDecoration(
+                                color: paleta.superficieInterior,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: paleta.acento,
+                                  width: 1.8,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: paleta.sombraAcento,
+                                    blurRadius: 16,
+                                    spreadRadius: 1,
                                   ),
+                                ],
+                              ),
+                              child: Icon(
+                                Icons.grid_view_rounded,
+                                size: 30,
+                                color: paleta.acento,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'BRILLIANT',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              letterSpacing: 4,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 22,
+                              color: paleta.textoPrincipal,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'Iniciar sesión',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 21,
+                              fontWeight: FontWeight.w700,
+                              color: paleta.textoPrincipal,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Inicia sesión o crea una cuenta para jugar en solitario '
+                            'y multijugador.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: paleta.textoSecundario,
+                              height: 1.3,
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          TextFormField(
+                            key: const ValueKey('login-usuario'),
+                            controller: _usuarioController,
+                            textInputAction: TextInputAction.next,
+                            autofillHints: const [AutofillHints.username],
+                            style: TextStyle(color: paleta.textoPrincipal),
+                            cursorColor: paleta.acento,
+                            decoration: _decoracionCampo(
+                              paleta: paleta,
+                              labelText: 'Nombre de usuario',
+                              prefixIcon: Icons.person_outline,
+                            ),
+                            validator: (valor) {
+                              final usuario = valor?.trim() ?? '';
+                              if (usuario.isEmpty) {
+                                return 'Escribe tu nombre de usuario.';
+                              }
+                              if (!RegExp(
+                                r'^[a-zA-Z0-9_]{3,15}$',
+                              ).hasMatch(usuario)) {
+                                return 'Usa de 3 a 15 letras, números o guiones bajos.';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 14),
+                          TextFormField(
+                            key: const ValueKey('login-password'),
+                            controller: _contrasenaController,
+                            obscureText: !_mostrarContrasena,
+                            textInputAction: TextInputAction.done,
+                            autofillHints: const [AutofillHints.password],
+                            style: TextStyle(color: paleta.textoPrincipal),
+                            cursorColor: paleta.acento,
+                            onFieldSubmitted: (_) {
+                              if (!_cargando) {
+                                _iniciarSesion();
+                              }
+                            },
+                            decoration: _decoracionCampo(
+                              paleta: paleta,
+                              labelText: 'Contraseña',
+                              prefixIcon: Icons.lock_outline,
+                              suffixIcon: IconButton(
+                                tooltip: _mostrarContrasena
+                                    ? 'Ocultar contraseña'
+                                    : 'Mostrar contraseña',
+                                onPressed: () => setState(
+                                  () =>
+                                      _mostrarContrasena = !_mostrarContrasena,
+                                ),
+                                icon: Icon(
+                                  _mostrarContrasena
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                  color: paleta.textoSecundario,
                                 ),
                               ),
-                        style: TextButton.styleFrom(
-                          foregroundColor: _azulElectrico,
-                        ),
-                        child: const Text(
-                          '¿No tienes cuenta? Crea tu cuenta',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
+                            ),
+                            validator: (valor) =>
+                                (valor == null || valor.isEmpty)
+                                ? 'Escribe tu contraseña.'
+                                : null,
+                          ),
+                          if (_error != null) ...[
+                            const SizedBox(height: 12),
+                            Text(
+                              _error!,
+                              key: const ValueKey('login-error'),
+                              style: TextStyle(
+                                color: paleta.errorTexto,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                          const SizedBox(height: 18),
+                          FilledButton(
+                            key: const ValueKey('login-submit'),
+                            onPressed: _cargando ? null : _iniciarSesion,
+                            style: FilledButton.styleFrom(
+                              backgroundColor: paleta.acento,
+                              foregroundColor: paleta.textoSobreAcento,
+                              disabledBackgroundColor:
+                                  paleta.botonDeshabilitadoFondo,
+                              disabledForegroundColor: paleta.textoSecundario,
+                              elevation: 3,
+                              shadowColor: paleta.sombraAcento,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(14),
+                              child: _cargando
+                                  ? SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: paleta.textoSobreAcento,
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Iniciar sesión',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextButton(
+                            key: const ValueKey('login-crear-cuenta'),
+                            onPressed: _cargando
+                                ? null
+                                : () => Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) => RegistroPage(
+                                        authService: widget.authService,
+                                        supabaseClient: widget.supabaseClient,
+                                        sesionUsuario: widget.sesionUsuario,
+                                      ),
+                                    ),
+                                  ),
+                            style: TextButton.styleFrom(
+                              foregroundColor: paleta.acento,
+                            ),
+                            child: const Text(
+                              '¿No tienes cuenta? Crea tu cuenta',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
             ),
           ),
         ),
-      ),
-    ),
+      );
+    },
   );
 }
