@@ -475,6 +475,398 @@ class _ClasificatoriasPageState extends State<ClasificatoriasPage> {
     super.dispose();
   }
 
+  Widget _tarjetaCrearPartidaClasificatoria() => Card(
+    key: const ValueKey('panel-crear-clasificatoria'),
+    elevation: 0,
+    color: _paleta.panelSecundario,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+      side: BorderSide(color: _paleta.bordeSecundario),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.add_circle_outline_rounded,
+                color: _paleta.acento,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Crear Partida Clasificatoria',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: _paleta.textoPrincipal,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '1.º puesto: +12 Elo + puntos · '
+            '2.º puesto: +8 Elo + puntos · '
+            '3.º puesto: +5 Elo + puntos. '
+            'La partida termina al ocuparse los 3 primeros puestos.',
+            style: TextStyle(
+              fontSize: 12.5,
+              color: _paleta.textoSecundario,
+            ),
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            key: ValueKey('nivel-clasificatoria-${_config.id}'),
+            initialValue: _config.id,
+            dropdownColor: _paleta.panelSecundario,
+            decoration: const InputDecoration(labelText: 'Nivel'),
+            items: [
+              for (final config in _niveles)
+                DropdownMenuItem(
+                  value: config.id,
+                  child: Text(config.nombre),
+                ),
+            ],
+            onChanged: _ocupado
+                ? null
+                : (id) {
+                    if (id == null) return;
+                    setState(() {
+                      _config = _configuracion(id);
+                      _valoresIniciales.clear();
+                      _error = null;
+                    });
+                  },
+          ),
+          const SizedBox(height: 10),
+          Text(
+            '${_valoresIniciales.values.whereType<int>().length} '
+            'de 6 números asignados',
+            key: const ValueKey('progreso-inicial-clasificatoria'),
+            style: TextStyle(
+              color: _paleta.acento,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 10),
+          TableroVisual(
+            key: ValueKey('tablero-clasificatoria-${_config.id}'),
+            valores: _valoresIniciales,
+            habilitado: !_ocupado,
+            onSeleccionar: _elegirNumero,
+            config: _config,
+          ),
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            key: const ValueKey('crear-partida-clasificatoria'),
+            onPressed: _ocupado ? null : _crearPartidaClasificatoria,
+            icon: const Icon(Icons.emoji_events_outlined),
+            label: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Text(
+                _ocupado ? 'Creando partida...' : 'Crear Partida',
+              ),
+            ),
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              _error!,
+              key: const ValueKey('error-clasificatoria'),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.error,
+              ),
+            ),
+          ],
+        ],
+      ),
+    ),
+  );
+
+  Widget _tarjetaUnirseClasificatoria() => Card(
+    key: const ValueKey('panel-unirse-clasificatoria'),
+    elevation: 0,
+    color: _paleta.panelSecundario,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+      side: BorderSide(color: _paleta.bordeSecundario),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.meeting_room_outlined, color: _paleta.acento),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Unirse a una partida clasificatoria',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: _paleta.textoPrincipal,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Ingresa el código de 6 dígitos de la sala para entrar y elegir '
+            'tus números pivote iniciales.',
+            style: TextStyle(
+              fontSize: 12.5,
+              color: _paleta.textoSecundario,
+            ),
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            key: const ValueKey('codigo-invitacion-clasificatoria'),
+            controller: _codigoController,
+            keyboardType: TextInputType.number,
+            maxLength: 6,
+            decoration: const InputDecoration(
+              labelText: 'Código de sala',
+              hintText: '123456',
+              prefixIcon: Icon(Icons.tag_rounded),
+              border: OutlineInputBorder(),
+              counterText: '',
+              isDense: true,
+            ),
+            onChanged: (_) {
+              if (_error != null) {
+                setState(() => _error = null);
+              }
+            },
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            key: const ValueKey('unirse-sala-clasificatoria'),
+            onPressed: _ocupado ? null : _unirseClasificatoria,
+            icon: const Icon(Icons.login),
+            label: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Text('Unirse'),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _tarjetaTablaClasificacion({
+    required ResumenRankingUsuario? resumen,
+    required List<EntradaRankingElo> top10,
+    required EntradaRankingElo miPerfil,
+  }) => Card(
+    key: const ValueKey('tabla-clasificacion-top10'),
+    elevation: 0,
+    color: _paleta.panelSecundario,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+      side: BorderSide(color: _paleta.bordeSecundario),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.leaderboard_rounded,
+                color: _paleta.acento,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Tabla de Clasificaciones · Top 10',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: _paleta.textoPrincipal,
+                  ),
+                ),
+              ),
+              if (_cargandoRanking)
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                  ),
+                ),
+            ],
+          ),
+          const Divider(height: 20),
+          if (top10.isEmpty && !_cargandoRanking)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Text(
+                'Aún no hay jugadores registrados en el ranking.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: _paleta.textoSecundario,
+                ),
+              ),
+            )
+          else
+            for (final entrada in top10)
+              Container(
+                key: ValueKey('fila-top10-${entrada.posicion}'),
+                margin: const EdgeInsets.symmetric(vertical: 3),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color:
+                      entrada.usuario.toLowerCase() ==
+                          widget.usuario.toLowerCase()
+                      ? _paleta.superficieAcentoSuave
+                      : _paleta.superficieInterior,
+                  borderRadius: BorderRadius.circular(8),
+                  border:
+                      entrada.usuario.toLowerCase() ==
+                          widget.usuario.toLowerCase()
+                      ? Border.all(color: _paleta.acento)
+                      : Border.all(
+                          color: _paleta.bordeSecundario,
+                          width: 0.6,
+                        ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: entrada.posicion == 1
+                            ? const Color(0xFFF1C40F)
+                            : entrada.posicion == 2
+                            ? const Color(0xFFBDC3C7)
+                            : entrada.posicion == 3
+                            ? const Color(0xFFE67E22)
+                            : _paleta.panelSecundario,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '${entrada.posicion}.º',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: entrada.posicion <= 3
+                              ? Colors.black87
+                              : _paleta.acento,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        entrada.usuario,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: _paleta.textoPrincipal,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '${entrada.elo} Elo',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: _paleta.acento,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          const Divider(height: 24),
+          Container(
+            key: const ValueKey('tarjeta-mi-ranking'),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: _paleta.superficieInterior,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: _paleta.acento),
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: _paleta.acento,
+                  child: Text(
+                    widget.usuario.isNotEmpty
+                        ? widget.usuario[0].toUpperCase()
+                        : 'U',
+                    style: TextStyle(
+                      color: _paleta.textoSobreAcento,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Tu perfil · ${miPerfil.usuario}',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: _paleta.textoPrincipal,
+                        ),
+                      ),
+                      Text(
+                        resumen?.estaEnTop10 == true
+                            ? 'Puesto #${miPerfil.posicion} (En el Top 10)'
+                            : 'Puesto #${miPerfil.posicion} en la clasificación general',
+                        key: const ValueKey('mi-puesto-ranking'),
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: _paleta.textoSecundario,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _paleta.superficieAcentoSuave,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: _paleta.acento),
+                  ),
+                  child: Text(
+                    '${miPerfil.elo} Elo',
+                    key: const ValueKey('mi-elo-ranking'),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      color: _paleta.acento,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final resumen = _resumenRanking;
@@ -507,383 +899,66 @@ class _ClasificatoriasPageState extends State<ClasificatoriasPage> {
               ),
             ],
           ),
-        body: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 620),
-              child: ListView(
-                padding: const EdgeInsets.all(20),
-                children: [
-                  Card(
-                    elevation: 0,
-                    color: _paleta.panelSecundario,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(color: _paleta.bordeSecundario),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.add_circle_outline_rounded,
-                                color: _paleta.acento,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  'Crear Partida Clasificatoria',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w700,
-                                    color: _paleta.textoPrincipal,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            '1.º puesto: +12 Elo + puntos · '
-                            '2.º puesto: +8 Elo + puntos · '
-                            '3.º puesto: +5 Elo + puntos. '
-                            'La partida termina al ocuparse los 3 primeros puestos.',
-                            style: TextStyle(
-                              fontSize: 12.5,
-                              color: _paleta.textoSecundario,
+          body: SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final esEscritorio = constraints.maxWidth >= 960;
+                final tarjetaRanking = _tarjetaTablaClasificacion(
+                  resumen: resumen,
+                  top10: top10,
+                  miPerfil: miPerfil,
+                );
+                final tarjetaCrear = _tarjetaCrearPartidaClasificatoria();
+                final tarjetaUnirse = _tarjetaUnirseClasificatoria();
+
+                if (esEscritorio) {
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1360),
+                        child: Row(
+                          key: const ValueKey('layout-clasificatorias-pc'),
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              flex: 4,
+                              child: tarjetaRanking,
                             ),
-                          ),
-                          const SizedBox(height: 12),
-                          DropdownButtonFormField<String>(
-                            key: ValueKey('nivel-clasificatoria-${_config.id}'),
-                            initialValue: _config.id,
-                            dropdownColor: _paleta.panelSecundario,
-                            decoration: const InputDecoration(
-                              labelText: 'Nivel',
+                            const SizedBox(width: 20),
+                            Expanded(
+                              flex: 5,
+                              child: tarjetaCrear,
                             ),
-                            items: [
-                              for (final config in _niveles)
-                                DropdownMenuItem(
-                                  value: config.id,
-                                  child: Text(config.nombre),
-                                ),
-                            ],
-                            onChanged: _ocupado
-                                ? null
-                                : (id) {
-                                    if (id == null) return;
-                                    setState(() {
-                                      _config = _configuracion(id);
-                                      _valoresIniciales.clear();
-                                      _error = null;
-                                    });
-                                  },
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            '${_valoresIniciales.values.whereType<int>().length} '
-                            'de 6 números asignados',
-                            key: const ValueKey(
-                              'progreso-inicial-clasificatoria',
-                            ),
-                            style: TextStyle(
-                              color: _paleta.acento,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          TableroVisual(
-                            key: ValueKey(
-                              'tablero-clasificatoria-${_config.id}',
-                            ),
-                            valores: _valoresIniciales,
-                            habilitado: !_ocupado,
-                            onSeleccionar: _elegirNumero,
-                            config: _config,
-                          ),
-                          const SizedBox(height: 12),
-                          FilledButton.icon(
-                            key: const ValueKey('crear-partida-clasificatoria'),
-                            onPressed: _ocupado
-                                ? null
-                                : _crearPartidaClasificatoria,
-                            icon: const Icon(Icons.emoji_events_outlined),
-                            label: Text(
-                              _ocupado ? 'Creando partida...' : 'Crear Partida',
-                            ),
-                          ),
-                          const Divider(height: 28),
-                          Text(
-                            'Unirse a una partida clasificatoria',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: _paleta.textoPrincipal,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                  key: const ValueKey(
-                                    'codigo-invitacion-clasificatoria',
-                                  ),
-                                  controller: _codigoController,
-                                  keyboardType: TextInputType.number,
-                                  maxLength: 6,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Código de sala',
-                                    hintText: '123456',
-                                    border: OutlineInputBorder(),
-                                    counterText: '',
-                                    isDense: true,
-                                  ),
-                                  onChanged: (_) {
-                                    if (_error != null) {
-                                      setState(() => _error = null);
-                                    }
-                                  },
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              OutlinedButton.icon(
-                                key: const ValueKey(
-                                  'unirse-sala-clasificatoria',
-                                ),
-                                onPressed: _ocupado
-                                    ? null
-                                    : _unirseClasificatoria,
-                                icon: const Icon(Icons.login),
-                                label: const Text('Unirse'),
-                              ),
-                            ],
-                          ),
-                          if (_error != null) ...[
-                            const SizedBox(height: 10),
-                            Text(
-                              _error!,
-                              key: const ValueKey('error-clasificatoria'),
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.error,
-                              ),
+                            const SizedBox(width: 20),
+                            Expanded(
+                              flex: 3,
+                              child: tarjetaUnirse,
                             ),
                           ],
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Card(
-                    key: const ValueKey('tabla-clasificacion-top10'),
-                    elevation: 0,
-                    color: _paleta.panelSecundario,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(color: _paleta.bordeSecundario),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.leaderboard_rounded,
-                                color: _paleta.acento,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  'Tabla de Clasificaciones · Top 10',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w700,
-                                    color: _paleta.textoPrincipal,
-                                  ),
-                                ),
-                              ),
-                              if (_cargandoRanking)
-                                const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                            ],
-                          ),
-                          const Divider(height: 20),
-                          if (top10.isEmpty && !_cargandoRanking)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              child: Text(
-                                'Aún no hay jugadores registrados en el ranking.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: _paleta.textoSecundario,
-                                ),
-                              ),
-                            )
-                          else
-                            for (final entrada in top10)
-                              Container(
-                                key: ValueKey('fila-top10-${entrada.posicion}'),
-                                margin: const EdgeInsets.symmetric(vertical: 3),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color:
-                                      entrada.usuario.toLowerCase() ==
-                                          widget.usuario.toLowerCase()
-                                      ? _paleta.superficieAcentoSuave
-                                      : _paleta.superficieInterior,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border:
-                                      entrada.usuario.toLowerCase() ==
-                                          widget.usuario.toLowerCase()
-                                      ? Border.all(color: _paleta.acento)
-                                      : Border.all(
-                                          color: _paleta.bordeSecundario,
-                                          width: 0.6,
-                                        ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 32,
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 3,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: entrada.posicion == 1
-                                            ? const Color(0xFFF1C40F)
-                                            : entrada.posicion == 2
-                                            ? const Color(0xFFBDC3C7)
-                                            : entrada.posicion == 3
-                                            ? const Color(0xFFE67E22)
-                                            : _paleta.panelSecundario,
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Text(
-                                        '${entrada.posicion}.º',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w800,
-                                          color: entrada.posicion <= 3
-                                              ? Colors.black87
-                                              : _paleta.acento,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: Text(
-                                        entrada.usuario,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          color: _paleta.textoPrincipal,
-                                        ),
-                                      ),
-                                    ),
-                                    Text(
-                                      '${entrada.elo} Elo',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w800,
-                                        color: _paleta.acento,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                          const Divider(height: 24),
-                          Container(
-                            key: const ValueKey('tarjeta-mi-ranking'),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: _paleta.superficieInterior,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: _paleta.acento),
-                            ),
-                            child: Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 18,
-                                  backgroundColor: _paleta.acento,
-                                  child: Text(
-                                    widget.usuario.isNotEmpty
-                                        ? widget.usuario[0].toUpperCase()
-                                        : 'U',
-                                    style: TextStyle(
-                                      color: _paleta.textoSobreAcento,
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Tu perfil · ${miPerfil.usuario}',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                          color: _paleta.textoPrincipal,
-                                        ),
-                                      ),
-                                      Text(
-                                        resumen?.estaEnTop10 == true
-                                            ? 'Puesto #${miPerfil.posicion} (En el Top 10)'
-                                            : 'Puesto #${miPerfil.posicion} en la clasificación general',
-                                        key: const ValueKey(
-                                          'mi-puesto-ranking',
-                                        ),
-                                        style: TextStyle(
-                                          fontSize: 12.5,
-                                          color: _paleta.textoSecundario,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: _paleta.superficieAcentoSuave,
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(color: _paleta.acento),
-                                  ),
-                                  child: Text(
-                                    '${miPerfil.elo} Elo',
-                                    key: const ValueKey('mi-elo-ranking'),
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w800,
-                                      color: _paleta.acento,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                  );
+                }
+
+                return Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 620),
+                    child: ListView(
+                      key: const ValueKey('layout-clasificatorias-movil'),
+                      padding: const EdgeInsets.all(20),
+                      children: [
+                        tarjetaCrear,
+                        const SizedBox(height: 16),
+                        tarjetaUnirse,
+                        const SizedBox(height: 16),
+                        tarjetaRanking,
+                      ],
                     ),
                   ),
-                ],
-              ),
-              ),
+                );
+              },
             ),
           ),
         ),

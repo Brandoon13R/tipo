@@ -666,6 +666,31 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('25 Elo'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('layout-clasificatorias-movil')),
+        findsOneWidget,
+      );
+
+      // En escritorio (ancho >= 960 px) muestra las 3 columnas lado a lado:
+      // Ranking a la izquierda, Crear Partida al centro y Unirse por código a la derecha
+      await tester.binding.setSurfaceSize(const Size(1280, 900));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('layout-clasificatorias-pc')),
+        findsOneWidget,
+      );
+      final rectRanking = tester.getRect(
+        find.byKey(const ValueKey('tabla-clasificacion-top10')),
+      );
+      final rectCrear = tester.getRect(
+        find.byKey(const ValueKey('panel-crear-clasificatoria')),
+      );
+      final rectUnirse = tester.getRect(
+        find.byKey(const ValueKey('panel-unirse-clasificatoria')),
+      );
+      expect(rectRanking.left, lessThan(rectCrear.left));
+      expect(rectCrear.left, lessThan(rectUnirse.left));
     },
   );
 
