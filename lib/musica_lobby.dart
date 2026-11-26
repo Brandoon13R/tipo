@@ -423,6 +423,15 @@ class MusicaLobbyService extends ChangeNotifier {
   /// Garantiza que la carpeta `assets/audio/` y el archivo `lobby_chill.wav` existan en disco.
   String? asegurarArchivoAudioGenerado() => _prepararArchivoAudio();
 
+  /// Detiene inmediatamente cualquier reproducción activa antes de cerrar la aplicación.
+  Future<void> detenerTodo() async {
+    _pantallasLobbyActivas.clear();
+    _reproduciendo = false;
+    if (!_enEntornoDePruebas) {
+      await _detenerAudioMultiplataforma();
+    }
+  }
+
   void reiniciarParaPruebas() {
     _pantallasLobbyActivas.clear();
     _pantallasSilenciadasEncima.clear();

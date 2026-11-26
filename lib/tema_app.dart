@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 enum IdTemaApp {
   aceroElectrico,
@@ -338,24 +341,57 @@ class PaletaTema {
 }
 
 class ControladorTema extends ChangeNotifier {
-  ControladorTema._();
+  ControladorTema({FlutterSecureStorage? storage})
+    : _storage = storage ?? const FlutterSecureStorage();
 
-  static final ControladorTema instance = ControladorTema._();
+  static final ControladorTema instance = ControladorTema();
 
+  static const String _temaKey = 'tema_preferido_app';
+
+  final FlutterSecureStorage _storage;
   PaletaTema _actual = PaletaTema.aceroElectrico;
 
   PaletaTema get actual => _actual;
 
-  void seleccionar(IdTemaApp id) {
-    final nuevo = switch (id) {
-      IdTemaApp.perlaCobalto => PaletaTema.perlaCobalto,
-      IdTemaApp.cafeCrema => PaletaTema.cafeCrema,
-      IdTemaApp.bosqueEsmeralda => PaletaTema.bosqueEsmeralda,
-      IdTemaApp.aceroElectrico => PaletaTema.aceroElectrico,
-    };
-    if (_actual.id == nuevo.id) return;
-    _actual = nuevo;
-    notifyListeners();
+  static PaletaTema paletaPorId(IdTemaApp id) => switch (id) {
+    IdTemaApp.perlaCobalto => PaletaTema.perlaCobalto,
+    IdTemaApp.cafeCrema => PaletaTema.cafeCrema,
+    IdTemaApp.bosqueEsmeralda => PaletaTema.bosqueEsmeralda,
+    IdTemaApp.aceroElectrico => PaletaTema.aceroElectrico,
+  };
+
+  static IdTemaApp? parsearId(String? nombre) {
+    if (nombre == null || nombre.isEmpty) return null;
+    for (final id in IdTemaApp.values) {
+      if (id.name == nombre) return id;
+    }
+    return null;
+  }
+
+  /// Restaura el último tema elegido por el usuario desde el almacenamiento seguro.
+  Future<void> restaurar() async {
+    try {
+      final guardado = await _storage.read(key: _temaKey);
+      final id = parsearId(guardado);
+      if (id != null) {
+        final restaurado = paletaPorId(id);
+        if (_actual.id != restaurado.id) {
+          _actual = restaurado;
+          notifyListeners();
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> seleccionar(IdTemaApp id) async {
+    final nuevo = paletaPorId(id);
+    if (_actual.id != nuevo.id) {
+      _actual = nuevo;
+      notifyListeners();
+    }
+    try {
+      await _storage.write(key: _temaKey, value: id.name);
+    } catch (_) {}
   }
 }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tipo/BDD.dart';
 import 'package:tipo/main.dart';
@@ -326,7 +327,60 @@ void main() {
       expect(find.byType(MenuPage), findsOneWidget);
       expect(servicioMusica.debeSonar, isTrue);
     });
+
+    test('guarda y restaura el tema elegido al salir y volver a entrar a la aplicación', () async {
+      final almacenamiento = _FakeSecureStorage();
+      final controladorPrimeraSesion = ControladorTema(storage: almacenamiento);
+
+      expect(controladorPrimeraSesion.actual.id, IdTemaApp.aceroElectrico);
+      await controladorPrimeraSesion.seleccionar(IdTemaApp.cafeCrema);
+      expect(controladorPrimeraSesion.actual.id, IdTemaApp.cafeCrema);
+
+      // Simula cerrar la aplicación y volver a abrirla creando un nuevo controlador
+      final controladorSegundaSesion = ControladorTema(storage: almacenamiento);
+      expect(controladorSegundaSesion.actual.id, IdTemaApp.aceroElectrico);
+
+      await controladorSegundaSesion.restaurar();
+      expect(controladorSegundaSesion.actual.id, IdTemaApp.cafeCrema);
+      expect(
+        controladorSegundaSesion.actual.nombre,
+        'Café & Crema (Ámbar)',
+      );
+    });
   });
+}
+
+class _FakeSecureStorage extends FlutterSecureStorage {
+  final Map<String, String> _datos = {};
+
+  @override
+  Future<void> write({
+    required String key,
+    required String? value,
+    AppleOptions? iOptions,
+    AndroidOptions? aOptions,
+    LinuxOptions? lOptions,
+    WebOptions? webOptions,
+    AppleOptions? mOptions,
+    WindowsOptions? wOptions,
+  }) async {
+    if (value == null) {
+      _datos.remove(key);
+    } else {
+      _datos[key] = value;
+    }
+  }
+
+  @override
+  Future<String?> read({
+    required String key,
+    AppleOptions? iOptions,
+    AndroidOptions? aOptions,
+    LinuxOptions? lOptions,
+    WebOptions? webOptions,
+    AppleOptions? mOptions,
+    WindowsOptions? wOptions,
+  }) async => _datos[key];
 }
 
 class _FakeSesionUsuario extends SesionUsuario {

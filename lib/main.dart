@@ -1,6 +1,9 @@
-import 'dart:io' show exit;
+import 'dart:async';
+import 'dart:io' show Platform, exit;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show SystemNavigator;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tipo/tablero.dart';
 import 'package:tipo/juego_bloc.dart';
@@ -28,8 +31,27 @@ void main() async {
   );
   final supabaseClient = Supabase.instance.client;
   final sesionUsuario = SesionUsuario.instance;
-  await sesionUsuario.restaurar(AuthService(supabaseClient));
+  await Future.wait([
+    ControladorTema.instance.restaurar(),
+    sesionUsuario.restaurar(AuthService(supabaseClient)),
+  ]);
   runApp(MainApp(supabaseClient: supabaseClient, sesionUsuario: sesionUsuario));
+}
+
+/// Cierra la aplicación de forma compatible con Android, iOS y Windows/Escritorio.
+Future<void> cerrarAplicacionMultiplataforma() async {
+  await MusicaLobbyService.instance.detenerTodo();
+  if (kIsWeb) return;
+
+  if (Platform.isAndroid) {
+    await SystemNavigator.pop();
+    return;
+  }
+  if (Platform.isIOS) {
+    await SystemNavigator.pop();
+    exit(0);
+  }
+  exit(0);
 }
 
 class MainApp extends StatelessWidget {
@@ -593,7 +615,8 @@ class _MenuPageState extends State<MenuPage> {
                           const SizedBox(height: 14),
                           OutlinedButton.icon(
                             key: const ValueKey('cerrar-aplicacion'),
-                            onPressed: () => exit(0),
+                            onPressed: () =>
+                                unawaited(cerrarAplicacionMultiplataforma()),
                             style: OutlinedButton.styleFrom(
                               backgroundColor: paleta.superficieInterior,
                               foregroundColor: paleta.textoPrincipal,
