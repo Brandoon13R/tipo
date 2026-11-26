@@ -10,6 +10,7 @@ import 'package:tipo/nivel_config.dart';
 import 'package:tipo/puntuacion.dart';
 import 'package:tipo/ranking_service.dart';
 import 'package:tipo/region.dart';
+import 'package:tipo/reglas_juego.dart';
 import 'package:tipo/tabla_puntos.dart';
 import 'package:tipo/tablero.dart';
 import 'package:tipo/tablero_config.dart';
@@ -226,6 +227,8 @@ class SeleccionModoMultijugadorPage extends StatelessWidget {
                     ),
                   ),
                 ),
+                const SizedBox(height: 16),
+                const BotonReglasJuego(incluirMultijugador: true),
               ],
             ),
             ),

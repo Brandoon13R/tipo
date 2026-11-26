@@ -303,6 +303,16 @@ void main() {
       expect(find.byType(SeleccionNivelPage), findsOneWidget);
       expect(servicioMusica.debeSonar, isTrue);
 
+      // 5. En Selección de Nivel aparece el botón de Reglas del juego y abre el diálogo explicativo
+      expect(find.byKey(const ValueKey('boton-reglas-juego')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('boton-reglas-juego')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('dialogo-reglas-juego')), findsOneWidget);
+      expect(find.text('¿Cómo jugar a Brilliant?'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('cerrar-reglas-juego')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('dialogo-reglas-juego')), findsNothing);
+
       await tester.tap(find.byKey(const ValueKey('seleccionar-nivel_1')));
       await tester.pumpAndSettle();
       expect(find.byType(ValoresInicialesPage), findsOneWidget);

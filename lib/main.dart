@@ -14,6 +14,7 @@ import 'package:tipo/BDD.dart';
 import 'package:tipo/sesion_usuario.dart';
 import 'package:tipo/multijugador.dart';
 import 'package:tipo/musica_lobby.dart';
+import 'package:tipo/reglas_juego.dart';
 import 'package:tipo/tablero_visual.dart';
 import 'package:tipo/tema_app.dart';
 
@@ -827,6 +828,10 @@ class SeleccionNivelPage extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 12),
                                 ],
+                                const SizedBox(height: 4),
+                                const BotonReglasJuego(
+                                  incluirMultijugador: false,
+                                ),
                               ],
                             ),
                           ),
