@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tipo/BDD.dart';
 import 'package:tipo/main.dart';
 import 'package:tipo/login.dart';
+import 'package:tipo/musica_lobby.dart';
 import 'package:tipo/registro.dart';
 import 'package:tipo/sesion_usuario.dart';
 import 'package:tipo/tema_app.dart';
@@ -249,6 +250,71 @@ void main() {
 
       // Volver al tema oscuro por defecto
       ControladorTema.instance.seleccionar(IdTemaApp.aceroElectrico);
+    });
+
+    testWidgets('la música del lobby suena en Menú pero se apaga en Login, Registro y al entrar a jugar', (
+      WidgetTester tester,
+    ) async {
+      final servicioMusica = MusicaLobbyService.instance;
+      servicioMusica.reiniciarParaPruebas();
+      final rutaWav = servicioMusica.asegurarArchivoAudioGenerado();
+      expect(rutaWav, isNotNull);
+
+      // 1. Sin sesión activa (en LoginPage): la música NO debe sonar
+      await tester.pumpWidget(MainApp(sesionUsuario: SesionUsuario()));
+      expect(find.byType(LoginPage), findsOneWidget);
+      expect(servicioMusica.debeSonar, isFalse);
+
+      // En RegistroPage tampoco debe sonar
+      await tester.tap(find.byKey(const ValueKey('login-crear-cuenta')));
+      await tester.pumpAndSettle();
+      expect(find.byType(RegistroPage), findsOneWidget);
+      expect(servicioMusica.debeSonar, isFalse);
+
+      await tester.tap(find.byKey(const ValueKey('registro-volver')));
+      await tester.pumpAndSettle();
+      expect(find.byType(LoginPage), findsOneWidget);
+      expect(servicioMusica.debeSonar, isFalse);
+
+      // 2. Con sesión activa (en MenuPage): la música SÍ debe sonar
+      servicioMusica.reiniciarParaPruebas();
+      await tester.pumpWidget(
+        MainApp(key: UniqueKey(), sesionUsuario: SesionUsuario.activa()),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(MenuPage), findsOneWidget);
+      expect(servicioMusica.debeSonar, isTrue);
+
+      // 3. El botón de música permite silenciar y reactivar
+      expect(find.byKey(const ValueKey('boton-musica-lobby')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('boton-musica-lobby')));
+      await tester.pumpAndSettle();
+      expect(servicioMusica.silenciado, isTrue);
+      expect(servicioMusica.debeSonar, isFalse);
+
+      await tester.tap(find.byKey(const ValueKey('boton-musica-lobby')));
+      await tester.pumpAndSettle();
+      expect(servicioMusica.silenciado, isFalse);
+      expect(servicioMusica.debeSonar, isTrue);
+
+      // 4. Al entrar a Selección de Nivel y Partida en solitario, la música continúa sonando
+      await tester.tap(find.byKey(const ValueKey('jugar')));
+      await tester.pumpAndSettle();
+      expect(find.byType(SeleccionNivelPage), findsOneWidget);
+      expect(servicioMusica.debeSonar, isTrue);
+
+      await tester.tap(find.byKey(const ValueKey('seleccionar-nivel_1')));
+      await tester.pumpAndSettle();
+      expect(find.byType(ValoresInicialesPage), findsOneWidget);
+      expect(servicioMusica.debeSonar, isTrue);
+
+      // Al regresar al menú principal, sigue sonando
+      await tester.tap(find.byKey(const ValueKey('volver-menu')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('volver-inicio')));
+      await tester.pumpAndSettle();
+      expect(find.byType(MenuPage), findsOneWidget);
+      expect(servicioMusica.debeSonar, isTrue);
     });
   });
 }

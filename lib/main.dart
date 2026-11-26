@@ -13,6 +13,7 @@ import 'package:tipo/perfil_usuario.dart';
 import 'package:tipo/BDD.dart';
 import 'package:tipo/sesion_usuario.dart';
 import 'package:tipo/multijugador.dart';
+import 'package:tipo/musica_lobby.dart';
 import 'package:tipo/tablero_visual.dart';
 import 'package:tipo/tema_app.dart';
 
@@ -409,36 +410,39 @@ class _MenuPageState extends State<MenuPage> {
     BuildContext context,
     bool sesionActiva,
     PaletaTema paleta,
-  ) => Scaffold(
-    backgroundColor: paleta.fondoPrincipal,
-    body: Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            paleta.fondoGradienteInicio,
-            paleta.fondoPrincipal,
-            paleta.fondoGradienteFin,
-          ],
+  ) => ZonaMusicaLobby(
+    habilitarMusica: true,
+    child: Scaffold(
+      backgroundColor: paleta.fondoPrincipal,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              paleta.fondoGradienteInicio,
+              paleta.fondoPrincipal,
+              paleta.fondoGradienteFin,
+            ],
+          ),
         ),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Wrap(
-                alignment: WrapAlignment.end,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 10,
-                runSpacing: 8,
-                children: [
-                  const SelectorTemaButton(),
-                  _botonAccesoEsquina(context, sesionActiva, paleta),
-                ],
-              ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Wrap(
+                  alignment: WrapAlignment.end,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 10,
+                  runSpacing: 8,
+                  children: [
+                    const BotonMusicaLobby(),
+                    const SelectorTemaButton(),
+                    _botonAccesoEsquina(context, sesionActiva, paleta),
+                  ],
+                ),
               Expanded(
                 child: Center(
                   child: ConstrainedBox(
@@ -627,7 +631,8 @@ class _MenuPageState extends State<MenuPage> {
         ),
       ),
     ),
-  );
+  ),
+);
 }
 
 class SeleccionNivelPage extends StatelessWidget {
@@ -653,11 +658,13 @@ class SeleccionNivelPage extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => AnimatedBuilder(
-    animation: ControladorTema.instance,
-    builder: (context, _) {
-      final paleta = ControladorTema.instance.actual;
-      return Scaffold(
+  Widget build(BuildContext context) => ZonaMusicaLobby(
+    habilitarMusica: true,
+    child: AnimatedBuilder(
+      animation: ControladorTema.instance,
+      builder: (context, _) {
+        final paleta = ControladorTema.instance.actual;
+        return Scaffold(
         backgroundColor: paleta.fondoPrincipal,
         body: Container(
           decoration: BoxDecoration(
@@ -696,6 +703,7 @@ class SeleccionNivelPage extends StatelessWidget {
                           spacing: 8,
                           runSpacing: 6,
                           children: [
+                            const BotonMusicaLobby(),
                             const SelectorTemaButton(),
                             PerfilUsuario(
                               sesion: sesionUsuario,
@@ -829,10 +837,11 @@ class SeleccionNivelPage extends StatelessWidget {
                 ],
               ),
             ),
+            ),
           ),
-        ),
-      );
-    },
+        );
+      },
+    ),
   );
 }
 
@@ -1222,11 +1231,13 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
   }
 
   @override
-  Widget build(BuildContext context) => AnimatedBuilder(
-    animation: ControladorTema.instance,
-    builder: (context, _) {
-      final paleta = ControladorTema.instance.actual;
-      return Scaffold(
+  Widget build(BuildContext context) => ZonaMusicaLobby(
+    habilitarMusica: true,
+    child: AnimatedBuilder(
+      animation: ControladorTema.instance,
+      builder: (context, _) {
+        final paleta = ControladorTema.instance.actual;
+        return Scaffold(
         backgroundColor: paleta.fondoPrincipal,
         body: SafeArea(
           child: SingleChildScrollView(
@@ -1300,6 +1311,7 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
                           spacing: 8,
                           runSpacing: 6,
                           children: [
+                            const BotonMusicaLobby(),
                             const SelectorTemaButton(),
                             PerfilUsuario(
                               sesion: widget.sesionUsuario,
@@ -1448,9 +1460,10 @@ class _ValoresInicialesPageState extends State<ValoresInicialesPage> {
                 ),
               ),
             ),
+            ),
           ),
-        ),
-      );
-    },
+        );
+      },
+    ),
   );
 }

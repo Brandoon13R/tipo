@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tipo/juego_bloc.dart';
 import 'package:tipo/multijugador_service.dart';
+import 'package:tipo/musica_lobby.dart';
 import 'package:tipo/nivel_config.dart';
 import 'package:tipo/puntuacion.dart';
 import 'package:tipo/ranking_service.dart';
@@ -39,23 +40,27 @@ class SeleccionModoMultijugadorPage extends StatelessWidget {
   final RankingService? rankingService;
 
   @override
-  Widget build(BuildContext context) => AnimatedBuilder(
-    animation: ControladorTema.instance,
-    builder: (context, _) => Scaffold(
-      appBar: AppBar(
-        title: const Text('Multijugador'),
-        leading: IconButton(
-          key: const ValueKey('volver-menu-multijugador'),
-          onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.arrow_back),
-        ),
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 12),
-            child: SelectorTemaButton(),
+  Widget build(BuildContext context) => ZonaMusicaLobby(
+    habilitarMusica: true,
+    child: AnimatedBuilder(
+      animation: ControladorTema.instance,
+      builder: (context, _) => Scaffold(
+        appBar: AppBar(
+          title: const Text('Multijugador'),
+          leading: IconButton(
+            key: const ValueKey('volver-menu-multijugador'),
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.arrow_back),
           ),
-        ],
-      ),
+          actions: const [
+            BotonMusicaLobby(),
+            SizedBox(width: 8),
+            Padding(
+              padding: EdgeInsets.only(right: 12),
+              child: SelectorTemaButton(),
+            ),
+          ],
+        ),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -222,6 +227,7 @@ class SeleccionModoMultijugadorPage extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
             ),
           ),
         ),
@@ -477,26 +483,30 @@ class _ClasificatoriasPageState extends State<ClasificatoriasPage> {
         resumen?.perfilActual ??
         EntradaRankingElo(posicion: 1, usuario: widget.usuario, elo: 0);
 
-    return AnimatedBuilder(
-      animation: ControladorTema.instance,
-      builder: (context, _) => Scaffold(
-        appBar: AppBar(
-          title: const Text('Clasificatorias · Ranking Elo'),
-          leading: IconButton(
-            key: const ValueKey('salir-clasificatorias'),
-            onPressed: _ocupado ? null : () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.arrow_back),
-          ),
-          actions: [
-            const SelectorTemaButton(),
-            IconButton(
-              key: const ValueKey('recargar-ranking'),
-              tooltip: 'Actualizar tabla de clasificación',
-              onPressed: _cargandoRanking ? null : _cargarRanking,
-              icon: const Icon(Icons.refresh_rounded),
+    return ZonaMusicaLobby(
+      habilitarMusica: true,
+      child: AnimatedBuilder(
+        animation: ControladorTema.instance,
+        builder: (context, _) => Scaffold(
+          appBar: AppBar(
+            title: const Text('Clasificatorias · Ranking Elo'),
+            leading: IconButton(
+              key: const ValueKey('salir-clasificatorias'),
+              onPressed: _ocupado ? null : () => Navigator.of(context).pop(),
+              icon: const Icon(Icons.arrow_back),
             ),
-          ],
-        ),
+            actions: [
+              const BotonMusicaLobby(),
+              const SizedBox(width: 6),
+              const SelectorTemaButton(),
+              IconButton(
+                key: const ValueKey('recargar-ranking'),
+                tooltip: 'Actualizar tabla de clasificación',
+                onPressed: _cargandoRanking ? null : _cargarRanking,
+                icon: const Icon(Icons.refresh_rounded),
+              ),
+            ],
+          ),
         body: SafeArea(
           child: Center(
             child: ConstrainedBox(
@@ -873,6 +883,7 @@ class _ClasificatoriasPageState extends State<ClasificatoriasPage> {
                   ),
                 ],
               ),
+              ),
             ),
           ),
         ),
@@ -1091,15 +1102,25 @@ class _LobbyMultijugadorPageState extends State<LobbyMultijugadorPage> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: const Text('Multijugador'),
-      leading: IconButton(
-        key: const ValueKey('salir-multijugador'),
-        onPressed: _ocupado ? null : () => Navigator.of(context).pop(),
-        icon: const Icon(Icons.arrow_back),
+  Widget build(BuildContext context) => ZonaMusicaLobby(
+    habilitarMusica: true,
+    child: Scaffold(
+      appBar: AppBar(
+        title: const Text('Multijugador'),
+        leading: IconButton(
+          key: const ValueKey('salir-multijugador'),
+          onPressed: _ocupado ? null : () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back),
+        ),
+        actions: const [
+          BotonMusicaLobby(),
+          SizedBox(width: 8),
+          Padding(
+            padding: EdgeInsets.only(right: 12),
+            child: SelectorTemaButton(),
+          ),
+        ],
       ),
-    ),
     body: SafeArea(
       child: Center(
         child: ConstrainedBox(
@@ -1208,7 +1229,8 @@ class _LobbyMultijugadorPageState extends State<LobbyMultijugadorPage> {
         ),
       ),
     ),
-  );
+  ),
+);
 }
 
 class ConfigurarTableroMultijugadorPage extends StatefulWidget {
@@ -1421,11 +1443,21 @@ class _ConfigurarTableroMultijugadorPageState
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: const Text('Configura tu tablero'),
-      automaticallyImplyLeading: false,
-    ),
+  Widget build(BuildContext context) => ZonaMusicaLobby(
+    habilitarMusica: true,
+    child: Scaffold(
+      appBar: AppBar(
+        title: const Text('Configura tu tablero'),
+        automaticallyImplyLeading: false,
+        actions: const [
+          BotonMusicaLobby(),
+          SizedBox(width: 8),
+          Padding(
+            padding: EdgeInsets.only(right: 12),
+            child: SelectorTemaButton(),
+          ),
+        ],
+      ),
     body: SafeArea(
       child: ListView(
         padding: const EdgeInsets.all(20),
@@ -1495,7 +1527,8 @@ class _ConfigurarTableroMultijugadorPageState
         ],
       ),
     ),
-  );
+  ),
+);
 }
 
 class SalaMultijugadorPage extends StatefulWidget {
@@ -1636,18 +1669,22 @@ class _SalaMultijugadorPageState extends State<SalaMultijugadorPage> {
         (!_sala.todosListos &&
             (_sala.estado == 'configurando' ||
                 (_sala.estado == 'activa' && _sala.estadoOponente == null)));
-    return AnimatedBuilder(
-      animation: ControladorTema.instance,
-      builder: (context, _) => Scaffold(
-        appBar: AppBar(
-          title: const Text('Lobby'),
-          actions: const [
-            Padding(
-              padding: EdgeInsets.only(right: 12),
-              child: SelectorTemaButton(),
-            ),
-          ],
-        ),
+    return ZonaMusicaLobby(
+      habilitarMusica: true,
+      child: AnimatedBuilder(
+        animation: ControladorTema.instance,
+        builder: (context, _) => Scaffold(
+          appBar: AppBar(
+            title: const Text('Lobby'),
+            actions: const [
+              BotonMusicaLobby(),
+              SizedBox(width: 8),
+              Padding(
+                padding: EdgeInsets.only(right: 12),
+                child: SelectorTemaButton(),
+              ),
+            ],
+          ),
         body: SafeArea(
           child: Center(
             child: ConstrainedBox(
@@ -1827,6 +1864,7 @@ class _SalaMultijugadorPageState extends State<SalaMultijugadorPage> {
                     ],
                   ],
                 ),
+              ),
               ),
             ),
           ),
@@ -2535,15 +2573,17 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
       }
     }
 
-    return AnimatedBuilder(
-      animation: ControladorTema.instance,
-      builder: (context, _) => Scaffold(
-        appBar: AppBar(
-          title: Text(
-            _esPartidaClasificatoria
-                ? 'Clasificatoria · ${_sala.codigo}'
-                : 'Partida · ${_sala.codigo}',
-          ),
+    return ZonaMusicaLobby(
+      habilitarMusica: false,
+      child: AnimatedBuilder(
+        animation: ControladorTema.instance,
+        builder: (context, _) => Scaffold(
+          appBar: AppBar(
+            title: Text(
+              _esPartidaClasificatoria
+                  ? 'Clasificatoria · ${_sala.codigo}'
+                  : 'Partida · ${_sala.codigo}',
+            ),
           actions: [
             const SelectorTemaButton(),
             IconButton(
@@ -2709,6 +2749,7 @@ class _PartidaMultijugadorPageState extends State<PartidaMultijugadorPage>
                     ],
                   ],
                 ),
+              ),
               ),
             ),
           ),
