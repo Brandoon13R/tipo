@@ -225,6 +225,7 @@ void main() {
       expect(find.text('Acero Eléctrico (Oscuro)'), findsOneWidget);
       expect(find.text('Perla & Cobalto (Claro)'), findsOneWidget);
       expect(find.text('Café & Crema (Ámbar)'), findsOneWidget);
+      expect(find.text('Bosque & Esmeralda'), findsOneWidget);
 
       await tester.tap(find.byKey(const ValueKey('tema-perlaCobalto')));
       await tester.pumpAndSettle();
@@ -238,6 +239,13 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(ControladorTema.instance.actual.id, IdTemaApp.cafeCrema);
+
+      await tester.tap(find.byKey(const ValueKey('selector-tema')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('tema-bosqueEsmeralda')));
+      await tester.pumpAndSettle();
+
+      expect(ControladorTema.instance.actual.id, IdTemaApp.bosqueEsmeralda);
 
       // Volver al tema oscuro por defecto
       ControladorTema.instance.seleccionar(IdTemaApp.aceroElectrico);
