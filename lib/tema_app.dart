@@ -4,6 +4,7 @@ enum IdTemaApp {
   aceroElectrico,
   perlaCobalto,
   cafeCrema,
+  bosqueEsmeralda,
 }
 
 class PaletaTema {
@@ -169,10 +170,45 @@ class PaletaTema {
     errorSuperficie: Color(0xFF421C19),
   );
 
+  /// Tema Naturaleza / Estrategia 60-30-10 (Pino Profundo + Salvia Niebla + Verde Esmeralda):
+  /// - 60%: Pino Profundo / Obsidiana Bosque (#0E1E1B / #132824)
+  /// - 30%: Salvia Brumosa (paneles #1B3631, bordes #2F5C53, textos #E4F4F0 y #9BC2B9)
+  /// - 10%: Verde Esmeralda Brillante (#00E5A3)
+  static const PaletaTema bosqueEsmeralda = PaletaTema(
+    id: IdTemaApp.bosqueEsmeralda,
+    nombre: 'Bosque & Esmeralda',
+    descripcionProporcion:
+        '60% Pino Profundo · 30% Salvia Niebla · 10% Verde Esmeralda',
+    esOscuro: true,
+    // 60% Pino Profundo dominante
+    fondoPrincipal: Color(0xFF0E1E1B),
+    fondoGradienteInicio: Color(0xFF152C27),
+    fondoGradienteFin: Color(0xFF081210),
+    superficieInterior: Color(0xFF132824),
+    barraSuperior: Color(0xFF112420),
+    // 30% Salvia Niebla (tarjetas, bordes y tipografía)
+    panelSecundario: Color(0xFF1B3631),
+    bordeSecundario: Color(0xFF2F5C53),
+    textoPrincipal: Color(0xFFE4F4F0),
+    textoSecundario: Color(0xFF9BC2B9),
+    sombraPanel: Color(0x66040B09),
+    // 10% Verde Esmeralda Brillante (color terciario)
+    acento: Color(0xFF00E5A3),
+    textoSobreAcento: Color(0xFF062018),
+    superficieAcentoSuave: Color(0xFF104237),
+    sombraAcento: Color(0x3800E5A3),
+    botonDeshabilitadoFondo: Color(0xFF22403A),
+    // Error
+    error: Color(0xFFFF6B6B),
+    errorTexto: Color(0xFFFF8E8E),
+    errorSuperficie: Color(0xFF3D1A1E),
+  );
+
   static const List<PaletaTema> todas = [
     aceroElectrico,
     perlaCobalto,
     cafeCrema,
+    bosqueEsmeralda,
   ];
 
   ThemeData toThemeData() {
@@ -314,6 +350,7 @@ class ControladorTema extends ChangeNotifier {
     final nuevo = switch (id) {
       IdTemaApp.perlaCobalto => PaletaTema.perlaCobalto,
       IdTemaApp.cafeCrema => PaletaTema.cafeCrema,
+      IdTemaApp.bosqueEsmeralda => PaletaTema.bosqueEsmeralda,
       IdTemaApp.aceroElectrico => PaletaTema.aceroElectrico,
     };
     if (_actual.id == nuevo.id) return;
