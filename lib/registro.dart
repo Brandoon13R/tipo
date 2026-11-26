@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tipo/BDD.dart';
+import 'package:tipo/musica_lobby.dart';
 import 'package:tipo/perfil_usuario.dart';
 import 'package:tipo/sesion_usuario.dart';
 import 'package:tipo/tema_app.dart';
@@ -141,66 +142,69 @@ class _RegistroPageState extends State<RegistroPage> {
   );
 
   @override
-  Widget build(BuildContext context) => AnimatedBuilder(
-    animation: ControladorTema.instance,
-    builder: (context, _) {
-      final paleta = ControladorTema.instance.actual;
-      return Scaffold(
-        backgroundColor: paleta.fondoPrincipal,
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                paleta.fondoGradienteInicio,
-                paleta.fondoPrincipal,
-                paleta.fondoGradienteFin,
-              ],
+  Widget build(BuildContext context) => ZonaMusicaLobby(
+    habilitarMusica: false,
+    child: AnimatedBuilder(
+      animation: ControladorTema.instance,
+      builder: (context, _) {
+        final paleta = ControladorTema.instance.actual;
+        return Scaffold(
+          backgroundColor: paleta.fondoPrincipal,
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  paleta.fondoGradienteInicio,
+                  paleta.fondoPrincipal,
+                  paleta.fondoGradienteFin,
+                ],
+              ),
             ),
-          ),
-          child: SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 430),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 28,
-                      vertical: 28,
-                    ),
-                    decoration: BoxDecoration(
-                      color: paleta.panelSecundario,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: paleta.bordeSecundario,
-                        width: 1.2,
+            child: SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 430),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 28,
+                        vertical: 28,
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: paleta.sombraPanel,
-                          blurRadius: 28,
-                          offset: const Offset(0, 14),
+                      decoration: BoxDecoration(
+                        color: paleta.panelSecundario,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: paleta.bordeSecundario,
+                          width: 1.2,
                         ),
-                        BoxShadow(
-                          color: paleta.sombraAcento,
-                          blurRadius: 24,
-                          spreadRadius: 1,
-                        ),
-                      ],
+                        boxShadow: [
+                          BoxShadow(
+                            color: paleta.sombraPanel,
+                            blurRadius: 28,
+                            offset: const Offset(0, 14),
+                          ),
+                          BoxShadow(
+                            color: paleta.sombraAcento,
+                            blurRadius: 24,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                      child: _registroCompletado
+                          ? _mensajeRegistroCompletado(paleta)
+                          : _formularioRegistro(paleta),
                     ),
-                    child: _registroCompletado
-                        ? _mensajeRegistroCompletado(paleta)
-                        : _formularioRegistro(paleta),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-      );
-    },
+        );
+      },
+    ),
   );
 
   Widget _encabezado(PaletaTema paleta) => Column(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tipo/BDD.dart';
+import 'package:tipo/musica_lobby.dart';
 import 'package:tipo/perfil_usuario.dart';
 import 'package:tipo/registro.dart';
 import 'package:tipo/sesion_usuario.dart';
@@ -138,11 +139,13 @@ class _LoginPageState extends State<LoginPage> {
   );
 
   @override
-  Widget build(BuildContext context) => AnimatedBuilder(
-    animation: ControladorTema.instance,
-    builder: (context, _) {
-      final paleta = ControladorTema.instance.actual;
-      return Scaffold(
+  Widget build(BuildContext context) => ZonaMusicaLobby(
+    habilitarMusica: false,
+    child: AnimatedBuilder(
+      animation: ControladorTema.instance,
+      builder: (context, _) {
+        final paleta = ControladorTema.instance.actual;
+        return Scaffold(
         backgroundColor: paleta.fondoPrincipal,
         body: Container(
           decoration: BoxDecoration(
@@ -417,9 +420,10 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
             ),
+            ),
           ),
-        ),
-      );
-    },
+        );
+      },
+    ),
   );
 }
