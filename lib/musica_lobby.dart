@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ffi' as ffi;
 import 'dart:io';
 import 'dart:math' as math;
@@ -5,6 +6,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:tipo/tema_app.dart';
 
 typedef _PlaySoundNative = ffi.Int32 Function(
@@ -377,7 +379,13 @@ class MusicaLobbyService extends ChangeNotifier {
 
   _PlaySoundDart? _playSoundW;
   _MciSendStringDart? _mciSendStringW;
+  ffi.Pointer<ffi.Void> Function(int, int)? _callocWin;
+  void Function(ffi.Pointer<ffi.Void>)? _freeWin;
   bool _ffiInicializado = false;
+
+  static const MethodChannel _canalAndroid = MethodChannel(
+    'brilliant/audio_lobby',
+  );
 
   bool get silenciado => _silenciadoPorUsuario;
   bool get reproduciendo => _reproduciendo;
@@ -438,9 +446,9 @@ class MusicaLobbyService extends ChangeNotifier {
     if (_enEntornoDePruebas) return;
 
     if (activar) {
-      _iniciarAudioNativo();
+      unawaited(_iniciarAudioMultiplataforma());
     } else {
-      _detenerAudioNativo();
+      unawaited(_detenerAudioMultiplataforma());
     }
   }
 
@@ -455,6 +463,17 @@ class MusicaLobbyService extends ChangeNotifier {
           .lookupFunction<_MciSendStringNative, _MciSendStringDart>(
             'mciSendStringW',
           );
+      final msvcrt = ffi.DynamicLibrary.open('msvcrt.dll');
+      _callocWin = msvcrt
+          .lookupFunction<
+            ffi.Pointer<ffi.Void> Function(ffi.IntPtr, ffi.IntPtr),
+            ffi.Pointer<ffi.Void> Function(int, int)
+          >('calloc');
+      _freeWin = msvcrt
+          .lookupFunction<
+            ffi.Void Function(ffi.Pointer<ffi.Void>),
+            void Function(ffi.Pointer<ffi.Void>)
+          >('free');
     } catch (_) {}
   }
 
@@ -466,13 +485,15 @@ class MusicaLobbyService extends ChangeNotifier {
 
     try {
       final cwd = Directory.current.path;
-      // 1. Si el usuario colocó un archivo lobby.mp3 o lobby.wav en assets/audio/, lo prioriza
-      final candidatosPersonalizados = [
+      // 1. En desarrollo o junto al ejecutable: busca lobby.mp3, lobby.wav o lobby_chill.wav
+      final candidatosLocales = [
         '$cwd${Platform.pathSeparator}assets${Platform.pathSeparator}audio${Platform.pathSeparator}lobby.mp3',
         '$cwd${Platform.pathSeparator}assets${Platform.pathSeparator}audio${Platform.pathSeparator}lobby.wav',
         '$cwd${Platform.pathSeparator}assets${Platform.pathSeparator}audio${Platform.pathSeparator}lobby_chill.wav',
+        '$cwd${Platform.pathSeparator}data${Platform.pathSeparator}flutter_assets${Platform.pathSeparator}assets${Platform.pathSeparator}audio${Platform.pathSeparator}lobby.mp3',
+        '$cwd${Platform.pathSeparator}data${Platform.pathSeparator}flutter_assets${Platform.pathSeparator}assets${Platform.pathSeparator}audio${Platform.pathSeparator}lobby_chill.wav',
       ];
-      for (final ruta in candidatosPersonalizados) {
+      for (final ruta in candidatosLocales) {
         final archivo = File(ruta);
         if (archivo.existsSync() && archivo.lengthSync() > 44) {
           _rutaAudioPreparada = archivo.path;
@@ -480,39 +501,81 @@ class MusicaLobbyService extends ChangeNotifier {
         }
       }
 
-      // 2. Genera el archivo WAV chill si aún no existe
+      // 2. Genera el archivo WAV chill (funciona en Windows .exe y en Android .apk en Directory.systemTemp)
       final wavBytes = GeneradorAudioChillLobby.generarWavBytes();
       try {
-        final dirAssets = Directory(
-          '$cwd${Platform.pathSeparator}assets${Platform.pathSeparator}audio',
-        );
-        if (!dirAssets.existsSync()) {
-          dirAssets.createSync(recursive: true);
+        if (Platform.isWindows) {
+          final dirAssets = Directory(
+            '$cwd${Platform.pathSeparator}assets${Platform.pathSeparator}audio',
+          );
+          if (dirAssets.existsSync()) {
+            final archivoAsset = File(
+              '${dirAssets.path}${Platform.pathSeparator}lobby_chill.wav',
+            );
+            archivoAsset.writeAsBytesSync(wavBytes, flush: true);
+            _rutaAudioPreparada = archivoAsset.path;
+            return _rutaAudioPreparada;
+          }
         }
-        final archivoAsset = File(
-          '${dirAssets.path}${Platform.pathSeparator}lobby_chill.wav',
-        );
-        archivoAsset.writeAsBytesSync(wavBytes, flush: true);
-        _rutaAudioPreparada = archivoAsset.path;
-        return _rutaAudioPreparada;
-      } catch (_) {
-        final archivoTemp = File(
-          '${Directory.systemTemp.path}${Platform.pathSeparator}brilliant_lobby_chill.wav',
-        );
-        archivoTemp.writeAsBytesSync(wavBytes, flush: true);
-        _rutaAudioPreparada = archivoTemp.path;
-        return _rutaAudioPreparada;
-      }
+      } catch (_) {}
+
+      final archivoTemp = File(
+        '${Directory.systemTemp.path}${Platform.pathSeparator}brilliant_lobby_chill.wav',
+      );
+      archivoTemp.writeAsBytesSync(wavBytes, flush: true);
+      _rutaAudioPreparada = archivoTemp.path;
+      return _rutaAudioPreparada;
     } catch (_) {
       return null;
     }
   }
 
-  void _iniciarAudioNativo() {
-    if (kIsWeb || !Platform.isWindows) return;
+  /// Carga un `.mp3` o `.wav` empaquetado dentro del `.apk` o `.exe` mediante `rootBundle`
+  /// o genera la pista chill en `Directory.systemTemp`.
+  Future<String?> _prepararArchivoAudioMultiplataforma() async {
+    final sincrono = _prepararArchivoAudio();
+    if (sincrono != null && sincrono.toLowerCase().endsWith('.mp3')) {
+      return sincrono;
+    }
+
+    // Intenta extraer assets/audio/lobby.mp3 del bundle empaquetado (útil en APK release)
+    for (final nombre in ['lobby.mp3', 'lobby.wav', 'lobby_chill.wav']) {
+      try {
+        final data = await rootBundle.load('assets/audio/$nombre');
+        if (data.lengthInBytes > 44) {
+          final bytes = data.buffer.asUint8List(
+            data.offsetInBytes,
+            data.lengthInBytes,
+          );
+          final destino = File(
+            '${Directory.systemTemp.path}${Platform.pathSeparator}brilliant_$nombre',
+          );
+          await destino.writeAsBytes(bytes, flush: true);
+          _rutaAudioPreparada = destino.path;
+          return _rutaAudioPreparada;
+        }
+      } catch (_) {}
+    }
+
+    return sincrono;
+  }
+
+  Future<void> _iniciarAudioMultiplataforma() async {
+    if (kIsWeb) return;
+    final ruta = await _prepararArchivoAudioMultiplataforma();
+    if (ruta == null || !_reproduciendo) return;
+
+    if (Platform.isAndroid) {
+      try {
+        await _canalAndroid.invokeMethod<void>('reproducirLoop', {
+          'path': ruta,
+        });
+      } catch (_) {}
+      return;
+    }
+
+    if (!Platform.isWindows) return;
     _inicializarWinMM();
-    final ruta = _prepararArchivoAudio();
-    if (ruta == null) return;
 
     if (ruta.toLowerCase().endsWith('.mp3') && _mciSendStringW != null) {
       _usandoMciMp3 = true;
@@ -526,15 +589,23 @@ class MusicaLobbyService extends ChangeNotifier {
     _usandoMciMp3 = false;
     final playSound = _playSoundW;
     if (playSound == null) return;
-    // SND_ASYNC (0x0001) | SND_LOOP (0x0008) | SND_FILENAME (0x00020000) | SND_NODEFAULT (0x0002)
+    // SND_ASYNC (0x0001) | SND_NODEFAULT (0x0002) | SND_LOOP (0x0008) | SND_FILENAME (0x00020000)
     const flags = 0x0001 | 0x0002 | 0x0008 | 0x00020000;
     _conUtf16(ruta, (ptr) {
       playSound(ptr, 0, flags);
     });
   }
 
-  void _detenerAudioNativo() {
-    if (kIsWeb || !Platform.isWindows) return;
+  Future<void> _detenerAudioMultiplataforma() async {
+    if (kIsWeb) return;
+    if (Platform.isAndroid) {
+      try {
+        await _canalAndroid.invokeMethod<void>('detener');
+      } catch (_) {}
+      return;
+    }
+
+    if (!Platform.isWindows) return;
     _inicializarWinMM();
     if (_usandoMciMp3 && _mciSendStringW != null) {
       _ejecutarMci('stop brilliant_lobby');
@@ -543,7 +614,7 @@ class MusicaLobbyService extends ChangeNotifier {
     }
     final playSound = _playSoundW;
     if (playSound != null) {
-      playSound(ffi. nullptr, 0, 0);
+      playSound(ffi.nullptr, 0, 0);
     }
   }
 
@@ -556,40 +627,20 @@ class MusicaLobbyService extends ChangeNotifier {
   }
 
   void _conUtf16(String texto, void Function(ffi.Pointer<ffi.Uint16>) accion) {
+    final callocFn = _callocWin;
+    final freeFn = _freeWin;
+    if (callocFn == null || freeFn == null) return;
     final unidades = texto.codeUnits;
-    final ptr = _asignarUtf16(unidades);
+    final ptr = callocFn(unidades.length + 1, 2).cast<ffi.Uint16>();
+    for (var i = 0; i < unidades.length; i++) {
+      (ptr + i).value = unidades[i];
+    }
+    (ptr + unidades.length).value = 0;
     try {
       accion(ptr);
     } finally {
-      _liberarMemoria(ptr);
+      freeFn(ptr.cast<ffi.Void>());
     }
-  }
-
-  static final ffi.DynamicLibrary _msvcrt = ffi.DynamicLibrary.open(
-    'msvcrt.dll',
-  );
-  static final ffi.Pointer<ffi.Void> Function(int, int) _calloc = _msvcrt
-      .lookupFunction<
-        ffi.Pointer<ffi.Void> Function(ffi.IntPtr, ffi.IntPtr),
-        ffi.Pointer<ffi.Void> Function(int, int)
-      >('calloc');
-  static final void Function(ffi.Pointer<ffi.Void>) _free = _msvcrt
-      .lookupFunction<
-        ffi.Void Function(ffi.Pointer<ffi.Void>),
-        void Function(ffi.Pointer<ffi.Void>)
-      >('free');
-
-  static ffi.Pointer<ffi.Uint16> _asignarUtf16(List<int> units) {
-    final ptr = _calloc(units.length + 1, 2).cast<ffi.Uint16>();
-    for (var i = 0; i < units.length; i++) {
-      (ptr + i).value = units[i];
-    }
-    (ptr + units.length).value = 0;
-    return ptr;
-  }
-
-  static void _liberarMemoria(ffi.Pointer<ffi.Uint16> ptr) {
-    _free(ptr.cast<ffi.Void>());
   }
 }
 
